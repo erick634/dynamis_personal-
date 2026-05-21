@@ -1,0 +1,60 @@
+---
+description: Internationalization with US English as the source of truth
+alwaysApply: true
+---
+
+# Internationalization (i18n)
+
+**Primary locale: `en-US` (US English) — single source of truth.**
+All other locales (pt-BR, es-ES, etc.) follow.
+
+## Hard rules
+- NEVER hardcode user-facing strings in components
+- ALL user-visible text MUST go through the translation function: `t('feature.context.key')`
+- New strings are added to `en-US.json` **first**, then translated to other locales
+- Missing translations fall back to `en-US`
+
+## Translation key conventions
+- Dot notation, organized by feature: `auth.login.submitButton`
+- Keep keys descriptive of meaning, not content: ✅ `cart.emptyMessage` ❌ `cart.yourCartIsEmpty`
+- Group by feature, not by component
+- Pluralization handled by i18n library, not by concatenation
+
+## File structure
+```
+src/locales/
+  en-US.json    ← source of truth
+  pt-BR.json
+  es-ES.json
+  fr-FR.json
+```
+
+## Locale-aware formatting (mandatory)
+NEVER format dates/numbers/currency manually. Use `Intl.*`:
+- Dates: `new Intl.DateTimeFormat(locale, options)`
+- Numbers: `new Intl.NumberFormat(locale, options)`
+- Currency: `new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' })`
+- Relative time: `new Intl.RelativeTimeFormat(locale)`
+
+## Library recommendations
+- React: `react-i18next` or `next-intl`
+- Vue: `vue-i18n`
+- Svelte: `svelte-i18n`
+- Backend: `i18next` (Node)
+
+## Code conventions (always English, regardless of locale support)
+- Variable/function/class names: English
+- Code comments: English
+- Commit messages: English (Conventional Commits)
+- Documentation primary version: English
+- Error messages thrown in code: English (translated for display only)
+
+## When adding a new feature
+1. Write code with English keys
+2. Add all keys to `en-US.json`
+3. Add placeholders to other locales (can be the English text temporarily, marked `[NEEDS_TRANSLATION]`)
+4. Never ship a locale with missing keys — fallback must be silent and correct
+
+## Testing
+- Test that all locales have the same key set
+- Test rendering with longest translation (German/Portuguese tend to be ~30% longer than English) to catch UI overflow

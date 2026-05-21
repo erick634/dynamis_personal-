@@ -1,0 +1,44 @@
+---
+description: Contexto geral do projeto Dynamis Transformation Agent — sempre aplicar.
+alwaysApply: true
+---
+
+# Dynamis · Project Context
+
+## What this product is
+
+Dynamis is a **transformation guide** — an AI-powered web (and mobile) application that helps users understand and leverage AI to expand their potential. It is not a chatbot, not a productivity tool, and not a coach app. It is closer to a personal navigator that combines:
+
+- A dynamic **discovery process** (agentic, never scripted) that builds an Intent Profile
+- A **Possibility Map** showing the gap between what the user thinks is possible (Dynamis) and what is actually possible right now with AI (Energeia)
+- A living **transformation plan** with a visual tree that grows as goals are realized
+- A **council of specialized agents** (lead guide, health, AI navigator, purpose) that meet daily and surface proactive suggestions
+
+## Critical project constraints
+
+- **Deadline: June 1, 2026** for the POC demo. We have ~10 days.
+- **Web-first**: the web app is the primary deliverable. A Flutter mobile app exists in parallel for voice interactions but its codebase is separate until June 1, when codebases will be unified.
+- **Single backend**: both web and Flutter connect to the same agent backend (via LiveKit). Do not propose architectures that duplicate backend logic per platform.
+- **Demo uses a dummy fixed profile** — no real authentication in scope. Use a pre-populated fictitious user, not mocked data scattered through the UI.
+- **Primary demo features**: Possibility Map and chat-based discovery. These must be fully functional. Profile editing may be partial. Other features are secondary.
+
+## When in doubt
+
+- Optimize for the June 1 demo, not long-term extensibility. Refactor after the demo.
+- Prefer obvious solutions over clever ones. The reviewer (Brian Sevy) needs to grasp the product instantly.
+- When the user asks you to build something not clearly listed in the POC scope, ask whether it's needed for the demo before implementing.
+
+## Reference materials
+
+- Mockup web: `Dynamis_POC_Mockup_v2.html` (visual reference for layout, terminology, color)
+- Mockup mobile: `Dynamis_Mobile_v2.html` (visual reference for mobile flow)
+- These mockups are the source of truth for design decisions until visual specs are formalized.
+
+## Related rules in this project
+
+- General code discipline → `01-file-organization`, `03-code-structure`, `06-anti-disorganization`
+- Internationalization (English source of truth, `t()` keys) → `04-i18n-english-first`
+- Changelog and progress tracking → `07-changelog-discipline`
+- Dynamis-specific terminology → `11-dynamis-terminology`
+- Demo scope guardrails → `12-dynamis-mvp-scope`
+- Cross-platform architecture → `13-dynamis-architecture`

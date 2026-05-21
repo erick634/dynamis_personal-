@@ -1,0 +1,149 @@
+---
+description: Convenções de código para o web app — Vite + React + TypeScript. Aplica em arquivos TS/TSX/JS.
+globs: ["**/*.{ts,tsx,js,jsx}", "vite.config.*", "tsconfig.json", "package.json"]
+alwaysApply: false
+---
+
+# Dynamis · Frontend Conventions (Vite + React + TypeScript)
+
+For general file organization and naming, follow `01-file-organization`. For architectural principles (separation of concerns, function size, error handling), follow `03-code-structure`. This rule adds **stack-specific** conventions on top of those foundations.
+
+## Stack (canonical)
+
+- **Build**: Vite 5+ with React plugin
+- **Language**: TypeScript with `strict: true`
+- **Styling**: Tailwind CSS v4 with custom theme mapped to our design tokens (see `20-dynamis-design-system`). CSS Modules acceptable for one-off complex components (the dynamis tree, the constellation SVG).
+- **Routing**: React Router v6+ (`react-router-dom`)
+- **Server state**: TanStack Query v5 (`@tanstack/react-query`)
+- **Client/UI state**: Zustand for shared state (Intent Profile, Council messages, current screen state). Plain `useState` for local component state.
+- **Real-time**: `@livekit/components-react` and `livekit-client`
+- **i18n**: `react-i18next` (per `04-i18n-english-first` recommendation)
+- **Forms** (if needed): React Hook Form + Zod
+- **Icons**: `lucide-react`
+
+Do not introduce alternative libraries (Redux, MobX, SWR, Recoil, Emotion, styled-components) unless we discuss it first.
+
+## TypeScript rules
+
+- `strict: true`, `noUncheckedIndexedAccess: true`, `noImplicitAny: true`.
+- **Never use `any`.** Use `unknown` and narrow, or define a proper type.
+- Prefer `type` aliases over `interface` for data shapes. Use `interface` only when you need declaration merging.
+- Discriminated unions for variant data (e.g. `type CouncilMessage = Suggestion | Aligned | Alert`).
+- Avoid `enum`. Use `as const` objects: `const PHASES = ['awakening', 'discovery', ...] as const`.
+
+## React patterns
+
+- **Functional components only.** No class components.
+- **Named exports** (per `01-file-organization`). No default exports.
+- One component per file. File name `kebab-case.tsx`, exported component `PascalCase`. Example: `possibility-map.tsx` exports `PossibilityMap`.
+- Props typed inline or via a named type. Avoid `React.FC<Props>` — type the component as `function Foo(props: Props)`.
+- Use `useId` for accessibility-related IDs, never construct them manually.
+- Effects: keep `useEffect` minimal. If a value is derived, derive it during render.
+
+## File and folder structure (feature-based, per `01-file-organization`)
+
+```
+src/
+├── main.tsx
+├── App.tsx
+├── routes/                       # React Router route components
+├── features/                     # one folder per Dynamis feature
+│   ├── awakening/
+│   │   ├── awakening-screen.tsx
+│   │   ├── awakening-cta.tsx
+│   │   └── use-awakening-animation.ts
+│   ├── discovery/
+│   │   ├── discovery-chat.tsx
+│   │   ├── discovery-message.tsx
+│   │   └── use-discovery-session.ts
+│   ├── possibility-map/
+│   │   ├── possibility-map.tsx
+│   │   ├── dynamis-constellation.tsx
+│   │   └── energeia-constellation.tsx
+│   ├── transformation-plan/
+│   │   ├── dynamis-tree.tsx
+│   │   ├── plan-item.tsx
+│   │   └── plan-filter.tsx
+│   ├── council/
+│   │   ├── council-agent-card.tsx
+│   │   └── use-council-stream.ts
+│   └── daily-reflection/
+│       └── reflection-prompt.tsx
+├── components/
+│   └── ui/                       # reusable, generic atoms (Button, Card, Pill)
+├── hooks/                        # cross-feature hooks
+├── stores/                       # Zustand stores
+├── lib/
+│   ├── livekit.ts                # LiveKit room/connection helpers
+│   ├── api.ts                    # TanStack Query setup, REST client
+│   └── i18n.ts                   # react-i18next setup
+├── services/                     # backend API clients (per `01-file-organization`)
+├── types/                        # shared product types (IntentProfile, Energeia, ...)
+├── locales/                      # i18n JSON (per `04-i18n-english-first`)
+│   ├── en-US.json
+│   ├── pt-BR.json
+│   └── es-ES.json
+└── styles/
+    ├── tokens.css                # CSS variables (the palette)
+    └── tailwind.css
+```
+
+Use the `@/` import alias for `src/` (configure in `vite.config.ts` and `tsconfig.json`).
+
+## Naming conventions
+
+Follows `01-file-organization` strictly. Concrete examples for this project:
+
+| Thing | Convention | Example |
+|---|---|---|
+| Component file | `kebab-case.tsx` | `possibility-map.tsx` |
+| Component export | `PascalCase` | `export function PossibilityMap()` |
+| Hook file | `use-kebab-case.ts` | `use-council-stream.ts` |
+| Hook export | `useCamelCase` | `useCouncilStream` |
+| Store file | `kebab-case.store.ts` | `intent-profile.store.ts` |
+| Store export | `useCamelCaseStore` | `useIntentProfileStore` |
+| Type file | `kebab-case.ts` | `intent-profile.ts` |
+| Type export | `PascalCase` | `IntentProfile`, `Energeia` |
+| Constants | `SCREAMING_SNAKE_CASE` | `LIVEKIT_TOKEN_TTL_SECONDS` |
+| Boolean variable | `is/has/should/can` prefix | `isAwakened`, `hasEnergeia` |
+
+## Styling with Tailwind v4
+
+Map our design tokens via `@theme` (see `20-dynamis-design-system` for the full palette):
+
+```css
+@theme {
+  --color-blue: #1B5E9F;
+  --color-blue-accent: #2E86DE;
+  --color-blue-soft: #DCE9F7;
+  --color-red: #D94A38;          /* achievement / Energeia */
+  --color-red-deep: #C73E2C;
+  --color-red-warm: #E8654D;
+  --color-success: #2EBC8F;      /* suggestion / completion */
+  --color-ink: #0B1929;
+  --color-ink-2: #475569;
+  --color-bg: #FAFBFD;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+}
+```
+
+Then use semantic classes: `bg-blue`, `text-red-deep`, `font-display`. Never use Tailwind's default `blue-500`, `red-600`, `gray-700`.
+
+## Error handling (per `03-code-structure`)
+
+- All async functions wrapped in `try/catch` at the call site that can react to the error.
+- TanStack Query handles network errors via `error` state — use it in UI.
+- Never `console.log` in committed code (per `pre-commit-check` skill).
+
+## Performance defaults
+
+- Lazy-load route components with `React.lazy` + `Suspense`.
+- Memoize expensive computations with `useMemo`, not micro-optimizations.
+- SVG illustrations: inline for the Dynamis tree / constellation. External `<img>` for static assets.
+
+## Out of scope for the POC
+
+- Server-side rendering — we are a SPA.
+- Theme switching (light/dark toggle) — fixed light theme except for The Awakening and Possibility Map screens.
+- All locales beyond `en-US.json` ship later; `en-US` is source of truth (per `04-i18n-english-first`).

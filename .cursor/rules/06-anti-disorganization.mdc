@@ -1,0 +1,49 @@
+---
+description: Prevent project and code disorganization over time
+alwaysApply: true
+---
+
+# Project Discipline & Anti-Entropy
+
+This rule fights the natural tendency of projects to become messy.
+
+## Before writing ANY new code
+1. **Search first**: is there already similar code? Extend/reuse instead of duplicating
+2. **Check the right place**: does this belong in an existing module?
+3. **Question new abstractions**: don't create a folder/module for one item — wait until pattern is clear (rule of three)
+
+## Refactoring triggers (act, don't postpone)
+- **3+ similar code blocks** → extract to function/component
+- **File > 300 lines** → split by responsibility
+- **Function > 50 lines** → decompose
+- **3+ levels of nesting** → use early returns or extract helpers
+- **Same conditional pattern in 3+ places** → unify or polymorphism
+
+## Banned patterns (entropy generators)
+- `utils.ts` / `helpers.ts` / `common.ts` / `misc.ts` — too vague, become dumping grounds
+- `temp/`, `tmp/`, `old/`, `backup/`, `_archive/`, `WIP/` folders — git tracks history
+- Numbered duplicates: `Component2`, `auth-new.ts`, `service-v2`, `final-FINAL.ts`
+- Mixing concerns: API calls + UI + business logic in one file
+- "God" files: a single file that everything imports from
+- Inconsistent naming within the same project (pick one style, stick to it)
+
+## When AI generates code, it must self-check
+Before finalizing output, verify:
+- [ ] Does this fit existing patterns and structure?
+- [ ] Am I introducing duplication? (search before writing)
+- [ ] Are concerns properly separated?
+- [ ] Does the file location make sense given the structure?
+- [ ] Are file/folder names consistent with the rest of the project?
+- [ ] Am I leaving any TODOs that should be done now?
+
+## Documentation discipline
+- README.md must reflect current state (not aspirations)
+- If you change architecture, update relevant docs in the same commit
+- Stale documentation is worse than no documentation — delete what's wrong
+
+## Periodic hygiene (suggest to user monthly)
+- Run dead-code tools (see rule 05)
+- Review and consolidate dependencies
+- Check for outdated docs
+- Look for files that have grown beyond limits
+- Review `// TODO` and `// FIXME` markers — resolve or convert to issues

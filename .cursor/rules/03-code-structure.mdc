@@ -1,0 +1,47 @@
+---
+description: Architecture principles and code structure standards
+alwaysApply: true
+---
+
+# Code Structure & Architecture
+
+## Architectural principles
+- **Feature-based** organization over type-based (group by domain, not by "controllers/models/views")
+- **Separation of concerns**: UI ↔ business logic ↔ data access must be clearly separated
+- **Pure functions** preferred where possible (same input → same output, no side effects)
+- **Dependency injection** over global singletons / module-level mutable state
+- **Composition** over inheritance
+
+## Function/Component rules
+- Single responsibility per function — if you can describe it with "AND", split it
+- **Max 50 lines** per function. Refactor if exceeded.
+- **Max 4 parameters** — beyond that, use an options object: `fn({ a, b, c, d, e })`
+- **Early returns** over deeply nested conditionals (max 3 levels of nesting)
+- NO magic numbers/strings — extract to named constants
+- Functions should be named with verbs (`getUser`, `validateEmail`), booleans with `is/has/can`
+
+## Imports
+- Group imports in this order with blank lines between:
+  1. Built-ins (`node:fs`, etc.)
+  2. External packages (`react`, `lodash`)
+  3. Internal absolute (`@/components/...`)
+  4. Internal relative (`./helper`)
+- Use **path aliases** (`@/`) over long relative paths (`../../../`)
+- NO circular dependencies — if you hit one, it's an architectural problem
+
+## State management
+- Local state first, lift state up ONLY when proven necessary
+- Server state (API data) separate from client state (UI state)
+- Avoid prop drilling beyond 2 levels — use context, store, or composition
+- Immutable updates — never mutate props/state directly
+
+## Error handling
+- Errors must be handled explicitly, not silently swallowed
+- Use Result/Either pattern OR typed exceptions, not both
+- Never catch and ignore: `catch (e) {}` is forbidden
+- Log errors with context (what operation, what inputs)
+
+## Comments
+- Comment **why**, not **what** (the code shows what)
+- Public APIs require JSDoc/docstrings
+- No commented-out code — delete it, git remembers

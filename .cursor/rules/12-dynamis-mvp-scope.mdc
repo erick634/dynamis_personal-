@@ -1,0 +1,70 @@
+---
+description: Escopo do MVP para o demo de 1 de junho — sempre aplicar.
+alwaysApply: true
+---
+
+# Dynamis · MVP Scope (June 1 demo)
+
+This rule exists to prevent scope creep. With ~10 days until the demo, every feature must justify itself against the demo arc.
+
+## The demo arc (Brian's framing)
+
+1. **Awakening / Discovery phase** — user enters and is awakened to the possibility
+2. **Profile and Possibility Map** — agent builds the user's profile and shows the gap
+3. **Actionable plan** — concrete next steps
+
+The user should leave the demo feeling their potential is significantly larger than they realized.
+
+## In scope (must work on June 1)
+
+- **Awakening screen** — visual hook, "AI is transforming your world. Are you?" + CTA
+- **Discovery chat** — dynamic, agentic conversation that adapts to the user (NOT a scripted question list). The agent decides what to ask next based on what it's learned so far.
+- **Intent Profile (read view)** — display the profile that emerged from Discovery
+- **Possibility Map** — the hero feature. Dynamis (current potential) vs Energeia (potential expanded by AI). This must be visually striking.
+- **Transformation Plan + Dynamis tree** — concrete next steps with the visual tree
+- **Council suggestions on Today screen** — proactive nudges from the 4 specialized agents
+- **Connection to the real agent backend** via LiveKit — not mocked responses
+- **Dummy fixed user profile** — pre-populated, no auth flow needed
+
+## Stretch goals (nice if time permits)
+
+- **Daily Reflection** via chat — train the agent to ask 3 reflective questions about the day
+- **Editable Intent Profile** — user can edit some profile fields directly (read-only is fine for the demo)
+- **Streak / gamification mechanics** — daily check-ins, fire emoji
+- **Agent personality preferences** — snarky vs gentle vs military-style guide
+
+## Out of scope (do NOT build before June 1)
+
+- Real user authentication / signup / login — use the dummy profile
+- Multi-user support / collaboration
+- Mobile-web parity (Flutter is separate until June 1)
+- Payment, billing, subscription tiers
+- Email notifications, SMS, push notifications
+- Admin panels, analytics dashboards
+- Export / sharing / public profile features
+- Onboarding tutorials beyond the Awakening
+
+## Decision filter
+
+Before generating any new feature, screen, route, or significant component, evaluate:
+
+1. **Does this feature appear in the demo arc?** If no → don't build it.
+2. **Does this feature support the user reaching the Possibility Map moment?** If no → defer.
+3. **Could the demo work without this?** If yes → defer it.
+
+When asked to build something outside this scope, flag it as out-of-scope and confirm with the user before implementing. This complements the AI self-check in `06-anti-disorganization`.
+
+## Data and content
+
+- Brian Sevy is providing a **fictitious user profile + sample possibility map + planning data**. This is the canonical demo content. Do not invent parallel mock data without checking what Brian has provided.
+- All visible numbers, names, and goals in the UI should be either (a) from Brian's mock dataset or (b) clearly placeholder-styled if the real data isn't ready yet.
+
+## Technical scope reminders
+
+- **Memory system**: evaluating MongoDB vs PostgreSQL with vector embeddings. Until the team decides, write data access through an abstraction layer so we can swap later without rewriting features.
+- **RAG with knowledge graphs/trees** for context retrieval — not naive chunk-based retrieval. The team learned this lesson from previous projects.
+- **No regulatory document handling** in scope. We are deliberately not solving that problem here.
+
+## When scope changes
+
+If a new feature is approved (by Brian or by team consensus), update this file in the same commit per `07-changelog-discipline`. Add an ADR entry to `docs/DECISIONS.md` if the change has architectural impact.

@@ -1,0 +1,120 @@
+---
+description: Arquitetura de integração — como Web + Flutter + Backend + LiveKit + Memory se conectam. Sempre aplicar.
+alwaysApply: true
+---
+
+# Dynamis · Architecture & Integration
+
+This rule describes how the pieces talk to each other. When in doubt about where logic belongs, refer to this.
+
+## The big picture
+
+```
+   Web app (Vite + React)              Flutter mobile (voice-first)
+            │                                    │
+            └──────────────┬─────────────────────┘
+                           │
+                    LiveKit (rooms, audio + data channel)
+                           │
+                ┌──────────┴──────────┐
+                │                     │
+        Backend (FastAPI)     LiveKit Agents worker (Python)
+                │                     │
+                └──────────┬──────────┘
+                           │
+                    Memory layer (interface)
+                           │
+                ┌──────────┴──────────┐
+                │                     │
+            MongoDB                PostgreSQL
+            (evaluating)         (evaluating)
+                           │
+                  Knowledge graph + embeddings
+```
+
+## Core principles
+
+1. **One backend, two clients.** The web app and Flutter app must use identical contracts. Any new endpoint or LiveKit event needs to make sense for both.
+2. **The "magic" is in the backend.** Frontend is a view + input layer. Do not put agent logic, prompt construction, or memory access in the frontend.
+3. **LiveKit is the real-time path.** Voice + streaming agent responses go through LiveKit's audio + data channels. The FastAPI REST API handles non-real-time data (profile fetch, possibility map render, history).
+4. **Memory abstraction is sacred.** Both Mongo and Postgres are still on the table. All memory access goes through `MemoryStore` protocol. No direct `pymongo`/`asyncpg` calls outside `app/memory/`. (See `03-code-structure` for the dependency-injection principle.)
+
+## Web ↔ Backend contract
+
+| What | How |
+|---|---|
+| Fetch Intent Profile | `GET /api/profile/{user_id}` → REST |
+| Fetch Possibility Map | `GET /api/possibility-map/{user_id}` → REST |
+| Fetch Transformation Plan | `GET /api/plan/{user_id}` → REST |
+| Mark a goal as Energeia | `POST /api/energeia` → REST |
+| Live agent conversation (Discovery, Reflection, ad-hoc chat) | **LiveKit room + data channel**, not REST |
+| Council session results | `GET /api/council/today/{user_id}` → REST (the session runs server-side overnight) |
+| LiveKit access token | `POST /api/livekit/token` → REST, returns a short-lived JWT |
+
+For the demo, `user_id` is hardcoded to the dummy profile. Do not build auth around this — wire it via a config value (per `06-anti-disorganization`: no magic strings).
+
+## LiveKit room model
+
+- **One room per active user session.** Both web and Flutter join the same room when the user is "talking to the guide."
+- The **agent joins as a participant** (the LiveKit Agents worker). It speaks via TTS over audio and emits structured events via the data channel.
+- Frontend listens for data channel events to update UI live (typing indicator, profile signals captured, etc.).
+
+## Data channel event taxonomy
+
+The agent emits events through LiveKit's data channel. Use these names consistently both server and client side:
+
+- `agent.message` — `{ text: string, role: 'agent' | 'user' }`
+- `agent.thinking` — start/stop indicator
+- `profile.signal` — `{ dimension: 'values' | 'mission' | 'strengths' | 'constraints', delta: number }`
+- `possibility_map.updated` — triggers a refetch
+- `energeia.realized` — `{ goal_id: string }` (the tree grows, streak increments)
+- `council.suggestion` — `{ agent: 'dynamis' | 'health' | 'navigator' | 'purpose', text: string }`
+
+Define this as a TypeScript discriminated union on the frontend and a Pydantic union on the backend. Keep them in sync — if they drift, both clients break.
+
+## Memory access pattern
+
+All memory access flows through the `MemoryStore` interface:
+
+```python
+# Backend (app/memory/interface.py)
+class MemoryStore(Protocol):
+    async def get_intent_profile(self, user_id: str) -> IntentProfile: ...
+    async def upsert_profile_signal(self, user_id: str, signal: ProfileSignal) -> None: ...
+    async def append_journal_entry(self, user_id: str, entry: JournalEntry) -> None: ...
+    async def retrieve_context(self, user_id: str, query: str, k: int = 8) -> list[KnowledgeNode]: ...
+```
+
+Concrete implementations live in `mongo_store.py` and `postgres_store.py`. The chosen implementation is injected via FastAPI dependency.
+
+## RAG approach
+
+- **Knowledge graph first, embeddings second.** Embeddings find candidate nodes; graph traversal expands the context.
+- The Discovery agent writes back to the graph as it learns about the user — each captured signal becomes a node connected to relevant concepts.
+- The Possibility Map is generated by traversing the graph from the user's nodes to "AI leverage" nodes (capabilities, tools, applied techniques).
+
+## What lives where
+
+| Concern | Frontend | Backend | LiveKit |
+|---|---|---|---|
+| UI rendering | ✅ | | |
+| Form validation (cosmetic) | ✅ | | |
+| Form validation (truth) | | ✅ | |
+| Prompt construction | | ✅ | |
+| Memory read/write | | ✅ | |
+| Agent decision-making | | ✅ (in worker) | |
+| Audio capture / playback | ✅ | | (transport) |
+| Real-time text streaming | | | ✅ (data channel) |
+| Session state | (mirror) | ✅ (source of truth) | |
+
+## Critical anti-patterns
+
+- ❌ Calling OpenAI / Anthropic directly from the frontend
+- ❌ Storing user data in `localStorage` beyond cosmetic preferences
+- ❌ Hardcoding the user ID anywhere outside config
+- ❌ Building a parallel REST endpoint for something already on the LiveKit data channel
+- ❌ Different schemas for the web app vs the Flutter app — they must match
+
+## Decision deferred (resolve before June 1)
+
+- **MongoDB vs PostgreSQL for memory.** Until decided, keep both `mongo_store.py` and `postgres_store.py` skeletons in sync with the `MemoryStore` interface. When decided, log it as an ADR per `07-changelog-discipline`.

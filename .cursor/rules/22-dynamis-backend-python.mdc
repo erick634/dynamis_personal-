@@ -1,0 +1,116 @@
+---
+description: Convenções de código para o backend Python — FastAPI + LangChain/LangGraph + LiveKit Agents.
+globs: ["**/*.py", "pyproject.toml", "requirements*.txt"]
+alwaysApply: false
+---
+
+# Dynamis · Backend Conventions (Python)
+
+For general file organization, follow `01-file-organization`. For architectural principles (separation of concerns, dependency injection, error handling), follow `03-code-structure`. This rule adds **stack-specific** Python conventions on top.
+
+## Stack (canonical)
+
+- **Python 3.11+** (use 3.12 if available — better type inference)
+- **Web framework**: FastAPI
+- **Async runtime**: `asyncio`. All I/O is `async def`.
+- **Agent framework**: LiveKit Agents (`livekit-agents`) — both web and Flutter connect through it
+- **LLM orchestration**: LangChain + LangGraph for the agent graph (dynamic discovery flow). Prefer LangGraph for stateful multi-step agents over raw LangChain chains.
+- **Validation**: Pydantic v2 — all request/response schemas, all agent tool inputs
+- **Memory layer**: abstracted via `MemoryStore` protocol (see `13-dynamis-architecture`)
+- **i18n on the backend**: `i18next` (Node parity) is not in scope — backend stores `en-US` strings for any user-visible messages it produces, frontend handles translation per `04-i18n-english-first`
+- **Package management**: `uv` (preferred) or `pip` with `pyproject.toml`. Pin versions.
+
+## Python style
+
+- **Type hints mandatory** on every function signature. Internal helpers included.
+- Avoid `Any`. Use `object`, `unknown`-style protocols, or define a `TypedDict` / Pydantic model.
+- Prefer `pydantic.BaseModel` over `dataclass` when the data crosses an API or LLM boundary.
+- F-strings for formatting. Never `%` or `.format()`.
+- `pathlib.Path` over `os.path`.
+- Format with `ruff format`. Lint with `ruff`.
+- Imports in this order (per `03-code-structure`): stdlib → third-party → local, separated by blank lines.
+
+## FastAPI conventions
+
+- One router per feature domain (`routers/intent_profile.py`, `routers/possibility_map.py`, `routers/council.py`).
+- Response models always declared (`response_model=...`).
+- Dependency injection (`Depends`) for memory client, agent client, config.
+- No business logic in route handlers — call into service modules (separation of concerns per `03-code-structure`).
+- `async def` for all routes.
+
+## Project structure (feature-based, per `01-file-organization`)
+
+```
+backend/
+├── pyproject.toml
+├── app/
+│   ├── main.py                  # FastAPI app, lifespan, CORS
+│   ├── config.py                # pydantic-settings, env-driven
+│   ├── routers/
+│   │   ├── intent_profile.py
+│   │   ├── possibility_map.py
+│   │   ├── council.py
+│   │   └── livekit_token.py
+│   ├── services/                # business logic
+│   ├── agents/
+│   │   ├── dynamis_guide.py     # the lead guide agent
+│   │   ├── health_coach.py
+│   │   ├── ai_navigator.py
+│   │   ├── purpose_agent.py
+│   │   └── council.py           # orchestrates the daily council session
+│   ├── memory/
+│   │   ├── interface.py         # MemoryStore Protocol
+│   │   ├── mongo_store.py
+│   │   ├── postgres_store.py
+│   │   └── knowledge_graph.py   # graph traversal for RAG
+│   ├── schemas/                 # Pydantic models
+│   │   ├── intent_profile.py
+│   │   ├── possibility_map.py
+│   │   └── energeia.py
+│   └── livekit_worker/
+│       └── worker.py            # LiveKit Agents worker entrypoint
+└── tests/
+```
+
+## Naming
+
+- Modules and files: `snake_case`
+- Classes: `PascalCase`, no `I` prefix on protocols (`MemoryStore`, not `IMemoryStore`)
+- Functions/variables: `snake_case`
+- Constants: `SCREAMING_SNAKE_CASE`
+- Use product vocabulary in code — see `11-dynamis-terminology`. `dynamis_profile`, `energeia_count`, `council_session`.
+
+## LangGraph agent patterns
+
+- Each agent is a **state graph**, not a fixed chain. Dynamic Discovery requires the agent to decide the next question based on what it has learned.
+- State is typed via a `TypedDict` or Pydantic model. Pass the whole state through nodes; nodes return state updates.
+- Tools are typed Pydantic models with descriptions — the LLM uses these descriptions to know when to call them.
+- Memory writes happen through the `MemoryStore` interface, never direct DB access from agent code (per `13-dynamis-architecture`).
+
+## RAG approach (decided by the team)
+
+- **Do not** use naive chunk-based retrieval. Earlier attempts failed on versioning and context.
+- Use **knowledge graphs / knowledge trees** for relating information. Embeddings index nodes; traversal expands context.
+- When in doubt about how to retrieve, ask before implementing — this is the area where wrong patterns cost the most time.
+
+## Error handling (per `03-code-structure`)
+
+- Specific exception types per failure mode. Custom exceptions in `app/exceptions.py`.
+- FastAPI exception handlers convert domain exceptions to HTTP responses with appropriate codes.
+- Never `except Exception: pass`. Log and re-raise or handle deliberately.
+- LLM errors (rate limits, malformed output) handled with retries via `tenacity` or LangChain's built-in retry logic.
+
+## Logging
+
+- `structlog` or `loguru` over stdlib logging.
+- Structured fields, not f-string log lines: `log.info("intent_profile_built", user_id=..., confidence=...)`.
+- Never log full LLM prompts/responses in production. Log token counts, model name, latency.
+- No `print()` in committed code (per `pre-commit-check` skill).
+
+## Out of scope for the POC
+
+- Real authentication (use the dummy fixed profile, per `12-dynamis-mvp-scope`)
+- Multi-tenant isolation
+- Rate limiting per user
+- Background job queues — for June 1, do work in-request or in the LiveKit agent loop
+- Production-grade observability — basic structured logs are enough

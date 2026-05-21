@@ -1,0 +1,102 @@
+---
+description: Design system Dynamis — paleta, tipografia, padrões visuais. Aplica em arquivos de UI.
+globs: ["**/*.{css,scss,sass,less,html,jsx,tsx,vue,svelte,astro}", "**/styles/**/*", "**/features/**/*", "**/components/**/*"]
+alwaysApply: false
+---
+
+# Dynamis · Design System
+
+## Color psychology (decided May 20, 2026)
+
+The palette is **deliberately a timeline**: blue = past/memory, red = present/achievement, green = future/suggestion. Use these meanings consistently.
+
+| Color | Hex | Semantic role | Where it appears |
+|---|---|---|---|
+| **Blue (memory)** | `#1B5E9F` primary, `#2E86DE` accent, `#DCE9F7` soft | Brand, context, memory, information, profile, history | Primary buttons (when contextual), brand mark, info cards, profile sections |
+| **Red (achievement)** | `#D94A38` primary, `#C73E2C` deep, `#E8654D` warm | Energeia, progress, streaks, achievements, realized goals | Streak indicators, Possibility Map "Energeia" side glow, high-priority tags, achievement leaves on the tree, the Awakening CTA |
+| **Green (suggestion)** | `#2EBC8F` primary, `#15803D` deep | Suggestions, next steps, completed checkmarks, growth, tree foliage | Council suggestion pills, plan item checkboxes (when done), the tree's leaves, "next step" CTAs, Daily Reflection icon |
+
+### Color rules — non-negotiable
+
+1. **NEVER use gold, amber, or yellow as a primary palette color.** This was reverted from an earlier mockup. Specifically forbidden hex values: `#F4B942`, `#FFC857`, `#E0A92C`, `#FFE9A8`. If a generated component uses these, replace with the red palette equivalents.
+2. **Red is for achievement and momentum, NOT for errors or destructive actions.** For destructive UI use a distinct cooler tone (`#9B2C2C`) — preferably handle destructive actions with confirmation modals instead of color alone.
+3. **Color is never the only signal.** Always pair with an icon, shape, or label — for accessibility (red/green together is the classic colorblind-problematic pair, and we use both).
+
+### Background and surface
+
+- Default theme is **light**, not dark. `--bg: #FAFBFD`, surface white.
+- **Two screens use dark backgrounds**: The Awakening (cinematic radial gradient, `#0B1929` → `#050D17`) and the Possibility Map (same dark gradient — the contrast makes the Energeia constellation glow).
+- All other screens are light. Dark mode is out of scope for the POC.
+
+## Typography
+
+- **Display / headlines**: `Fraunces` (Google Fonts) — variable, weight 500-700, opsz set to use larger optical sizes. Italic Fraunces is used for emphasis inside headlines (`<em>` tag).
+- **Body / UI**: `Manrope` (Google Fonts) — weights 400, 500, 600, 700.
+- Forbidden defaults: Inter, Roboto, Arial, system-ui as the primary font.
+- Tabular numbers for stats: `font-variant-numeric: tabular-nums` on streaks, counts, percentages.
+
+## Spacing and rhythm
+
+- Base unit: 4px. Use multiples (4, 8, 12, 16, 20, 24, 32, 48, 64, 80).
+- Card border radius: `16px` (small), `20-22px` (medium), `44px` (device frame).
+- Pills/chips: `100px` border radius (fully rounded).
+
+## i18n in components (per `04-i18n-english-first`)
+
+The mockups show **conceptual copy** like "AI is transforming your world". In real code, all user-facing strings go through `t()`:
+
+```tsx
+// ❌ Don't — hardcoded string
+<h1>AI is transforming your world.</h1>
+
+// ✅ Do — translation key with product vocabulary
+<h1>{t('awakening.headline.line1')}</h1>
+```
+
+Define keys using product terminology (see `11-dynamis-terminology`):
+
+```
+awakening.headline.line1 = "AI is transforming your world."
+awakening.headline.line2 = "Are you?"
+possibilityMap.dynamis.label = "Potential, waiting to be realized."
+possibilityMap.energeia.label = "Potential, becoming actuality."
+```
+
+## Visual references
+
+The two mockups are the source of truth:
+- `Dynamis_POC_Mockup_v2.html` — desktop layouts, sidebar nav, dark/light contrast
+- `Dynamis_Mobile_v2.html` — mobile layouts, bottom tab bar, iOS device frame
+
+When generating a new component, look at the closest analog in these files first.
+
+## What to avoid
+
+- Purple gradients on white (generic AI aesthetic).
+- Emoji as decoration. Single emoji (🔥 for streak) used meaningfully is fine.
+- Solid color backgrounds for hero sections — use radial gradients with sparks (see Awakening).
+- Generic Tailwind defaults (`bg-blue-500`, `text-gray-700`). Map to our token palette.
+
+## CSS variable naming
+
+Use the existing variables in the mockups as the canonical set:
+
+```css
+--bg: #FAFBFD;
+--bg-soft: #F1F5FA;
+--bg-deep: #0B1929;
+--ink: #0B1929;        /* primary text */
+--ink-2: #475569;      /* secondary text */
+--ink-3: #94A3B8;      /* tertiary, hints */
+--line: #E2E8F0;
+--line-soft: #EEF2F7;
+--blue: #1B5E9F;
+--blue-2: #2E86DE;
+--blue-soft: #DCE9F7;
+--red: #D94A38;        /* achievement primary */
+--red-2: #C73E2C;      /* achievement deep */
+--red-warm: #E8654D;   /* achievement light */
+--success: #2EBC8F;    /* suggestion / completed */
+```
+
+If the project uses Tailwind, extend `theme.colors` to map these tokens. Do not introduce new color values without updating this file first.

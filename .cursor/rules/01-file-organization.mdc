@@ -1,0 +1,39 @@
+---
+description: File and folder organization standards for the project
+alwaysApply: true
+---
+
+# File Organization
+
+## Folder structure (adapt to your stack)
+- `src/` — source code only
+- `src/features/` — feature-based modules (preferred over type-based grouping)
+- `src/components/` — reusable, generic UI components
+- `src/lib/` — shared utilities and helpers
+- `src/hooks/` — custom hooks (React) or composables (Vue)
+- `src/types/` — shared types/interfaces
+- `src/locales/` — i18n translation files
+- `src/services/` — API clients, external integrations
+- `tests/` — integration/e2e tests (co-locate unit tests with source)
+- `docs/` — markdown documentation
+- `scripts/` — build, dev, deploy scripts
+
+## Naming conventions
+- Files: `kebab-case.ts` (e.g. `user-profile.tsx`)
+- Components: `PascalCase` exports (`export function UserProfile()`)
+- Functions/variables: `camelCase`
+- Constants: `SCREAMING_SNAKE_CASE`
+- Types/Interfaces: `PascalCase`
+- Boolean variables: `is`, `has`, `should`, `can` prefix
+
+## Hard rules
+- ONE primary export per file
+- NO files at project root except config (`package.json`, `tsconfig.json`, etc.)
+- NO generic dumping grounds: forbidden names → `utils.ts`, `helpers.ts`, `misc.ts`, `common.ts`. Use specific names like `date-formatting.ts`, `string-validators.ts`.
+- Files MUST be under 300 lines. Refactor if exceeded.
+- Folders MUST contain at least 2 files (or have a clear plan to grow). No single-file folders.
+
+## When creating new files
+- First search the codebase for similar existing code — extend before creating
+- New top-level folders require explicit justification
+- Place file next to its closest relative, not in a generic bucket

@@ -1,0 +1,100 @@
+---
+description: CHANGELOG, ADR, PROGRESS conventions and Conventional Commits
+alwaysApply: true
+---
+
+# Changelog & Project Documentation Discipline
+
+Maintain a clear, current view of what's done, what's changing, and why.
+
+## Required files in the repo
+
+- `CHANGELOG.md` — user-facing changes (follows [Keep a Changelog](https://keepachangelog.com/))
+- `docs/PROGRESS.md` — high-level project status, current milestone, roadmap
+- `docs/DECISIONS.md` — Architectural Decision Records (ADRs)
+
+## CHANGELOG.md format
+
+```markdown
+# Changelog
+
+## [Unreleased]
+
+### Added
+- New features and capabilities
+
+### Changed
+- Modifications to existing behavior
+
+### Fixed
+- Bug fixes
+
+### Removed
+- Removed features (with migration notes)
+
+### Security
+- Security-related changes
+
+## [1.2.0] - 2026-05-20
+...
+```
+
+## When the AI completes a meaningful task, it MUST
+
+1. Update `CHANGELOG.md` under `[Unreleased]` with one-line summary
+2. If a milestone or phase is complete, update `docs/PROGRESS.md`
+3. If an architectural decision was made (library choice, pattern, structural shift), append an entry to `docs/DECISIONS.md`
+
+## ADR entry template (docs/DECISIONS.md)
+
+```markdown
+## ADR-NNN: <Short title>
+Date: YYYY-MM-DD
+Status: Accepted | Superseded | Deprecated
+
+### Context
+What problem are we solving?
+
+### Decision
+What did we choose?
+
+### Alternatives considered
+What else did we look at?
+
+### Consequences
+What changes because of this? Tradeoffs?
+```
+
+## PROGRESS.md structure
+
+```markdown
+# Project Progress
+
+## Current phase
+<e.g. MVP - Authentication module>
+
+## Completed
+- [x] Feature A (v0.1.0)
+- [x] Feature B (v0.2.0)
+
+## In progress
+- [ ] Feature C — 60% — blocker: waiting on design
+
+## Next up
+- [ ] Feature D
+- [ ] Feature E
+
+## Known risks / debt
+- ...
+```
+
+## Commit messages (feed into the progress system)
+
+Use Conventional Commits — they auto-categorize for changelog:
+
+- `feat: ...` → Added
+- `fix: ...` → Fixed
+- `refactor: ...` → Changed (internal)
+- `docs: ...` → docs only
+- `chore: ...` → tooling
+- `BREAKING CHANGE: ...` in body → major version bump

@@ -1,0 +1,69 @@
+---
+description: Terminologia e vocabulário do produto Dynamis — sempre aplicar.
+alwaysApply: true
+---
+
+# Dynamis · Terminology & Language
+
+The product has a deliberate, philosophy-grounded vocabulary inspired by Aristotelian concepts. Use it consistently — in code (variable names, function names, types), in user-facing copy (translation keys), and in documentation.
+
+## Core conceptual pair
+
+- **Dynamis** — *untapped potential*. The user's possibilities before action. Visualized as the "Possibility Map" left side, as the growing tree, as the user's goals-yet-to-be-realized.
+  - Examples: `dynamisProfile`, `possibilityMap`, `dynamisTree`, `userPotential`
+- **Energeia** — *potential becoming actuality*. Realized achievements, completed goals, captured progress.
+  - Examples: `energeiaCount`, `markAsEnergeia`, `energeiaThisWeek`, `realizedGoals`
+
+When in doubt: **Dynamis is what could be, Energeia is what is.**
+
+## Phase and feature names (use exactly these terms)
+
+| Concept | Use | Don't use |
+|---|---|---|
+| Onboarding intro screen | **The Awakening** | Welcome, Splash, Intro |
+| Conversational profile building | **Discovery** | Onboarding survey, Questionnaire, Quiz |
+| The user's profile state | **Intent Profile** | User profile, Account, Bio |
+| The Dynamis → Energeia visualization | **Possibility Map** | Goals map, Dashboard, Vision board |
+| Concrete action steps | **Transformation Plan** | To-do list, Tasks, Roadmap |
+| Visual progress representation | **Dynamis tree** | Progress bar, Achievement chart |
+| The agent group | **Council** | Agents, Bots, Assistants |
+| Individual agents in the council | **Lead Guide** (Dynamis), **Health Coach**, **AI Navigator**, **Purpose Agent** | Bot 1/2/3 |
+| Daily journal entry via chat | **Daily Reflection** | Journal entry, Daily log |
+
+## Translation key conventions (i18n)
+
+Per `04-i18n-english-first`, all user-facing strings go through `t()`. Use the product vocabulary in the key paths:
+
+- `awakening.headline.line1` (not `welcome.title`)
+- `possibilityMap.dynamis.label` / `possibilityMap.energeia.label`
+- `discovery.agent.openingPrompt`
+- `council.purposeAgent.dailySuggestion`
+- `transformationPlan.section.thisWeek`
+- `dailyReflection.prompt.morningCheckIn`
+
+Group keys by feature, not by component (per `04-i18n` convention).
+
+## Voice and tone
+
+- **Direct but warm.** The product is a guide, not a cheerleader. Avoid exclamation marks, "Awesome!", motivational fluff.
+- **Use second person** ("you", "your"). Never refer to the user in third person in UI copy.
+- **Display headlines use a small italic for emphasis** (e.g. "Your <em>plan</em>"). This is a Fraunces italic stylistic choice; preserve it when writing component examples.
+
+## Do not use
+
+- "AI agent" in user-facing copy. The user sees the Council and individual agents by name.
+- "Streak gamification" — call it the streak, the user understands.
+- Generic AI clichés: "Let's dive in", "I'm here to help", "Sure!", "Absolutely!"
+- "Score", "rating", or quantification of user worth. Energeia is binary (realized/not yet) and qualitative.
+
+## Code naming (per `01-file-organization`)
+
+When you generate a variable, type, or component name, prefer the product's vocabulary over generic CRUD terms:
+
+- `IntentProfile` not `User`
+- `dynamisTree` not `progressTree`
+- `energeiaLog` not `completedTasksList`
+- `councilSession` not `agentMeeting`
+- `awakening-screen.tsx` (file) exporting `AwakeningScreen` (component) — kebab-case file with PascalCase export, per `01-file-organization`
+
+This consistency makes the codebase legible to anyone who knows the product.
