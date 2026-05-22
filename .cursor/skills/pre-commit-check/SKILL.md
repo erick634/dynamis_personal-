@@ -1,8 +1,9 @@
 ---
 name: pre-commit-check
-description: "Runs pre-commit and pre-push quality gates (tests, lint, type-check, format, build). Use when the user asks to commit, push, verify before commit, run pre-commit checks, quality gates, or is it ready to commit. Palavras-chave PT: commitar, fazer commit, push, verificar antes de commitar, checagem pré-commit, portões de qualidade, pronto para commitar, rodar testes antes de commitar, husky, lint-staged."
+description: 'Runs pre-commit and pre-push quality gates (tests, lint, type-check, format, build). Use when the user asks to commit, push, verify before commit, run pre-commit checks, quality gates, or is it ready to commit. Palavras-chave PT: commitar, fazer commit, push, verificar antes de commitar, checagem pré-commit, portões de qualidade, pronto para commitar, rodar testes antes de commitar, husky, lint-staged.'
 disable-model-invocation: false
 ---
+
 # Pre-Commit Check
 
 ## When to Use

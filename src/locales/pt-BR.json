@@ -1,0 +1,264 @@
+{
+  "brand": {
+    "name": "Dynamis"
+  },
+  "bootstrap": {
+    "title": "Dynamis",
+    "ok": "bootstrap OK"
+  },
+  "awakening": {
+    "headline": {
+      "line1": "A IA está <em>transformando</em> o seu mundo.",
+      "line2": "E você?"
+    },
+    "cta": {
+      "primary": "Comece sua jornada"
+    }
+  },
+  "possibilityMap": {
+    "eyebrow": "Mapa de Possibilidades",
+    "title": "Seu potencial, ampliado pela IA.",
+    "dynamis": {
+      "label": "Dynamis",
+      "name": "Seu potencial",
+      "tagline": "Potencial à espera de ser realizado."
+    },
+    "energeia": {
+      "label": "Energeia",
+      "name": "Potencial ampliado",
+      "tagline": "Potencial em vias de se tornar realidade."
+    },
+    "arrow": {
+      "label": "Ampliado pela IA"
+    },
+    "leverage": "+{{percent}}%",
+    "dimensions": {
+      "aiDisruption": {
+        "name": "Disrupção por IA",
+        "description": "Como a IA transforma seu setor, suas habilidades e seu trabalho — e onde você pode liderar essa mudança."
+      },
+      "careerReinvention": {
+        "name": "Reinvenção de carreira",
+        "description": "Papéis, projetos e redes que se multiplicam quando você une experiência e alavancagem de IA."
+      },
+      "health": {
+        "name": "Saúde",
+        "description": "Energia, recuperação e hábitos que permanecem realistas quando suas ambições aceleram."
+      },
+      "purpose": {
+        "name": "Propósito",
+        "description": "O fio condutor entre o que importa para você e o que se torna possível com ação guiada."
+      }
+    }
+  },
+  "discovery": {
+    "title": "Descoberta",
+    "subtitle": "Uma conversa que se adapta a você — não um questionário scriptado.",
+    "thinking": "O Lead Guide está refletindo…",
+    "messages": {
+      "label": "Conversa de descoberta"
+    },
+    "message": {
+      "userAvatar": "Você"
+    },
+    "input": {
+      "label": "Sua mensagem",
+      "placeholder": "Compartilhe o que está em sua mente…",
+      "sendLabel": "Enviar mensagem",
+      "micLabel": "Iniciar conversa por voz",
+      "micStopLabel": "Encerrar conversa por voz"
+    },
+    "sidePanel": {
+      "profileTitle": "Sinais do Perfil de Intenção",
+      "profileHint": "Capturados em tempo real enquanto você fala",
+      "dimensions": {
+        "values": "Valores",
+        "mission": "Missão",
+        "strengths": "Forças",
+        "constraints": "Restrições"
+      }
+    },
+    "insight": {
+      "title": "Insight emergente",
+      "quote": "Padrão emergente: você retorna a \"climate\" duas vezes e \"starting\" três vezes — pode haver um fio entre cuidado e novos começos."
+    },
+    "mockMessages": {
+      "greeting": "Bem-vindo. Sou seu Lead Guide. Antes de mapear o que é possível, quero entender o que já importa para você. O que trouxe você aqui hoje?",
+      "userClimate": "Fico pensando em trabalho climático e se já é tarde demais para começar algo com significado.",
+      "followUp": "Essa tensão entre urgência e timing merece atenção. Quando você diz \"começar,\" como seria o primeiro passo pequeno?",
+      "agentReply": "Obrigado por compartilhar. Estou notando com que frequência o cuidado com o mundo e o cuidado com seu próprio caminho aparecem juntos no que você disse."
+    }
+  },
+  "transformationPlan": {
+    "eyebrow": "Plano de Transformação",
+    "title": "Passos concretos. Uma árvore.",
+    "streak": "Sequência de {{days}} dias",
+    "filters": {
+      "label": "Filtrar itens do plano",
+      "all": "Todos",
+      "today": "Hoje",
+      "high": "Alta",
+      "build": "Construir"
+    },
+    "tags": {
+      "high": "Alta",
+      "research": "Pesquisa",
+      "build": "Construir",
+      "reflect": "Refletir"
+    },
+    "schedule": {
+      "todayAt": "Hoje · 14:00",
+      "tomorrow": "Amanhã",
+      "wed": "Qua",
+      "fri": "Sex"
+    },
+    "item": {
+      "markDone": "Marcar \"{{title}}\" como realizado",
+      "markNotDone": "Marcar \"{{title}}\" como ainda não realizado"
+    },
+    "emptyFilter": "Nenhum passo corresponde a este filtro.",
+    "items": {
+      "mapGaps": {
+        "title": "Mapear 3 lacunas de adaptação climática na sua cidade"
+      },
+      "interview": {
+        "title": "Entrevistar 5 pessoas fora do clima sobre o que temem"
+      },
+      "draftHypothesis": {
+        "title": "Rascunhar hipótese de 'próximo passo óbvio' — 1 página"
+      },
+      "synthesis": {
+        "title": "Síntese de 30 min com seu estrategista de IA"
+      },
+      "shipPost": {
+        "title": "Publicar post de 200 palavras sobre 'a lacuna de ativação'"
+      }
+    }
+  },
+  "intentProfile": {
+    "eyebrow": "Fase 03 · Perfil de Intenção",
+    "title": "Quem você é — nas suas próprias palavras.",
+    "meta": {
+      "confidence": "Confiança: {{percent}}%",
+      "lastUpdated": "Última atualização · {{relativeTime}}"
+    },
+    "mission": {
+      "eyebrow": "Missão",
+      "tagsLabel": "Valores centrais"
+    },
+    "attributes": {
+      "topValue": {
+        "eyebrow": "Valor principal",
+        "description": "O que aparece de forma consistente quando você descreve o que importa."
+      },
+      "coreStrength": {
+        "eyebrow": "Força central",
+        "description": "Uma capacidade pela qual outros contam com você — você nomeie ou não."
+      },
+      "patternToWatch": {
+        "eyebrow": "Padrão a observar",
+        "description": "Uma lacuna entre intenção e ação que vale notar cedo."
+      },
+      "vision": {
+        "eyebrow": "Visão",
+        "description": "Os papéis e canais onde sua missão pode se multiplicar com o tempo."
+      }
+    }
+  },
+  "dailyReflection": {
+    "card": {
+      "eyebrow": "Reflexão Diária",
+      "title": "Reflexão de fim de dia",
+      "description": "3 perguntas, ~2 min · faz sua árvore crescer"
+    },
+    "prompt": {
+      "eyebrow": "Modo reflexão",
+      "title": "Reflexão de fim de dia",
+      "subtitle": "Responda com suas palavras — o Lead Guide escuta, não avalia."
+    },
+    "chat": {
+      "title": "Reflexão Diária",
+      "subtitle": "Três perguntas para fechar o dia e alimentar sua árvore Dynamis."
+    },
+    "messages": {
+      "label": "Conversa de reflexão diária"
+    },
+    "questions": {
+      "q1": "Como foi o dia — com energia, esgotado, algo no meio?",
+      "q2": "Qual momento hoje ficou mais perto de quem você quer se tornar?",
+      "q3": "O que você faria diferente se amanhã fosse igual?"
+    },
+    "mockMessages": {
+      "ack": "Anotado. Vá no seu ritmo para a próxima quando estiver pronto.",
+      "closing": "Obrigado por fechar o ciclo hoje. Sua árvore vai lembrar disso."
+    },
+    "insight": {
+      "quote": "Reflexões assim viram nós no diário — informam o Conselho de amanhã e sua próxima Energeia."
+    }
+  },
+  "appLayout": {
+    "navLabel": "Navegação principal"
+  },
+  "today": {
+    "eyebrow": "Fase 06 · Hoje",
+    "title": "Bom dia. Aqui está onde focar.",
+    "nudge": {
+      "eyebrow": "⚡ Sugestão proativa",
+      "title": "Suas entrevistas climáticas são hoje — o Lead Guide tem um enquadramento pronto.",
+      "subtitle": "Cinco conversas podem revelar a lacuna de ativação mais rápido que outra semana de pesquisa. Comece pelo bloco das 14:00.",
+      "primaryCta": "Abrir Descoberta",
+      "secondaryCta": "Ver Mapa de Possibilidades"
+    },
+    "stats": {
+      "streakSubtitle": "Maior sequência até aqui",
+      "energeiaEyebrow": "Energeia esta semana",
+      "energeiaSubtitle": "Passos realizados em direção ao potencial ampliado"
+    },
+    "council": {
+      "title": "Conselho",
+      "subtitle": "Sessão noturna — quatro perspectivas sobre sua semana"
+    }
+  },
+  "council": {
+    "pills": {
+      "suggested": "Sugerido",
+      "aligned": "Alinhado"
+    },
+    "agents": {
+      "dynamis": {
+        "name": "Dynamis",
+        "role": "Lead Guide",
+        "status": "Conduza as entrevistas de hoje com uma pergunta: o que tornaria o próximo passo óbvio para elas?"
+      },
+      "health": {
+        "name": "Health Coach",
+        "role": "Health Coach",
+        "status": "Reserve 20 minutos de caminhada antes do bloco das 14:00 — sua energia cai quando as sessões se acumulam sem recuperação."
+      },
+      "navigator": {
+        "name": "AI Navigator",
+        "role": "AI Navigator",
+        "status": "Experimente um fluxo de memo de voz de 10 min → resumo estruturado antes de rascunhar a página de hipótese."
+      },
+      "purpose": {
+        "name": "Purpose Agent",
+        "role": "Purpose Agent",
+        "status": "Sua missão e os passos da semana estão alinhados — adaptação climática para quem não se vê como pessoa do clima."
+      }
+    }
+  },
+  "nav": {
+    "home": "Início",
+    "awakening": "O Despertar",
+    "discovery": "Descoberta",
+    "guide": "Descoberta",
+    "profile": "Perfil de Intenção",
+    "you": "Perfil de Intenção",
+    "possibilityMap": "Mapa de Possibilidades",
+    "plan": "Plano de Transformação",
+    "today": "Hoje"
+  },
+  "routes": {
+    "stubMessage": "Em breve — estrutura do demo"
+  }
+}

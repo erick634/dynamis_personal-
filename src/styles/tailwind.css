@@ -1,0 +1,56 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+@theme inline {
+  /* Colors — semantic tokens only */
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-bg-awakening-start: var(--bg-awakening-start);
+  --color-bg-deep: var(--bg-deep);
+  --color-bg-deep-end: var(--bg-deep-end);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+
+  --color-blue: var(--blue);
+  --color-blue-accent: var(--blue-2);
+  --color-blue-soft: var(--blue-soft);
+
+  --color-red: var(--red);
+  --color-red-deep: var(--red-2);
+  --color-red-warm: var(--red-warm);
+
+  --color-success: var(--success);
+  --color-success-deep: var(--success-deep);
+
+  --color-destructive: var(--destructive);
+
+  /* Typography */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  /* Shadows */
+  --shadow-soft: var(--shadow-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-glow-red: var(--shadow-glow-red);
+  --shadow-glow-success: var(--shadow-glow-success);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background-color: var(--bg);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+}

@@ -1,0 +1,45 @@
+:root {
+  /* Background and surface */
+  --bg: #fafbfd;
+  --bg-soft: #f1f5fa;
+  --bg-awakening-start: #0f2d52;
+  --bg-deep: #0b1929;
+  --bg-deep-end: #050d17;
+
+  /* Ink (text) */
+  --ink: #0b1929;
+  --ink-2: #475569;
+  --ink-3: #94a3b8;
+
+  /* Borders */
+  --line: #e2e8f0;
+  --line-soft: #eef2f7;
+
+  /* Blue — memory / brand */
+  --blue: #1b5e9f;
+  --blue-2: #2e86de;
+  --blue-soft: #dce9f7;
+
+  /* Red — achievement / Energeia */
+  --red: #d94a38;
+  --red-2: #c73e2c;
+  --red-warm: #e8654d;
+
+  /* Green — suggestion / growth */
+  --success: #2ebc8f;
+  --success-deep: #15803d;
+
+  /* Destructive (not achievement red) */
+  --destructive: #9b2c2c;
+
+  /* Typography */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 24px rgb(11 25 41 / 6%);
+  --shadow-card: 0 8px 32px rgb(11 25 41 / 8%);
+  --shadow-elevated: 0 16px 48px rgb(11 25 41 / 12%);
+  --shadow-glow-red: 0 0 40px rgb(217 74 56 / 25%);
+  --shadow-glow-success: 0 0 32px rgb(46 188 143 / 20%);
+}

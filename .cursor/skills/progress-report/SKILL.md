@@ -1,8 +1,9 @@
 ---
 name: progress-report
-description: "Generates a structured project progress report from git history, CHANGELOG, and PROGRESS.md. Use when the user asks for a progress report, status report, sprint summary, what shipped, roadmap update, or generate a progress report. Palavras-chave PT: relatório de progresso, status do projeto, resumo da sprint, o que foi entregue, andamento do projeto, roadmap, relatório semanal, relatório mensal, gerar relatório de progresso."
+description: 'Generates a structured project progress report from git history, CHANGELOG, and PROGRESS.md. Use when the user asks for a progress report, status report, sprint summary, what shipped, roadmap update, or generate a progress report. Palavras-chave PT: relatório de progresso, status do projeto, resumo da sprint, o que foi entregue, andamento do projeto, roadmap, relatório semanal, relatório mensal, gerar relatório de progresso.'
 disable-model-invocation: true
 ---
+
 # Progress Report
 
 ## When to Use
@@ -48,27 +49,35 @@ Use this structure:
 # Progress Report — YYYY-MM-DD
 
 ## Period
+
 <start> → <end>
 
 ## Summary
+
 <2–4 sentences: what shipped and overall momentum>
 
 ## Shipped (from git + CHANGELOG)
+
 - ...
 
 ## Unreleased (CHANGELOG [Unreleased])
+
 - ...
 
 ## Active work (from PROGRESS.md)
+
 - ... — estimated % if known
 
 ## Pending / next up
+
 - ...
 
 ## Blockers & risks
+
 - ...
 
 ## Test coverage
+
 <delta or "not available">
 ```
 

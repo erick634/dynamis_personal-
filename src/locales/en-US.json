@@ -1,0 +1,264 @@
+{
+  "brand": {
+    "name": "Dynamis"
+  },
+  "bootstrap": {
+    "title": "Dynamis",
+    "ok": "bootstrap OK"
+  },
+  "awakening": {
+    "headline": {
+      "line1": "AI is <em>transforming</em> your world.",
+      "line2": "Are you?"
+    },
+    "cta": {
+      "primary": "Begin your journey"
+    }
+  },
+  "possibilityMap": {
+    "eyebrow": "Possibility Map",
+    "title": "Your potential, expanded by AI.",
+    "dynamis": {
+      "label": "Dynamis",
+      "name": "Your potential",
+      "tagline": "Potential, waiting to be realized."
+    },
+    "energeia": {
+      "label": "Energeia",
+      "name": "Expanded potential",
+      "tagline": "Potential, becoming actuality."
+    },
+    "arrow": {
+      "label": "Expanded by AI"
+    },
+    "leverage": "+{{percent}}%",
+    "dimensions": {
+      "aiDisruption": {
+        "name": "AI Disruption",
+        "description": "How AI reshapes your industry, skills, and daily work — and where you can lead that shift."
+      },
+      "careerReinvention": {
+        "name": "Career Reinvention",
+        "description": "Roles, projects, and networks that compound when you pair your experience with AI leverage."
+      },
+      "health": {
+        "name": "Health",
+        "description": "Energy, recovery, and habits that stay realistic when your ambitions accelerate."
+      },
+      "purpose": {
+        "name": "Purpose",
+        "description": "The through-line between what matters to you and what becomes possible with guided action."
+      }
+    }
+  },
+  "discovery": {
+    "title": "Discovery",
+    "subtitle": "A conversation that adapts to you — not a scripted survey.",
+    "thinking": "Lead Guide is reflecting…",
+    "messages": {
+      "label": "Discovery conversation"
+    },
+    "message": {
+      "userAvatar": "You"
+    },
+    "input": {
+      "label": "Your message",
+      "placeholder": "Share what is on your mind…",
+      "sendLabel": "Send message",
+      "micLabel": "Start voice conversation",
+      "micStopLabel": "Stop voice conversation"
+    },
+    "sidePanel": {
+      "profileTitle": "Intent Profile signals",
+      "profileHint": "Captured live as you speak",
+      "dimensions": {
+        "values": "Values",
+        "mission": "Mission",
+        "strengths": "Strengths",
+        "constraints": "Constraints"
+      }
+    },
+    "insight": {
+      "title": "Emerging insight",
+      "quote": "Pattern emerging: you return to \"climate\" twice and \"starting\" three times — there may be a thread between stewardship and new beginnings."
+    },
+    "mockMessages": {
+      "greeting": "Welcome. I am your Lead Guide. Before we map what is possible, I want to understand what already matters to you. What brought you here today?",
+      "userClimate": "I keep thinking about climate work and whether I am too late to start something meaningful.",
+      "followUp": "That tension between urgency and timing is worth sitting with. When you say \"starting,\" what would the first small step look like?",
+      "agentReply": "Thank you for sharing that. I am noticing how often care for the world and care for your own path appear together in what you said."
+    }
+  },
+  "transformationPlan": {
+    "eyebrow": "Transformation Plan",
+    "title": "Concrete steps. One tree.",
+    "streak": "{{days}} day streak",
+    "filters": {
+      "label": "Filter plan items",
+      "all": "All",
+      "today": "Today",
+      "high": "High",
+      "build": "Build"
+    },
+    "tags": {
+      "high": "High",
+      "research": "Research",
+      "build": "Build",
+      "reflect": "Reflect"
+    },
+    "schedule": {
+      "todayAt": "Today · 14:00",
+      "tomorrow": "Tomorrow",
+      "wed": "Wed",
+      "fri": "Fri"
+    },
+    "item": {
+      "markDone": "Mark \"{{title}}\" as realized",
+      "markNotDone": "Mark \"{{title}}\" as not yet realized"
+    },
+    "emptyFilter": "No steps match this filter.",
+    "items": {
+      "mapGaps": {
+        "title": "Map 3 climate adaptation gaps in your city"
+      },
+      "interview": {
+        "title": "Interview 5 non-climate-people about what they fear"
+      },
+      "draftHypothesis": {
+        "title": "Draft 'obvious next step' hypothesis — 1 page"
+      },
+      "synthesis": {
+        "title": "30-min synthesis with your AI strategist"
+      },
+      "shipPost": {
+        "title": "Ship a 200-word post on 'the activation gap'"
+      }
+    }
+  },
+  "intentProfile": {
+    "eyebrow": "Phase 03 · Intent Profile",
+    "title": "Here's who you are — in your own words.",
+    "meta": {
+      "confidence": "Confidence: {{percent}}%",
+      "lastUpdated": "Last updated · {{relativeTime}}"
+    },
+    "mission": {
+      "eyebrow": "Mission",
+      "tagsLabel": "Core values"
+    },
+    "attributes": {
+      "topValue": {
+        "eyebrow": "Top value",
+        "description": "What consistently shows up when you describe what matters."
+      },
+      "coreStrength": {
+        "eyebrow": "Core strength",
+        "description": "A capability others rely on you for — whether you name it or not."
+      },
+      "patternToWatch": {
+        "eyebrow": "Pattern to watch",
+        "description": "A gap between intention and follow-through worth noticing early."
+      },
+      "vision": {
+        "eyebrow": "Vision",
+        "description": "The roles and outlets where your mission could compound over time."
+      }
+    }
+  },
+  "dailyReflection": {
+    "card": {
+      "eyebrow": "Daily Reflection",
+      "title": "End-of-day reflection",
+      "description": "3 questions, ~2 min · grows your tree"
+    },
+    "prompt": {
+      "eyebrow": "Reflection mode",
+      "title": "End-of-day reflection",
+      "subtitle": "Answer in your own words — the Lead Guide is listening, not scoring."
+    },
+    "chat": {
+      "title": "Daily Reflection",
+      "subtitle": "Three questions to close the day and feed your Dynamis tree."
+    },
+    "messages": {
+      "label": "Daily reflection conversation"
+    },
+    "questions": {
+      "q1": "How did today feel — energetic, drained, somewhere between?",
+      "q2": "Which moment today felt closest to who you want to become?",
+      "q3": "What's one thing you'd do differently if tomorrow was the same?"
+    },
+    "mockMessages": {
+      "ack": "Noted. Take your time with the next one when you're ready.",
+      "closing": "Thank you for closing the loop today. Your tree will remember this."
+    },
+    "insight": {
+      "quote": "Reflections like this become journal nodes — they inform tomorrow's Council and your next Energeia."
+    }
+  },
+  "appLayout": {
+    "navLabel": "Main navigation"
+  },
+  "today": {
+    "eyebrow": "Phase 06 · Today",
+    "title": "Good morning. Here's where to lean.",
+    "nudge": {
+      "eyebrow": "⚡ Proactive nudge",
+      "title": "Your climate interviews are today — the Lead Guide has a framing ready.",
+      "subtitle": "Five conversations can surface the activation gap faster than another week of research. Start with the 14:00 block.",
+      "primaryCta": "Open Discovery",
+      "secondaryCta": "View Possibility Map"
+    },
+    "stats": {
+      "streakSubtitle": "Longest yet",
+      "energeiaEyebrow": "Energeia this week",
+      "energeiaSubtitle": "Realized steps toward expanded potential"
+    },
+    "council": {
+      "title": "Council",
+      "subtitle": "Overnight session — four perspectives on your week"
+    }
+  },
+  "council": {
+    "pills": {
+      "suggested": "Suggested",
+      "aligned": "Aligned"
+    },
+    "agents": {
+      "dynamis": {
+        "name": "Dynamis",
+        "role": "Lead Guide",
+        "status": "Lead today's interviews with one question: what would make the next step obvious to them?"
+      },
+      "health": {
+        "name": "Health Coach",
+        "role": "Health Coach",
+        "status": "Protect a 20-minute walk before the 14:00 block — your energy dips when sessions stack without recovery."
+      },
+      "navigator": {
+        "name": "AI Navigator",
+        "role": "AI Navigator",
+        "status": "Try a 10-minute voice memo → structured summary workflow before drafting the hypothesis page."
+      },
+      "purpose": {
+        "name": "Purpose Agent",
+        "role": "Purpose Agent",
+        "status": "Your mission and this week's steps are aligned — climate adaptation for people outside the climate bubble."
+      }
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "awakening": "The Awakening",
+    "discovery": "Discovery",
+    "guide": "Discovery",
+    "profile": "Intent Profile",
+    "you": "Intent Profile",
+    "possibilityMap": "Possibility Map",
+    "plan": "Transformation Plan",
+    "today": "Today"
+  },
+  "routes": {
+    "stubMessage": "Coming soon — demo scaffold"
+  }
+}

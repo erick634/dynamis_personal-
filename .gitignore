@@ -7,6 +7,10 @@ node_modules/
 dist/
 build/
 *.tsbuildinfo
+node_modules/.tmp/
+
+# Vite
+*.local
 
 # Python
 __pycache__/

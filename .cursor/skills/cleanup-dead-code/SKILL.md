@@ -1,8 +1,9 @@
 ---
 name: cleanup-dead-code
-description: "Finds and removes unused code, imports, exports, dependencies, and cruft. Use when the user asks to clean up dead code, remove unused imports, run knip/depcheck/ts-prune, delete legacy files, or says this is not used anymore. Palavras-chave PT: limpar código morto, remover imports não usados, código não utilizado, dependências não usadas, limpeza do projeto, knip, depcheck, ts-prune, apagar legado, isso não é mais usado, refatorar e remover."
+description: 'Finds and removes unused code, imports, exports, dependencies, and cruft. Use when the user asks to clean up dead code, remove unused imports, run knip/depcheck/ts-prune, delete legacy files, or says this is not used anymore. Palavras-chave PT: limpar código morto, remover imports não usados, código não utilizado, dependências não usadas, limpeza do projeto, knip, depcheck, ts-prune, apagar legado, isso não é mais usado, refatorar e remover.'
 disable-model-invocation: false
 ---
+
 # Cleanup Dead Code
 
 ## When to Use
