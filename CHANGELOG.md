@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- `.gitattributes` enforcing LF line endings cross-platform
+- feat(tooling): add husky + lint-staged pre-commit hooks
 - Daily Reflection stretch: card on Today → `/guide?mode=reflection`, three agent questions, journal/Energeia TODO hook
 - Today screen at `/today` (proactive nudge, stats, Council cards, `getTodayCouncil` mock)
 - App layout with 5-tab navigation (Today / Plan / Map / Guide / You) on all routes except Awakening

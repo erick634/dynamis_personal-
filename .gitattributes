@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+# Forçar LF nos arquivos de código e config
+*.{ts,tsx,js,jsx,json,md,mdc,css,html,yml,yaml} text eol=lf
+
+# Binários
+*.{png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot,zip,pdf} binary
