@@ -1,11 +1,14 @@
-# Dependencies
+# Dependencies (qualquer subpasta também)
 node_modules/
+**/node_modules/
 .pnp
 .pnp.js
 
-# Build
+# Build (qualquer subpasta também)
 dist/
 build/
+**/dist/
+**/build/
 *.tsbuildinfo
 node_modules/.tmp/
 
@@ -17,9 +20,14 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Environment and secrets (frontend AND backend)
 .env
 .env.*
 !.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 
 # IDE / OS
 .idea/
