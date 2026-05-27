@@ -5,8 +5,11 @@ import { BrandMark } from '@/components/ui/brand-mark';
 import { DynamisTree } from '@/features/transformation-plan/dynamis-tree';
 import { PlanFilter, type PlanFilterId } from '@/features/transformation-plan/plan-filter';
 import { PlanItem } from '@/features/transformation-plan/plan-item';
+import { DEMO_STREAK_DAYS } from '@/features/transformation-plan/transformation-plan-constants';
 import { MOCK_PLAN_GOALS } from '@/features/transformation-plan/transformation-plan-mock';
 import type { DynamisGoal } from '@/types/energeia';
+
+const DEMO_BRANCH_COUNT = 4;
 
 function filterGoals(goals: DynamisGoal[], filter: PlanFilterId): DynamisGoal[] {
   switch (filter) {
@@ -21,16 +24,31 @@ function filterGoals(goals: DynamisGoal[], filter: PlanFilterId): DynamisGoal[] 
   }
 }
 
+function buildInitialRealizedIds(goals: DynamisGoal[]): Set<string> {
+  return new Set(goals.filter((goal) => goal.realized).map((goal) => goal.id));
+}
+
 export function TransformationPlanScreen() {
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState<PlanFilterId>('all');
   const [goals, setGoals] = useState<DynamisGoal[]>(MOCK_PLAN_GOALS);
+  const [realizedIds, setRealizedIds] = useState<Set<string>>(() =>
+    buildInitialRealizedIds(MOCK_PLAN_GOALS),
+  );
 
   const filteredGoals = useMemo(() => filterGoals(goals, activeFilter), [goals, activeFilter]);
 
-  const realizedCount = goals.filter((goal) => goal.realized).length;
-
   const handleToggleRealized = (goalId: string, realized: boolean) => {
+    setRealizedIds((prev) => {
+      const next = new Set(prev);
+      if (realized) {
+        next.add(goalId);
+      } else {
+        next.delete(goalId);
+      }
+      return next;
+    });
+
     setGoals((prev) =>
       prev.map((goal) => {
         if (goal.id !== goalId) {
@@ -65,15 +83,12 @@ export function TransformationPlanScreen() {
 
         <div className="mt-10 flex flex-col gap-8 lg:flex-row lg:gap-10">
           <aside className="w-full shrink-0 lg:w-[360px]">
-            <div className="rounded-[20px] border border-line-soft bg-gradient-to-b from-blue-soft to-white p-6 shadow-card">
-              <div className="mb-4 flex justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-red/15 px-3 py-1.5 font-body text-sm font-semibold text-red-deep">
-                  <span aria-hidden>🔥</span>
-                  {t('transformationPlan.streak', { days: 12 })}
-                </span>
-              </div>
-              <DynamisTree realizedCount={realizedCount} />
-            </div>
+            <DynamisTree
+              branches={DEMO_BRANCH_COUNT}
+              leaves={DEMO_STREAK_DAYS}
+              fruits={realizedIds.size}
+              streakDays={DEMO_STREAK_DAYS}
+            />
           </aside>
 
           <section className="min-w-0 flex-1">

@@ -16,10 +16,150 @@
   pointer-events: none;
 }
 
-.possibility-map__energeia-glow {
+.possibility-map__energeia-column-glow {
   position: absolute;
-  inset: -12%;
+  inset: -8% -12%;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, rgb(217 74 56 / 35%) 0%, transparent 70%);
   pointer-events: none;
+  opacity: 0;
+  transform: scale(0.85);
+  animation: possibility-map-glow-grow 700ms ease-out 1200ms both;
+}
+
+@keyframes possibility-map-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes possibility-map-glow-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes possibility-map-arrow-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes possibility-map-arrow-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes possibility-map-energeia-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+.possibility-map__reveal-header {
+  animation: possibility-map-fade-up 600ms ease-out both;
+}
+
+.possibility-map__reveal-dynamis {
+  animation: possibility-map-fade-up 700ms ease-out 400ms both;
+}
+
+.possibility-map__reveal-energeia {
+  animation: possibility-map-fade-up 700ms ease-out 1200ms both;
+}
+
+.possibility-map__reveal-arrow-draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: possibility-map-arrow-draw 600ms ease-out 800ms forwards;
+}
+
+.possibility-map__reveal-arrow-flow {
+  opacity: 0;
+  stroke-dashoffset: 24;
+  animation:
+    possibility-map-arrow-flow-visible 0ms linear 1400ms forwards,
+    possibility-map-arrow-flow 3s linear 1400ms infinite;
+}
+
+@keyframes possibility-map-arrow-flow-visible {
+  to {
+    opacity: 1;
+  }
+}
+
+.possibility-map__reveal-card {
+  opacity: 0;
+  animation: possibility-map-fade-up 500ms ease-out both;
+}
+
+.possibility-map__energeia-pulse {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: possibility-map-energeia-pulse 3s ease-in-out infinite;
+}
+
+.possibility-map__arrow-column {
+  width: 80px;
+}
+
+.possibility-map__arrow-svg {
+  transform: rotate(90deg);
+}
+
+@media (min-width: 768px) {
+  .possibility-map__arrow-svg {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .possibility-map__reveal-header,
+  .possibility-map__reveal-dynamis,
+  .possibility-map__reveal-energeia,
+  .possibility-map__reveal-card,
+  .possibility-map__energeia-column-glow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .possibility-map__reveal-arrow-draw,
+  .possibility-map__reveal-arrow-flow {
+    animation: none !important;
+    opacity: 1 !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .possibility-map__energeia-pulse {
+    animation: none !important;
+  }
 }

@@ -1,3 +1,6 @@
 dist
 node_modules
 coverage
+
+# Cursor skills — formatted at source, excluded from lint-staged Prettier runs
+.cursor/skills/

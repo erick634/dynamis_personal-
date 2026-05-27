@@ -94,3 +94,70 @@ Adopt the palette in `20-dynamis-design-system`: blue `#1B5E9F` family, red achi
 
 - `src/styles/tokens.css` is canonical; new colors require updating the design rule first.
 - Fraunces (display) + Manrope (body) loaded from Google Fonts.
+
+---
+
+## ADR-005: Dynamis tree visual semantics
+
+Date: 2026-05-22  
+Status: Accepted
+
+### Context
+
+The Transformation Plan needs a single visual metaphor for progress that matches product vocabulary (rule 11): journeys started, daily actions, and realized goals (Energeia). The previous tree used circles for foliage and mixed red circles with green, which blurred meaning.
+
+### Decision
+
+Render the Dynamis tree as parametric SVG subcomponents with fixed position slots:
+
+- **Branches** — one per active `DynamisGoal` (journey started)
+- **Leaves** — green teardrop shapes for daily actions (demo: `streakDays` as proxy until action history exists)
+- **Fruits** — red radial-gradient circles (never gold) for `realized === true` (Energeia)
+
+Slots are ordered central → peripheral; counts slice predefined coordinate arrays. Enter animations fire when counts increase (React key + CSS). `prefers-reduced-motion` disables motion.
+
+### Alternatives considered
+
+- Circle foliage clusters — rejected; indistinguishable from fruits and not leaf-shaped
+- Gold fruit accents — rejected per ADR-004 (red = Energeia achievement)
+- Zustand for tree counts — rejected for demo; parent `goals` state in `TransformationPlanScreen` is sufficient
+
+### Consequences
+
+- Files under `src/features/transformation-plan/tree-*.tsx` and `tree-positions.ts`; orchestrator `dynamis-tree.tsx` stays under 200 lines
+- i18n keys under `transformationPlan.tree.*` for `aria-label` and screen-reader text
+- When backend exposes action history, replace `leaves = streakDays` proxy with a real count
+
+---
+
+## ADR-006: Possibility Map visual design
+
+Date: 2026-05-27  
+Status: Accepted
+
+### Context
+
+The Possibility Map is the hero moment of the June 1 demo — a threshold-crossing visualization of Dynamis (untapped potential) becoming Energeia (realized potential expanded by AI). The screen must be visually striking, accessible, and ready for backend integration without coupling to live data yet.
+
+### Decision
+
+Implement the Possibility Map as a feature module under `src/features/possibility-map/` with:
+
+- **Dual constellation SVGs** — sparse blue Dynamis constellation (left) vs dense red Energeia constellation (right) with radial glow and subtle pulse on accent nodes
+- **Curved expansion arrow** — gradient stroke (blue → red) with one-time draw animation followed by infinite dash flow; rotates vertical on mobile
+- **Sequential CSS reveal** — header → Dynamis → arrow → Energeia → staggered dimension cards (~1.6s total); all disabled under `prefers-reduced-motion`
+- **Climate Adaptation mock persona** — four dimension cards with leverage percentages (340, 220, 180, 260) via `climateAdaptationMockMap`; service layer returns mock with simulated latency until `GET /api/possibility-map/{userId}` is wired
+
+No Framer Motion — CSS keyframes only. All copy via i18n (`possibilityMap.*`). Semantic Tailwind tokens only (no default palette or gold accents).
+
+### Alternatives considered
+
+- Single combined visualization — rejected; dual-side layout matches vision doc v10 and mockup screen 4
+- Live API fetch in demo — rejected; mock-first with TODO hook preserves rule 12 scope while preparing rule 13 contract
+- Framer Motion for reveal — rejected; no dependency in project, CSS sufficient
+
+### Consequences
+
+- Files: `possibility-map.tsx`, `dynamis-constellation.tsx`, `energeia-constellation.tsx`, `dimension-card.tsx`, `possibility-map-mock.ts`, `possibility-map.css`
+- `getPossibilityMap()` in `possibility-map-api.ts` replaces direct fetch for demo; swap implementation when backend is ready
+- Dimension i18n keys use `healthLongevity` and `purposeMeaning` (not generic `health`/`purpose`)

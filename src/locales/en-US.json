@@ -16,38 +16,43 @@
     }
   },
   "possibilityMap": {
-    "eyebrow": "Possibility Map",
+    "eyebrow": "Phase 04 · Possibility Map",
     "title": "Your potential, expanded by AI.",
+    "subtitle": "Where AI doesn't replace you — it multiplies what you can become.",
     "dynamis": {
-      "label": "Dynamis",
-      "name": "Your potential",
-      "tagline": "Potential, waiting to be realized."
+      "label": "DYNAMIS",
+      "subLabel": "Potential, waiting",
+      "name": "dynamis",
+      "tagline": "Potential, waiting to be realized.",
+      "ariaLabel": "Dynamis constellation — sparse blue stars representing untapped potential"
     },
     "energeia": {
-      "label": "Energeia",
-      "name": "Expanded potential",
-      "tagline": "Potential, becoming actuality."
+      "label": "ENERGEIA",
+      "subLabel": "Potential, becoming",
+      "name": "energeia",
+      "tagline": "Potential, becoming actuality.",
+      "ariaLabel": "Energeia constellation — dense red stars representing potential becoming actuality"
     },
     "arrow": {
-      "label": "Expanded by AI"
+      "label": "expansion"
     },
-    "leverage": "+{{percent}}%",
+    "leveragePercent": "+{{percent}}%",
     "dimensions": {
       "aiDisruption": {
-        "name": "AI Disruption",
-        "description": "How AI reshapes your industry, skills, and daily work — and where you can lead that shift."
+        "name": "Navigating AI Disruption",
+        "description": "Climate work historically required teams. AI now lets one synthesist with conviction operate at the leverage of ten."
       },
       "careerReinvention": {
         "name": "Career Reinvention",
-        "description": "Roles, projects, and networks that compound when you pair your experience with AI leverage."
+        "description": "From climate adjacent to climate central. The capability gap that took a decade now closes in months."
       },
-      "health": {
-        "name": "Health",
-        "description": "Energy, recovery, and habits that stay realistic when your ambitions accelerate."
+      "healthLongevity": {
+        "name": "Health & Longevity",
+        "description": "Decade-long energy curve, not annual. Sleep, recovery, and cognition treated as compounding assets."
       },
-      "purpose": {
-        "name": "Purpose",
-        "description": "The through-line between what matters to you and what becomes possible with guided action."
+      "purposeMeaning": {
+        "name": "Purpose & Meaning",
+        "description": "Work that closes the activation gap — making climate obvious for people who don't see themselves as climate people."
       }
     }
   },
@@ -117,6 +122,10 @@
       "markNotDone": "Mark \"{{title}}\" as not yet realized"
     },
     "emptyFilter": "No steps match this filter.",
+    "tree": {
+      "streakPill": "{{count}} day streak",
+      "ariaLabel": "Your Dynamis tree — {{branches}} active journeys, {{leaves}} actions taken, {{fruits}} Energeia realized, {{streakDays}} day streak"
+    },
     "items": {
       "mapGaps": {
         "title": "Map 3 climate adaptation gaps in your city"

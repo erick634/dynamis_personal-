@@ -1,10 +1,12 @@
-import { API_BASE_URL } from '@/lib/config';
+import { climateAdaptationMockMap } from '@/features/possibility-map/possibility-map-mock';
 import type { PossibilityMap } from '@/types/possibility-map';
 
-export async function fetchPossibilityMap(userId: string): Promise<PossibilityMap> {
-  const response = await fetch(`${API_BASE_URL}/api/possibility-map/${userId}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch possibility map (${String(response.status)})`);
-  }
-  return response.json() as Promise<PossibilityMap>;
+export async function getPossibilityMap(userId: string): Promise<PossibilityMap> {
+  // TODO(backend): substituir por fetch GET /api/possibility-map/{userId}
+  // quando o endpoint estiver disponível (rule 13)
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  return { ...climateAdaptationMockMap, userId };
 }
+
+/** @deprecated Use getPossibilityMap */
+export const fetchPossibilityMap = getPossibilityMap;

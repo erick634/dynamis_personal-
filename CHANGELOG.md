@@ -6,9 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- feat(transformation-plan): polish Dynamis tree with depth layers, sway animation, falling leaves, sparkles, and Energeia fruit pulse — all CSS-only, respects prefers-reduced-motion
+- feat(transformation-plan): add subtle CSS animations to Dynamis tree — falling leaves background, gentle leaf sway, soft fruit pulse
+- feat(transformation-plan): redesigned Dynamis tree as illustrated SVG with semantic branches/leaves/fruits mapping to journeys/actions/Energeia
+- fix(transformation-plan): redesign Dynamis tree using a cleaner single-file SVG component adapted from a designer reference — branches/leaves/fruits parametrized by props, fruits use var(--color-red) for Energeia semantics
+
+### Fixed
+
+- fix(transformation-plan): restructure Dynamis tree visual hierarchy — trunk widens at base, branches rise from the crown, leaves form dense clusters at branch tips, fruits sit inside clusters
+
 ### Added
 
-- `.gitattributes` enforcing LF line endings cross-platform
+- feat(possibility-map): implement hero screen with dynamis/energeia constellations, dramatic reveal animation, and 4 dimension cards (Climate Adaptation mock)
 - feat(tooling): add husky + lint-staged pre-commit hooks
 - Daily Reflection stretch: card on Today → `/guide?mode=reflection`, three agent questions, journal/Energeia TODO hook
 - Today screen at `/today` (proactive nudge, stats, Council cards, `getTodayCouncil` mock)
