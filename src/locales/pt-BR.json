@@ -16,38 +16,43 @@
     }
   },
   "possibilityMap": {
-    "eyebrow": "Mapa de Possibilidades",
-    "title": "Seu potencial, ampliado pela IA.",
+    "eyebrow": "Fase 04 · Mapa de Possibilidades",
+    "title": "Seu potencial, expandido pela IA.",
+    "subtitle": "Onde a IA não te substitui — ela multiplica no que você pode se tornar.",
     "dynamis": {
-      "label": "Dynamis",
-      "name": "Seu potencial",
-      "tagline": "Potencial à espera de ser realizado."
+      "label": "DYNAMIS",
+      "subLabel": "Potencial, esperando",
+      "name": "dynamis",
+      "tagline": "Potencial, esperando para ser realizado.",
+      "ariaLabel": "Constelação Dynamis — estrelas azuis esparsas representando potencial não realizado"
     },
     "energeia": {
-      "label": "Energeia",
-      "name": "Potencial ampliado",
-      "tagline": "Potencial em vias de se tornar realidade."
+      "label": "ENERGEIA",
+      "subLabel": "Potencial, tornando-se",
+      "name": "energeia",
+      "tagline": "Potencial, tornando-se atualidade.",
+      "ariaLabel": "Constelação Energeia — estrelas vermelhas densas representando potencial tornando-se atualidade"
     },
     "arrow": {
-      "label": "Ampliado pela IA"
+      "label": "expansão"
     },
-    "leverage": "+{{percent}}%",
+    "leveragePercent": "+{{percent}}%",
     "dimensions": {
       "aiDisruption": {
-        "name": "Disrupção por IA",
-        "description": "Como a IA transforma seu setor, suas habilidades e seu trabalho — e onde você pode liderar essa mudança."
+        "name": "Navegando a Disrupção da IA",
+        "description": "O trabalho climático exigia equipes. A IA agora permite que um sintetizador com convicção opere com a alavancagem de dez."
       },
       "careerReinvention": {
-        "name": "Reinvenção de carreira",
-        "description": "Papéis, projetos e redes que se multiplicam quando você une experiência e alavancagem de IA."
+        "name": "Reinvenção de Carreira",
+        "description": "De adjacente ao clima para central no clima. A lacuna de capacidade que levou uma década agora se fecha em meses."
       },
-      "health": {
-        "name": "Saúde",
-        "description": "Energia, recuperação e hábitos que permanecem realistas quando suas ambições aceleram."
+      "healthLongevity": {
+        "name": "Saúde & Longevidade",
+        "description": "Curva de energia de uma década, não anual. Sono, recuperação e cognição tratados como ativos compostos."
       },
-      "purpose": {
-        "name": "Propósito",
-        "description": "O fio condutor entre o que importa para você e o que se torna possível com ação guiada."
+      "purposeMeaning": {
+        "name": "Propósito & Significado",
+        "description": "Trabalho que fecha a lacuna de ativação — tornando o clima óbvio para quem não se vê como pessoa do clima."
       }
     }
   },
@@ -117,6 +122,10 @@
       "markNotDone": "Marcar \"{{title}}\" como ainda não realizado"
     },
     "emptyFilter": "Nenhum passo corresponde a este filtro.",
+    "tree": {
+      "streakPill": "{{count}} dias de sequência",
+      "ariaLabel": "Sua árvore Dynamis — {{branches}} jornadas ativas, {{leaves}} ações cumpridas, {{fruits}} Energeia realizada, {{streakDays}} dias de sequência"
+    },
     "items": {
       "mapGaps": {
         "title": "Mapear 3 lacunas de adaptação climática na sua cidade"
