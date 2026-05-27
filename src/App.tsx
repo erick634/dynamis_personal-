@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/ui/app-layout';
 import { AwakeningScreen } from '@/features/awakening/awakening-screen';
 import { DiscoveryChat } from '@/features/discovery/discovery-chat';
+import { LiveScreen } from '@/features/live/live-screen';
 import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
 import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { TodayScreen } from '@/features/today/today-screen';
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/possibility-map" element={<Navigate to="/map" replace />} />
           <Route path="/guide" element={<DiscoveryChat />} />
           <Route path="/discovery" element={<Navigate to="/guide" replace />} />
+          <Route path="/live" element={<LiveScreen />} />
           <Route path="/you" element={<IntentProfileScreen />} />
           <Route path="/profile" element={<Navigate to="/you" replace />} />
         </Route>

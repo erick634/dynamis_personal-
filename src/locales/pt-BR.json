@@ -247,11 +247,79 @@
       }
     }
   },
+  "live": {
+    "title": "Live",
+    "subtitle": "Uma sessão em tempo real com seu Guia Principal — voz e presença, não só texto.",
+    "stage": {
+      "ariaLabel": "Sessão ao vivo com o Guia Principal",
+      "liveBadge": "Ao vivo",
+      "connecting": "Conectando ao seu guia…",
+      "listening": "O Guia Principal está ouvindo",
+      "thinking": "O Guia Principal está pensando",
+      "agentSpeaking": "O Guia Principal está com você",
+      "agentWaiting": "Seu guia está pronto",
+      "sessionEnded": "Sessão encerrada",
+      "errorHeadline": "Algo deu errado",
+      "agentHintLive": "Fale naturalmente. Seu guia escuta e responde em tempo real.",
+      "agentHintIdle": "Entre quando estiver pronto para uma conversa ao vivo.",
+      "agentHintEnded": "Você pode iniciar outra sessão ao vivo quando quiser.",
+      "agentHintConnecting": "Abrindo o canal de voz com o seu guia.",
+      "agentHintReady": "Pode falar quando quiser.",
+      "agentHintListening": "Continue, estou ouvindo.",
+      "agentHintThinking": "Processando sua mensagem.",
+      "agentHintError": "Encerre a sessão e tente novamente."
+    },
+    "controls": {
+      "join": "Entrar ao vivo",
+      "end": "Encerrar sessão",
+      "joinAgain": "Entrar novamente",
+      "micOn": "Ligar microfone",
+      "micOff": "Desligar microfone",
+      "mute": "Silenciar microfone",
+      "unmute": "Reativar microfone",
+      "cameraOn": "Ligar câmera",
+      "cameraOff": "Desligar câmera"
+    },
+    "transcript": {
+      "title": "Conversa",
+      "placeholder": "Suas palavras e as do guia aparecerão aqui durante a sessão.",
+      "listening": "Ouvindo…",
+      "you": "Você",
+      "guide": "Guia"
+    },
+    "errors": {
+      "noToken": "Configure VITE_DYNAMIS_JWT no .env para entrar ao vivo.",
+      "micDenied": "Permissão de microfone negada. Habilite no navegador.",
+      "connection": "Falha de conexão com o servidor de voz.",
+      "backend": "O servidor encerrou a sessão. Tente novamente."
+    },
+    "sidePanel": {
+      "title": "Sessão",
+      "hint": "Conexão e transcrição ao vivo",
+      "agentLabel": "Guia",
+      "agentName": "Guia Principal (Dynamis)",
+      "connectionLabel": "Conexão",
+      "sessionLabel": "ID da sessão",
+      "status": {
+        "idle": "Desconectado",
+        "connecting": "Conectando…",
+        "ready": "Pronto",
+        "listening": "Ouvindo",
+        "thinking": "Pensando…",
+        "speaking": "Falando",
+        "error": "Erro",
+        "ended": "Encerrada"
+      },
+      "transcriptTitle": "Transcrição ao vivo",
+      "transcriptSample": "Ao entrar, as palavras do seu guia aparecerão aqui enquanto vocês conversam."
+    }
+  },
   "nav": {
     "home": "Início",
     "awakening": "O Despertar",
     "discovery": "Descoberta",
     "guide": "Descoberta",
+    "live": "Live",
     "profile": "Perfil de Intenção",
     "you": "Perfil de Intenção",
     "possibilityMap": "Mapa de Possibilidades",

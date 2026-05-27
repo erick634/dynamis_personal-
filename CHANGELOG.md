@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- Local dev mode for Live: when the backend runs with `DEV_AUTH_BYPASS=true`, the web app connects to `/voice/realtime` without WorkOS sign-in. Toggled via `VITE_ALLOW_EMPTY_TOKEN=true` in `.env`. Defaults now point at `http://localhost:8000`.
+- Lead Guide voice (backend TTS): English male “Carson” via Cartesia; live agent replies instructed to speak in English with warm mentor tone.
+- Live screen now connects to backend `/voice/realtime` over WebSocket: PCM 16k mic capture via AudioWorklet, MP3 streaming TTS playback (one sentence per chunk), half-duplex pause/resume and barge-in interrupt — mirrors the `app-live-kit` Flutter protocol. JWT supplied via `VITE_DYNAMIS_JWT` (no in-app auth yet).
+- Live transcript panel (user/assistant bubbles + live partial) and animated guide orb reflecting `ready/listening/thinking/speaking/error` states
+- Live screen at `/live` with mock real-time session UI (video stage, controls, side panel) and bottom nav item beside Discovery
 - `.gitattributes` enforcing LF line endings cross-platform
 - feat(tooling): add husky + lint-staged pre-commit hooks
 - Daily Reflection stretch: card on Today → `/guide?mode=reflection`, three agent questions, journal/Energeia TODO hook

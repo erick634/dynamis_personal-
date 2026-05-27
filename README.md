@@ -61,3 +61,37 @@ Import alias: `@/` → `src/`.
 ## Remote
 
 [github.com/erick634/dynamis_personal-](https://github.com/erick634/dynamis_personal-.git)
+
+---
+
+rodar teste backend e live
+
+---
+
+Como rodar
+Backend local:
+
+cd backendend
+npm install
+npm run dev
+Sobe em http://localhost:8000. Vai imprimir [auth] DEV_AUTH_BYPASS=true — every request will be authenticated as the dev user.
+
+Web:
+
+cd dynamis_personal-
+npm run dev
+Acesse /live no browser, clique em Entrar ao vivo, aceite o microfone. Sem JWT, sem WorkOS — todo request entra como o usuário aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.
+
+Trocar para produção depois
+No dynamis_personal-/.env:
+
+VITE_API_BASE_URL=https://dynamis-backend-33565254033.us-central1.run.app
+VITE_WS_BASE_URL=wss://dynamis-backend-33565254033.us-central1.run.app
+VITE_ALLOW_EMPTY_TOKEN=false
+VITE_DYNAMIS_JWT=<JWT>
+E reinicie o npm run dev (Vite só lê env na subida).
+
+Segurança
+NODE_ENV=production no Cloud Run desliga o bypass mesmo com a env var ativa — está no código.
+O bloco .env do backend está em .gitignore, então a flag não vaza para o repo.
+Em dev, todos os requests viram o mesmo usuário fictício — não use isso para multi-tenant.

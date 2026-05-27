@@ -1,4 +1,4 @@
-import { CalendarDays, ListTodo, Map, MessageCircle, UserRound } from 'lucide-react';
+import { CalendarDays, ListTodo, Map, MessageCircle, Radio, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -14,6 +14,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/plan', labelKey: 'nav.plan', icon: ListTodo },
   { to: '/map', labelKey: 'nav.possibilityMap', icon: Map },
   { to: '/guide', labelKey: 'nav.guide', icon: MessageCircle },
+  { to: '/live', labelKey: 'nav.live', icon: Radio },
   { to: '/you', labelKey: 'nav.you', icon: UserRound },
 ];
 

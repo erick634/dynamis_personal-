@@ -247,11 +247,79 @@
       }
     }
   },
+  "live": {
+    "title": "Live",
+    "subtitle": "A real-time session with your Lead Guide — voice and presence, not just text.",
+    "stage": {
+      "ariaLabel": "Live session with Lead Guide",
+      "liveBadge": "Live",
+      "connecting": "Connecting to your guide…",
+      "listening": "Lead Guide is listening",
+      "thinking": "Lead Guide is thinking",
+      "agentSpeaking": "Lead Guide is with you",
+      "agentWaiting": "Your guide is ready",
+      "sessionEnded": "Session ended",
+      "errorHeadline": "Something went wrong",
+      "agentHintLive": "Speak naturally. Your guide listens and responds in real time.",
+      "agentHintIdle": "Join when you are ready for a live conversation.",
+      "agentHintEnded": "You can start another live session anytime.",
+      "agentHintConnecting": "Opening the voice channel with your guide.",
+      "agentHintReady": "Go ahead and speak whenever you're ready.",
+      "agentHintListening": "Keep going, I'm listening.",
+      "agentHintThinking": "Processing your message.",
+      "agentHintError": "End the session and try again."
+    },
+    "controls": {
+      "join": "Join live",
+      "end": "End session",
+      "joinAgain": "Join again",
+      "micOn": "Turn microphone on",
+      "micOff": "Turn microphone off",
+      "mute": "Mute microphone",
+      "unmute": "Unmute microphone",
+      "cameraOn": "Turn camera on",
+      "cameraOff": "Turn camera off"
+    },
+    "transcript": {
+      "title": "Conversation",
+      "placeholder": "Your words and your guide's will appear here during the session.",
+      "listening": "Listening…",
+      "you": "You",
+      "guide": "Guide"
+    },
+    "errors": {
+      "noToken": "Set VITE_DYNAMIS_JWT in your .env to start a live session.",
+      "micDenied": "Microphone permission denied. Enable it in the browser.",
+      "connection": "Connection to the voice server failed.",
+      "backend": "The server ended the session. Please try again."
+    },
+    "sidePanel": {
+      "title": "Session",
+      "hint": "Connection and live transcript",
+      "agentLabel": "Guide",
+      "agentName": "Lead Guide (Dynamis)",
+      "connectionLabel": "Connection",
+      "sessionLabel": "Session ID",
+      "status": {
+        "idle": "Not connected",
+        "connecting": "Connecting…",
+        "ready": "Ready",
+        "listening": "Listening",
+        "thinking": "Thinking…",
+        "speaking": "Speaking",
+        "error": "Error",
+        "ended": "Ended"
+      },
+      "transcriptTitle": "Live transcript",
+      "transcriptSample": "When you join, your guide's words will appear here as you speak together."
+    }
+  },
   "nav": {
     "home": "Home",
     "awakening": "The Awakening",
     "discovery": "Discovery",
     "guide": "Discovery",
+    "live": "Live",
     "profile": "Intent Profile",
     "you": "Intent Profile",
     "possibilityMap": "Possibility Map",
