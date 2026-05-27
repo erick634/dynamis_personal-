@@ -10,6 +10,7 @@
  */
 
 import {
+  DEMO_USER_ID,
   ENDPOINTING_MS,
   VOICE_PATH,
   VOICE_SAMPLE_RATE,
@@ -181,6 +182,7 @@ export class VoiceService {
   private buildWsUrl(): string {
     const base = WS_BASE_URL.replace(/\/+$/, '');
     const params = new URLSearchParams({
+      user_id: DEMO_USER_ID,
       session_id: this.sessionId,
       sample_rate: String(VOICE_SAMPLE_RATE),
       endpointing_ms: String(ENDPOINTING_MS),

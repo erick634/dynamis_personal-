@@ -16,11 +16,33 @@ Transformation guide powered by AI — web POC for the June 1, 2026 demo.
 
 ```bash
 npm install
-cp .env.example .env   # optional — defaults to http://localhost:8000
 npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173). The home route shows **Dynamis — bootstrap OK**.
+
+## Local Development
+
+Voice/Live needs the **backend voice service** running in parallel (Robson's stack, port **8000**) with `DEV_AUTH_BYPASS=true`.
+
+1. Start the backend (separate repo/folder) so it listens on `http://localhost:8000`.
+2. Copy env template and enable dev bypass on the frontend:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   In `.env`, set `VITE_ALLOW_EMPTY_TOKEN=true` and leave `VITE_DYNAMIS_JWT` empty. Defaults already point at `http://localhost:8000` / `ws://localhost:8000` (the app appends `/voice/realtime` for the WebSocket).
+
+3. Start the frontend (restart Vite after changing `.env`):
+
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:5173/live](http://localhost:5173/live), click **Entrar ao vivo**, and allow the microphone.
+
+**Production:** set `VITE_API_BASE_URL` / `VITE_WS_BASE_URL` to the Cloud Run host, `VITE_ALLOW_EMPTY_TOKEN=false`, and paste a real `VITE_DYNAMIS_JWT`.
 
 ## Scripts
 
@@ -62,36 +84,3 @@ Import alias: `@/` → `src/`.
 
 [github.com/erick634/dynamis_personal-](https://github.com/erick634/dynamis_personal-.git)
 
----
-
-rodar teste backend e live
-
----
-
-Como rodar
-Backend local:
-
-cd backendend
-npm install
-npm run dev
-Sobe em http://localhost:8000. Vai imprimir [auth] DEV_AUTH_BYPASS=true — every request will be authenticated as the dev user.
-
-Web:
-
-cd dynamis_personal-
-npm run dev
-Acesse /live no browser, clique em Entrar ao vivo, aceite o microfone. Sem JWT, sem WorkOS — todo request entra como o usuário aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.
-
-Trocar para produção depois
-No dynamis_personal-/.env:
-
-VITE_API_BASE_URL=https://dynamis-backend-33565254033.us-central1.run.app
-VITE_WS_BASE_URL=wss://dynamis-backend-33565254033.us-central1.run.app
-VITE_ALLOW_EMPTY_TOKEN=false
-VITE_DYNAMIS_JWT=<JWT>
-E reinicie o npm run dev (Vite só lê env na subida).
-
-Segurança
-NODE_ENV=production no Cloud Run desliga o bypass mesmo com a env var ativa — está no código.
-O bloco .env do backend está em .gitignore, então a flag não vaza para o repo.
-Em dev, todos os requests viram o mesmo usuário fictício — não use isso para multi-tenant.
