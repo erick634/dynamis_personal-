@@ -139,6 +139,15 @@ function safeCompareKeys(clientKey: string, serverKey: string): boolean {
 function isRequestAuthorized(
   req: import('express').Request | import('node:http').IncomingMessage,
 ): boolean {
+  // Dev bypass: when DEV_AUTH_BYPASS=true is set, skip auth entirely.
+  // This is HARD-DISABLED when NODE_ENV=production for safety.
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    (process.env.DEV_AUTH_BYPASS ?? '').toLowerCase() === 'true'
+  ) {
+    return true;
+  }
+
   const clientApiKey = getHeaderValue(req.headers['x-api-key']);
   const serverApiKey = process.env.APP_SECRET_KEY ?? '';
   return Boolean(serverApiKey && clientApiKey && safeCompareKeys(clientApiKey, serverApiKey));
@@ -1250,7 +1259,7 @@ async function runAgentVoiceStream(
     reason,
   });
 
-  if (finalReply.trim() && reason !== 'canceled') {
+  if (finalReply.trim()) {
     persistTurn(userId, sessionId, userMessage, finalReply).catch((e) =>
       console.error('[persist] failed', e),
     );

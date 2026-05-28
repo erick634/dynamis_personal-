@@ -1,9 +1,8 @@
-import { DEMO_USER_ID } from '@/lib/config';
 import type { PossibilityMap } from '@/types/possibility-map';
 
 /** Climate Adaptation persona — canonical demo dataset (rule 12). */
 export const climateAdaptationMockMap: PossibilityMap = {
-  userId: DEMO_USER_ID,
+  userId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   updatedAt: new Date().toISOString(),
   dimensions: [
     {

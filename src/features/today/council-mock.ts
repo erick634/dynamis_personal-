@@ -1,9 +1,8 @@
-import { DEMO_USER_ID } from '@/lib/config';
 import type { TodayCouncil } from '@/types/council';
 
 /** Canonical demo council session (rule 12). */
 export const MOCK_TODAY_COUNCIL: TodayCouncil = {
-  userId: DEMO_USER_ID,
+  userId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   updatedAt: new Date().toISOString(),
   agents: [
     { id: 'dynamis', status: 'suggested' },

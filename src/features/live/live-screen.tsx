@@ -1,19 +1,36 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { LiveControls } from '@/features/live/live-controls';
 import { LiveSidePanel } from '@/features/live/live-side-panel';
 import { LiveTranscript } from '@/features/live/live-transcript';
 import { LiveVideoStage } from '@/features/live/live-video-stage';
 import { useLiveSession } from '@/features/live/use-live-session';
+import { useCurrentUser } from '@/stores/current-user';
 
 export function LiveScreen() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const user = useCurrentUser((state) => state.user);
   const session = useLiveSession();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [user, navigate]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-dvh bg-bg font-body text-ink">
       <header className="border-b border-line-soft bg-white px-6 py-5">
-        <h1 className="font-display text-2xl font-semibold text-ink md:text-3xl">{t('live.title')}</h1>
+        <h1 className="font-display text-2xl font-semibold text-ink md:text-3xl">
+          {t('live.title')}
+        </h1>
         <p className="mt-1 max-w-2xl font-body text-sm text-ink-2">{t('live.subtitle')}</p>
       </header>
 

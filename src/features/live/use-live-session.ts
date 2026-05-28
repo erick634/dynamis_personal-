@@ -4,6 +4,7 @@ import { ALLOW_EMPTY_TOKEN, DYNAMIS_JWT } from '@/lib/config';
 import { StreamingTtsPlayer, type TtsPlaybackState } from '@/features/live/streaming-tts-player';
 import { VoiceService } from '@/features/live/voice-service';
 import type { VoiceServerMessage } from '@/features/live/voice-protocol';
+import { useCurrentUser } from '@/stores/current-user';
 
 export type LiveSessionStatus =
   | 'idle'
@@ -48,6 +49,7 @@ function makeId(): string {
 }
 
 export function useLiveSession() {
+  const user = useCurrentUser((state) => state.user);
   const [state, setState] = useState<LiveSessionState>(INITIAL_STATE);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -74,7 +76,11 @@ export function useLiveSession() {
     if (streamingActiveRef.current) return;
     serviceRef.current?.resumeRecorder();
     setState((prev) => {
-      if (prev.status !== 'speaking' && prev.status !== 'thinking' && prev.status !== 'connecting') {
+      if (
+        prev.status !== 'speaking' &&
+        prev.status !== 'thinking' &&
+        prev.status !== 'connecting'
+      ) {
         return prev;
       }
       return { ...prev, status: 'ready' };
@@ -164,10 +170,7 @@ export function useLiveSession() {
             ...prev,
             sessionId: message.sessionId ?? prev.sessionId,
             messages: text
-              ? [
-                  ...prev.messages,
-                  { id: makeId(), role: 'assistant', text, createdAt: Date.now() },
-                ]
+              ? [...prev.messages, { id: makeId(), role: 'assistant', text, createdAt: Date.now() }]
               : prev.messages,
           }));
           break;
@@ -186,7 +189,8 @@ export function useLiveSession() {
           serviceRef.current?.resumeRecorder();
           setState((prev) => ({
             ...prev,
-            status: prev.status === 'speaking' || prev.status === 'thinking' ? 'listening' : prev.status,
+            status:
+              prev.status === 'speaking' || prev.status === 'thinking' ? 'listening' : prev.status,
           }));
           break;
 
@@ -228,6 +232,15 @@ export function useLiveSession() {
   }, []);
 
   const joinLive = useCallback(async () => {
+    if (!user) {
+      setState((prev) => ({
+        ...prev,
+        status: 'error',
+        inlineError: 'noUser',
+      }));
+      return;
+    }
+
     if (!DYNAMIS_JWT.trim() && !ALLOW_EMPTY_TOKEN) {
       setState((prev) => ({
         ...prev,
@@ -250,7 +263,9 @@ export function useLiveSession() {
       onMessage: handleMessage,
       onClose: () => {
         setState((prev) =>
-          prev.status === 'idle' || prev.status === 'ended' ? prev : { ...prev, status: 'connecting' },
+          prev.status === 'idle' || prev.status === 'ended'
+            ? prev
+            : { ...prev, status: 'connecting' },
         );
       },
       onError: (error) => {
@@ -265,7 +280,7 @@ export function useLiveSession() {
     serviceRef.current = service;
 
     try {
-      await service.start({ sessionId, token: DYNAMIS_JWT });
+      await service.start({ sessionId, token: DYNAMIS_JWT, userId: user.userId });
     } catch (err) {
       await teardown();
       const message = err instanceof Error ? err.message : String(err);
@@ -276,7 +291,7 @@ export function useLiveSession() {
         inlineError: code,
       });
     }
-  }, [handleMessage, handleTtsPlayerState, teardown]);
+  }, [user, handleMessage, handleTtsPlayerState, teardown]);
 
   const endLive = useCallback(async () => {
     await teardown();

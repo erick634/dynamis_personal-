@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from '@/components/ui/app-layout';
 import { AwakeningScreen } from '@/features/awakening/awakening-screen';
+import { CreateProfileScreen } from '@/features/onboarding/create-profile-screen';
+import { WelcomeScreen } from '@/features/onboarding/welcome-screen';
 import { DiscoveryChat } from '@/features/discovery/discovery-chat';
 import { LiveScreen } from '@/features/live/live-screen';
 import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
@@ -15,6 +17,8 @@ export function App() {
       <Routes>
         <Route path="/" element={<AwakeningScreen />} />
         <Route path="/awakening" element={<Navigate to="/" replace />} />
+        <Route path="/onboarding" element={<CreateProfileScreen />} />
+        <Route path="/welcome" element={<WelcomeScreen />} />
         <Route element={<AppLayout />}>
           <Route path="/today" element={<TodayScreen />} />
           <Route path="/plan" element={<TransformationPlanScreen />} />

@@ -103,7 +103,15 @@ export function LiveControls({
 }
 
 function translateErrorCode(t: (key: string) => string, value: string): string {
-  if (value === 'noToken' || value === 'micDenied' || value === 'connection' || value === 'backend') {
+  if (value === 'noUser') {
+    return t('live.inlineError.noUser');
+  }
+  if (
+    value === 'noToken' ||
+    value === 'micDenied' ||
+    value === 'connection' ||
+    value === 'backend'
+  ) {
     return t(`live.errors.${value}`);
   }
   return value;

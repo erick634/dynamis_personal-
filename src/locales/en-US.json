@@ -15,6 +15,29 @@
       "primary": "Begin your journey"
     }
   },
+  "onboarding": {
+    "title": "Ready to begin?",
+    "subtitle": "Tell us a little about yourself. We only use this to personalize the conversation.",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your first name",
+    "ageLabel": "Age",
+    "agePlaceholder": "Your age",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "emailHint": "optional",
+    "submitButton": "Begin my journey",
+    "errors": {
+      "nameRequired": "Please enter your name.",
+      "ageRequired": "Please enter your age.",
+      "ageMin": "You must be at least {{min}} years old."
+    }
+  },
+  "welcome": {
+    "greeting": "Good to see you here, {{name}}.",
+    "body": "Your Lead Guide is ready for a real conversation — by voice, in real time.\n\nThere are no scripted questions. Speak naturally; your guide listens and responds as you go.",
+    "startButton": "Talk to my Lead Guide",
+    "skipButton": "Maybe later"
+  },
   "possibilityMap": {
     "eyebrow": "Phase 04 · Possibility Map",
     "title": "Your potential, expanded by AI.",
@@ -174,6 +197,36 @@
       }
     }
   },
+  "you": {
+    "loading": "Loading your profile...",
+    "fallbackTitle": "Your profile",
+    "processing": {
+      "title": "Your Intent Profile is being prepared",
+      "body": "After your conversation with the Lead Guide, we take a few moments to distill what matters. Check back in a minute.",
+      "refreshButton": "Refresh",
+      "startConversation": "Start a conversation"
+    },
+    "error": {
+      "title": "I couldn't load your profile right now.",
+      "body": "Please try again in a moment.",
+      "retryButton": "Try again"
+    },
+    "sections": {
+      "whoYouAre": "Who you are",
+      "aspirations": "Aspirations",
+      "strengths": "Strengths",
+      "growthAreas": "Growth areas",
+      "values": "Values",
+      "activeFocus": "Current focus",
+      "synthesis": "Synthesis",
+      "guideNotes": "Guide notes"
+    },
+    "meta": {
+      "updatedAt": "Updated {{date}}",
+      "messagesAnalyzed": "{{count}} messages analyzed"
+    },
+    "refreshButton": "Refresh profile"
+  },
   "dailyReflection": {
     "card": {
       "eyebrow": "Daily Reflection",
@@ -295,6 +348,9 @@
       "listening": "Listening…",
       "you": "You",
       "guide": "Guide"
+    },
+    "inlineError": {
+      "noUser": "Please create your profile first to start a live session."
     },
     "errors": {
       "noToken": "Set VITE_DYNAMIS_JWT in your .env to start a live session.",

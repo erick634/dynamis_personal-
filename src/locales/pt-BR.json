@@ -15,6 +15,29 @@
       "primary": "Comece sua jornada"
     }
   },
+  "onboarding": {
+    "title": "Vamos começar?",
+    "subtitle": "Conta um pouco sobre você. A gente usa só pra personalizar a conversa.",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Seu primeiro nome",
+    "ageLabel": "Idade",
+    "agePlaceholder": "Sua idade",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "voce@exemplo.com",
+    "emailHint": "opcional",
+    "submitButton": "Começar minha jornada",
+    "errors": {
+      "nameRequired": "Informe seu nome.",
+      "ageRequired": "Informe sua idade.",
+      "ageMin": "Você precisa ter pelo menos {{min}} anos."
+    }
+  },
+  "welcome": {
+    "greeting": "Que bom te ver aqui, {{name}}.",
+    "body": "Seu Lead Guide está pronto para uma conversa de verdade — por voz, em tempo real.\n\nNão há perguntas scriptadas. Fale naturalmente; seu guia escuta e responde conforme você vai.",
+    "startButton": "Falar com meu Lead Guide",
+    "skipButton": "Talvez depois"
+  },
   "possibilityMap": {
     "eyebrow": "Fase 04 · Mapa de Possibilidades",
     "title": "Seu potencial, expandido pela IA.",
@@ -174,6 +197,36 @@
       }
     }
   },
+  "you": {
+    "loading": "Carregando seu perfil...",
+    "fallbackTitle": "Seu perfil",
+    "processing": {
+      "title": "Seu Intent Profile está sendo preparado",
+      "body": "Depois da sua conversa com o Lead Guide, levamos alguns instantes para destilar o que importa. Volte em um minuto.",
+      "refreshButton": "Atualizar",
+      "startConversation": "Comece uma conversa"
+    },
+    "error": {
+      "title": "Não consegui carregar seu perfil agora.",
+      "body": "Tente novamente em instantes.",
+      "retryButton": "Tentar de novo"
+    },
+    "sections": {
+      "whoYouAre": "Quem você é",
+      "aspirations": "Aspirações",
+      "strengths": "Forças",
+      "growthAreas": "Áreas de crescimento",
+      "values": "Valores",
+      "activeFocus": "Foco atual",
+      "synthesis": "Síntese",
+      "guideNotes": "Notas do Guia"
+    },
+    "meta": {
+      "updatedAt": "Atualizado em {{date}}",
+      "messagesAnalyzed": "{{count}} mensagens analisadas"
+    },
+    "refreshButton": "Atualizar perfil"
+  },
   "dailyReflection": {
     "card": {
       "eyebrow": "Reflexão Diária",
@@ -295,6 +348,9 @@
       "listening": "Ouvindo…",
       "you": "Você",
       "guide": "Guia"
+    },
+    "inlineError": {
+      "noUser": "Crie seu perfil primeiro pra iniciar uma sessão live."
     },
     "errors": {
       "noToken": "Configure VITE_DYNAMIS_JWT no .env para entrar ao vivo.",

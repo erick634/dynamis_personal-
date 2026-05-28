@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- feat(onboarding): multi-user profile flow with `/onboarding` and `/welcome` routes, persisted `CurrentUser` fields (age, email), and Awakening CTA routing
+- feat(live): voice WebSocket uses `userId` from `useCurrentUser` instead of hardcoded demo UUID; `/live` guarded when no profile
+
 ### Changed
 
+- feat(you): `/you` now loads the real Intent Profile from Supabase `user_profiles` with loading, processing, error, and manual refresh states
 - feat(transformation-plan): polish Dynamis tree with depth layers, sway animation, falling leaves, sparkles, and Energeia fruit pulse — all CSS-only, respects prefers-reduced-motion
 - feat(transformation-plan): add subtle CSS animations to Dynamis tree — falling leaves background, gentle leaf sway, soft fruit pulse
 - feat(transformation-plan): redesigned Dynamis tree as illustrated SVG with semantic branches/leaves/fruits mapping to journeys/actions/Energeia

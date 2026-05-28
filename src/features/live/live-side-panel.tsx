@@ -85,7 +85,10 @@ export function LiveSidePanel({
       </div>
 
       {errorLabel ? (
-        <p role="alert" className="rounded-[12px] bg-red/10 px-4 py-3 font-body text-xs text-red-deep">
+        <p
+          role="alert"
+          className="rounded-[12px] bg-red/10 px-4 py-3 font-body text-xs text-red-deep"
+        >
           {errorLabel}
         </p>
       ) : null}
@@ -94,7 +97,15 @@ export function LiveSidePanel({
 }
 
 function translateErrorCode(t: (key: string) => string, value: string): string {
-  if (value === 'noToken' || value === 'micDenied' || value === 'connection' || value === 'backend') {
+  if (value === 'noUser') {
+    return t('live.inlineError.noUser');
+  }
+  if (
+    value === 'noToken' ||
+    value === 'micDenied' ||
+    value === 'connection' ||
+    value === 'backend'
+  ) {
     return t(`live.errors.${value}`);
   }
   return value;

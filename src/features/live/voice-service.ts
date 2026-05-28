@@ -9,13 +9,7 @@
  * drains, it calls `resumeRecorder()`.
  */
 
-import {
-  DEMO_USER_ID,
-  ENDPOINTING_MS,
-  VOICE_PATH,
-  VOICE_SAMPLE_RATE,
-  WS_BASE_URL,
-} from '@/lib/config';
+import { ENDPOINTING_MS, VOICE_PATH, VOICE_SAMPLE_RATE, WS_BASE_URL } from '@/lib/config';
 import {
   parseVoiceServerMessage,
   type VoiceClientMessage,
@@ -35,6 +29,7 @@ export type VoiceServiceEvents = {
 export type VoiceServiceStartOptions = {
   sessionId: string;
   token: string;
+  userId: string;
 };
 
 export class VoiceService {
@@ -55,16 +50,18 @@ export class VoiceService {
 
   private sessionId = '';
   private token = '';
+  private userId = '';
 
   constructor(events: VoiceServiceEvents) {
     this.events = events;
   }
 
-  async start({ sessionId, token }: VoiceServiceStartOptions): Promise<void> {
+  async start({ sessionId, token, userId }: VoiceServiceStartOptions): Promise<void> {
     // Token may be empty when the backend is running with DEV_AUTH_BYPASS=true.
     // The WebSocket URL only adds `?token=` when one is provided.
     this.sessionId = sessionId;
     this.token = token;
+    this.userId = userId;
     this.stopped = false;
     this.chunksSent = 0;
 
@@ -172,7 +169,10 @@ export class VoiceService {
     try {
       const audioBase64 = bytesToBase64(bytes);
       this.socket.send(
-        JSON.stringify({ type: 'audio_chunk', audio_base64: audioBase64 } satisfies VoiceClientMessage),
+        JSON.stringify({
+          type: 'audio_chunk',
+          audio_base64: audioBase64,
+        } satisfies VoiceClientMessage),
       );
     } catch {
       // Socket likely closing mid-reconnect.
@@ -182,7 +182,7 @@ export class VoiceService {
   private buildWsUrl(): string {
     const base = WS_BASE_URL.replace(/\/+$/, '');
     const params = new URLSearchParams({
-      user_id: DEMO_USER_ID,
+      user_id: this.userId,
       session_id: this.sessionId,
       sample_rate: String(VOICE_SAMPLE_RATE),
       endpointing_ms: String(ENDPOINTING_MS),
