@@ -8,11 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- feat(onboarding): multi-user profile flow with `/onboarding` and `/welcome` routes, persisted `CurrentUser` fields (age, email), and Awakening CTA routing
+- feat(onboarding): multi-user profile flow with `/onboarding` and `/welcome` routes, persisted `CurrentUser` fields (date of birth, age, email), and Awakening CTA routing
 - feat(live): voice WebSocket uses `userId` from `useCurrentUser` instead of hardcoded demo UUID; `/live` guarded when no profile
 
 ### Changed
 
+- feat(copy): PRD vocabulary — Journey → Unlock Plan; Daily Reflection (feature labels) → Captain's Log / Diário de Bordo (i18n values only)
+- feat(onboarding): Ready to Begin asks for date of birth instead of age; age is derived on submit and stored with `dateOfBirth`; styled date field with calendar icon and empty-state hint
 - feat(today): proactive nudge driven by plan, Intent Profile, and Council — Mark Energeia action and deep links to plan/discovery
 - feat(ui): prominent shared End the day button on Discovery and Today (links to reflection check-in)
 - feat(discovery): microphone uses Live voice stack (`VoiceService` + AssemblyAI) in `stt_only` mode — transcribes into the chat input and sends via `/chat`
