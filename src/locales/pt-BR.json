@@ -15,7 +15,7 @@
       "line2": "E você?"
     },
     "cta": {
-      "primary": "Comece sua jornada"
+      "primary": "Comece seu Unlock Plan"
     }
   },
   "onboarding": {
@@ -23,16 +23,18 @@
     "subtitle": "Conta um pouco sobre você. A gente usa só pra personalizar a conversa.",
     "nameLabel": "Nome",
     "namePlaceholder": "Seu primeiro nome",
-    "ageLabel": "Idade",
-    "agePlaceholder": "Sua idade",
+    "birthDateLabel": "Data de nascimento",
+    "birthDatePlaceholder": "Selecione sua data de nascimento",
     "emailLabel": "E-mail",
     "emailPlaceholder": "voce@exemplo.com",
     "emailHint": "opcional",
-    "submitButton": "Começar minha jornada",
+    "submitButton": "Começar meu Unlock Plan",
     "errors": {
       "nameRequired": "Informe seu nome.",
-      "ageRequired": "Informe sua idade.",
-      "ageMin": "Você precisa ter pelo menos {{min}} anos."
+      "birthDateRequired": "Informe sua data de nascimento.",
+      "birthDateInvalid": "Informe uma data de nascimento válida.",
+      "birthDateFuture": "A data de nascimento não pode ser no futuro.",
+      "birthDateMinAge": "Você precisa ter pelo menos {{min}} anos."
     }
   },
   "welcome": {
@@ -95,7 +97,7 @@
     "title": "Descoberta",
     "subtitle": "Uma conversa que se adapta a você — não um questionário scriptado.",
     "endTheDay": "Encerrar o dia",
-    "endTheDayTooltip": "Reflexão de fim de dia",
+    "endTheDayTooltip": "Diário de Bordo de fim de dia",
     "thinking": "O Lead Guide está refletindo…",
     "messages": {
       "label": "Conversa de descoberta"
@@ -182,7 +184,7 @@
     },
     "tree": {
       "streakPill": "{{count}} dias de sequência",
-      "ariaLabel": "Sua árvore Dynamis — {{branches}} jornadas ativas, {{leaves}} ações cumpridas, {{fruits}} Energeia realizada, {{streakDays}} dias de sequência"
+      "ariaLabel": "Sua árvore Dynamis — {{branches}} unlocks ativos, {{leaves}} ações cumpridas, {{fruits}} Energeia realizada, {{streakDays}} dias de sequência"
     },
     "items": {
       "mapGaps": {
@@ -266,23 +268,23 @@
     "greeting": "Bem-vindo de volta. Vamos refletir sobre seu dia — o que aconteceu hoje, e o que está chamando sua atenção pra amanhã?",
     "endCheckIn": "Finalizar check-in",
     "card": {
-      "eyebrow": "Reflexão Diária",
-      "title": "Reflexão de fim de dia",
+      "eyebrow": "Diário de Bordo",
+      "title": "Diário de Bordo de fim de dia",
       "description": "3 perguntas, ~2 min · faz sua árvore crescer",
       "completedTitle": "Check-in de hoje concluído",
       "completedDescription": "{{count}} atividades registradas · abra para revisar ou acrescentar"
     },
     "prompt": {
-      "eyebrow": "Modo reflexão",
-      "title": "Reflexão de fim de dia",
+      "eyebrow": "Modo Diário de Bordo",
+      "title": "Diário de Bordo de fim de dia",
       "subtitle": "Responda com suas palavras — o Lead Guide escuta, não avalia."
     },
     "chat": {
-      "title": "Reflexão Diária",
+      "title": "Diário de Bordo",
       "subtitle": "Três perguntas para fechar o dia e alimentar sua árvore Dynamis."
     },
     "messages": {
-      "label": "Conversa de reflexão diária"
+      "label": "Conversa do Diário de Bordo"
     },
     "summary": {
       "title": "Resumo do dia",
@@ -304,7 +306,7 @@
   "today": {
     "eyebrow": "Fase 06 · Hoje",
     "title": "Bom dia. Aqui está onde focar.",
-    "endTheDayHint": "Feche o dia com uma reflexão curta — cerca de dois minutos.",
+    "endTheDayHint": "Feche o dia no Diário de Bordo — cerca de dois minutos.",
     "nudge": {
       "eyebrow": "⚡ Sugestão proativa",
       "markEnergeia": "Marcar Energeia",
@@ -313,8 +315,8 @@
         "plan": "Do seu plano",
         "profile": "Do seu perfil",
         "council": "Do Conselho",
-        "reflection": "Reflexão diária",
-        "fallback": "Sua jornada"
+        "reflection": "Diário de Bordo",
+        "fallback": "Seu Unlock Plan"
       },
       "todayTask": {
         "title": "Foco de hoje: {{taskTitle}}",
@@ -341,7 +343,7 @@
         "secondaryCta": "Ver Plano de Transformação"
       },
       "reflection": {
-        "title": "Feche o dia com uma reflexão curta",
+        "title": "Feche o dia no Diário de Bordo",
         "subtitle": "Três perguntas, cerca de dois minutos — registre o que fez e o que importa para amanhã.",
         "primaryCta": "Iniciar check-in",
         "secondaryCta": "Ver Plano de Transformação"

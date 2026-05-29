@@ -15,7 +15,7 @@
       "line2": "Are you?"
     },
     "cta": {
-      "primary": "Begin your journey"
+      "primary": "Begin your Unlock Plan"
     }
   },
   "onboarding": {
@@ -23,16 +23,18 @@
     "subtitle": "Tell us a little about yourself. We only use this to personalize the conversation.",
     "nameLabel": "Name",
     "namePlaceholder": "Your first name",
-    "ageLabel": "Age",
-    "agePlaceholder": "Your age",
+    "birthDateLabel": "Date of birth",
+    "birthDatePlaceholder": "Select your date of birth",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "emailHint": "optional",
-    "submitButton": "Begin my journey",
+    "submitButton": "Begin my Unlock Plan",
     "errors": {
       "nameRequired": "Please enter your name.",
-      "ageRequired": "Please enter your age.",
-      "ageMin": "You must be at least {{min}} years old."
+      "birthDateRequired": "Please enter your date of birth.",
+      "birthDateInvalid": "Please enter a valid date of birth.",
+      "birthDateFuture": "Date of birth cannot be in the future.",
+      "birthDateMinAge": "You must be at least {{min}} years old."
     }
   },
   "welcome": {
@@ -95,7 +97,7 @@
     "title": "Discovery",
     "subtitle": "A conversation that adapts to you — not a scripted survey.",
     "endTheDay": "End the day",
-    "endTheDayTooltip": "End-of-day reflection",
+    "endTheDayTooltip": "End-of-day Captain's Log",
     "thinking": "Lead Guide is reflecting…",
     "messages": {
       "label": "Discovery conversation"
@@ -182,7 +184,7 @@
     },
     "tree": {
       "streakPill": "{{count}} day streak",
-      "ariaLabel": "Your Dynamis tree — {{branches}} active journeys, {{leaves}} actions taken, {{fruits}} Energeia realized, {{streakDays}} day streak"
+      "ariaLabel": "Your Dynamis tree — {{branches}} active unlocks, {{leaves}} actions taken, {{fruits}} Energeia realized, {{streakDays}} day streak"
     },
     "items": {
       "mapGaps": {
@@ -266,23 +268,23 @@
     "greeting": "Welcome back. Let's reflect on your day — what happened today, and what's calling your attention for tomorrow?",
     "endCheckIn": "End check-in",
     "card": {
-      "eyebrow": "Daily Reflection",
-      "title": "End-of-day reflection",
+      "eyebrow": "Captain's Log",
+      "title": "End-of-day Captain's Log",
       "description": "3 questions, ~2 min · grows your tree",
       "completedTitle": "Check-in complete for today",
       "completedDescription": "{{count}} activities captured · open to review or add more"
     },
     "prompt": {
-      "eyebrow": "Reflection mode",
-      "title": "End-of-day reflection",
+      "eyebrow": "Captain's Log mode",
+      "title": "End-of-day Captain's Log",
       "subtitle": "Answer in your own words — the Lead Guide is listening, not scoring."
     },
     "chat": {
-      "title": "Daily Reflection",
+      "title": "Captain's Log",
       "subtitle": "Three questions to close the day and feed your Dynamis tree."
     },
     "messages": {
-      "label": "Daily reflection conversation"
+      "label": "Captain's Log conversation"
     },
     "summary": {
       "title": "Today's recap",
@@ -304,7 +306,7 @@
   "today": {
     "eyebrow": "Phase 06 · Today",
     "title": "Good morning. Here's where to lean.",
-    "endTheDayHint": "Close the day with a short reflection — about two minutes.",
+    "endTheDayHint": "Close the day in your Captain's Log — about two minutes.",
     "nudge": {
       "eyebrow": "⚡ Proactive nudge",
       "markEnergeia": "Mark Energeia",
@@ -313,8 +315,8 @@
         "plan": "From your plan",
         "profile": "From your profile",
         "council": "From Council",
-        "reflection": "Daily reflection",
-        "fallback": "Your journey"
+        "reflection": "Captain's Log",
+        "fallback": "Your Unlock Plan"
       },
       "todayTask": {
         "title": "Today's focus: {{taskTitle}}",
@@ -341,7 +343,7 @@
         "secondaryCta": "View Transformation Plan"
       },
       "reflection": {
-        "title": "Close the day with a short reflection",
+        "title": "Close the day in your Captain's Log",
         "subtitle": "Three questions, about two minutes — capture what you did and what matters for tomorrow.",
         "primaryCta": "Start check-in",
         "secondaryCta": "View Transformation Plan"

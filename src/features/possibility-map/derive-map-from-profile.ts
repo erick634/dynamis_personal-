@@ -238,7 +238,7 @@ function describePurposeMeaning(profile: IntentProfile): string {
   }
   if (aspirations && weaknesses) {
     return truncateText(
-      `Closing the gap toward ${aspirations} — growing through ${weaknesses} is the work that gives the journey weight.`,
+      `Closing the gap toward ${aspirations} — growing through ${weaknesses} is the work that gives the Unlock Plan weight.`,
       DESCRIPTION_MAX_LENGTH,
     );
   }
