@@ -1,15 +1,23 @@
-import { useId, useState, type FormEvent } from 'react';
+import { CalendarDays } from 'lucide-react';
+import { useId, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '@/components/ui/brand-mark';
+import {
+  calculateAgeFromBirthDate,
+  isBirthDateInFuture,
+  MIN_ONBOARDING_AGE,
+  parseIsoDateLocal,
+  toIsoDateLocal,
+} from '@/features/onboarding/calculate-age-from-birth-date';
 import { useCurrentUser } from '@/stores/current-user';
 
-const MIN_AGE = 13;
+import '@/features/onboarding/onboarding.css';
 
 type FieldErrors = {
   displayName?: string;
-  age?: string;
+  birthDate?: string;
 };
 
 export function CreateProfileScreen() {
@@ -18,13 +26,25 @@ export function CreateProfileScreen() {
   const setUser = useCurrentUser((state) => state.setUser);
 
   const nameId = useId();
-  const ageId = useId();
+  const birthDateId = useId();
   const emailId = useId();
 
   const [displayName, setDisplayName] = useState('');
-  const [ageInput, setAgeInput] = useState('');
+  const [birthDateInput, setBirthDateInput] = useState('');
+  const [isBirthDateFocused, setIsBirthDateFocused] = useState(false);
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  const { maxBirthDate, minBirthDate } = useMemo(() => {
+    const today = new Date();
+    const oldest = new Date(today);
+    oldest.setFullYear(today.getFullYear() - 120);
+
+    return {
+      maxBirthDate: toIsoDateLocal(today),
+      minBirthDate: toIsoDateLocal(oldest),
+    };
+  }, []);
 
   const validate = (): FieldErrors => {
     const next: FieldErrors = {};
@@ -34,11 +54,17 @@ export function CreateProfileScreen() {
       next.displayName = t('onboarding.errors.nameRequired');
     }
 
-    const age = Number.parseInt(ageInput, 10);
-    if (!ageInput.trim()) {
-      next.age = t('onboarding.errors.ageRequired');
-    } else if (Number.isNaN(age) || age < MIN_AGE) {
-      next.age = t('onboarding.errors.ageMin', { min: MIN_AGE });
+    if (!birthDateInput.trim()) {
+      next.birthDate = t('onboarding.errors.birthDateRequired');
+    } else if (!parseIsoDateLocal(birthDateInput)) {
+      next.birthDate = t('onboarding.errors.birthDateInvalid');
+    } else if (isBirthDateInFuture(birthDateInput)) {
+      next.birthDate = t('onboarding.errors.birthDateFuture');
+    } else {
+      const age = calculateAgeFromBirthDate(birthDateInput);
+      if (age == null || age < MIN_ONBOARDING_AGE) {
+        next.birthDate = t('onboarding.errors.birthDateMinAge', { min: MIN_ONBOARDING_AGE });
+      }
     }
 
     return next;
@@ -54,12 +80,17 @@ export function CreateProfileScreen() {
     }
 
     const trimmedName = displayName.trim();
-    const age = Number.parseInt(ageInput, 10);
+    const age = calculateAgeFromBirthDate(birthDateInput);
     const trimmedEmail = email.trim();
+
+    if (age == null) {
+      return;
+    }
 
     setUser({
       userId: crypto.randomUUID(),
       displayName: trimmedName,
+      dateOfBirth: birthDateInput,
       age,
       ...(trimmedEmail ? { email: trimmedEmail } : {}),
     });
@@ -113,29 +144,54 @@ export function CreateProfileScreen() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor={ageId} className="block font-body text-sm font-medium text-ink">
-              {t('onboarding.ageLabel')}
+            <label htmlFor={birthDateId} className="block font-body text-sm font-medium text-ink">
+              {t('onboarding.birthDateLabel')}
             </label>
-            <input
-              id={ageId}
-              type="number"
-              min={MIN_AGE}
-              inputMode="numeric"
-              value={ageInput}
-              onChange={(event) => {
-                setAgeInput(event.target.value);
-                if (errors.age) {
-                  setErrors((prev) => ({ ...prev, age: undefined }));
-                }
-              }}
-              placeholder={t('onboarding.agePlaceholder')}
-              className={inputClassName}
-              aria-invalid={Boolean(errors.age)}
-              aria-describedby={errors.age ? `${ageId}-error` : undefined}
-            />
-            {errors.age ? (
-              <p id={`${ageId}-error`} className="text-sm text-destructive" role="alert">
-                {errors.age}
+            <div
+              className={[
+                'onboarding-date-field',
+                birthDateInput
+                  ? 'onboarding-date-field--filled'
+                  : isBirthDateFocused
+                    ? 'onboarding-date-field--focused'
+                    : 'onboarding-date-field--empty',
+                errors.birthDate ? 'onboarding-date-field--invalid' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              <input
+                id={birthDateId}
+                type="date"
+                value={birthDateInput}
+                min={minBirthDate}
+                max={maxBirthDate}
+                onFocus={() => {
+                  setIsBirthDateFocused(true);
+                }}
+                onBlur={() => {
+                  setIsBirthDateFocused(false);
+                }}
+                onChange={(event) => {
+                  setBirthDateInput(event.target.value);
+                  if (errors.birthDate) {
+                    setErrors((prev) => ({ ...prev, birthDate: undefined }));
+                  }
+                }}
+                className="onboarding-date-field__input"
+                aria-invalid={Boolean(errors.birthDate)}
+                aria-describedby={errors.birthDate ? `${birthDateId}-error` : undefined}
+              />
+              {!birthDateInput && !isBirthDateFocused ? (
+                <span className="onboarding-date-field__hint" aria-hidden>
+                  {t('onboarding.birthDatePlaceholder')}
+                </span>
+              ) : null}
+              <CalendarDays className="onboarding-date-field__icon" aria-hidden />
+            </div>
+            {errors.birthDate ? (
+              <p id={`${birthDateId}-error`} className="text-sm text-destructive" role="alert">
+                {errors.birthDate}
               </p>
             ) : null}
           </div>

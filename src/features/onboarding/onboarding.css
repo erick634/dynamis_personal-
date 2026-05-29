@@ -1,0 +1,103 @@
+/* Onboarding form — date field aligned with Dynamis tokens */
+
+.onboarding-date-field {
+  position: relative;
+  display: block;
+}
+
+.onboarding-date-field__input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  background-color: #fff;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+  color-scheme: light;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.onboarding-date-field__input:focus-visible {
+  border-color: var(--blue-2);
+  box-shadow: 0 0 0 2px var(--blue-soft);
+}
+
+.onboarding-date-field--invalid .onboarding-date-field__input {
+  border-color: var(--destructive);
+}
+
+.onboarding-date-field--invalid .onboarding-date-field__input:focus-visible {
+  box-shadow: 0 0 0 2px rgb(155 44 44 / 18%);
+}
+
+.onboarding-date-field__hint {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.onboarding-date-field__icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  transform: translateY(-50%);
+  color: var(--blue);
+  pointer-events: none;
+}
+
+/* Expand hit area; custom icon stays visible */
+.onboarding-date-field__input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 3rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.onboarding-date-field__input::-webkit-datetime-edit {
+  padding: 0;
+}
+
+/* Empty + unfocused: hide native dd/mm/yyyy mask; custom hint covers the field */
+.onboarding-date-field--empty .onboarding-date-field__input {
+  color: transparent;
+}
+
+.onboarding-date-field--empty .onboarding-date-field__input::-webkit-datetime-edit,
+.onboarding-date-field--empty .onboarding-date-field__input::-webkit-datetime-edit-fields-wrapper {
+  opacity: 0;
+}
+
+/* Focused or filled: show native date segments only */
+.onboarding-date-field--focused .onboarding-date-field__input,
+.onboarding-date-field--filled .onboarding-date-field__input {
+  color: var(--ink);
+}
+
+.onboarding-date-field--focused .onboarding-date-field__input::-webkit-datetime-edit,
+.onboarding-date-field--focused .onboarding-date-field__input::-webkit-datetime-edit-fields-wrapper,
+.onboarding-date-field--filled .onboarding-date-field__input::-webkit-datetime-edit,
+.onboarding-date-field--filled .onboarding-date-field__input::-webkit-datetime-edit-fields-wrapper {
+  opacity: 1;
+}
