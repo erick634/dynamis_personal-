@@ -10,21 +10,215 @@
 
 .possibility-map__stage-glow {
   position: absolute;
-  inset: 10% 5% 20%;
+  inset: 5% 8% 15%;
   border-radius: 50%;
-  background: radial-gradient(circle at 75% 50%, rgb(217 74 56 / 28%) 0%, transparent 55%);
+  background: radial-gradient(circle at 72% 48%, rgb(217 74 56 / 22%) 0%, transparent 58%);
   pointer-events: none;
+}
+
+.possibility-map__comparison {
+  margin-top: 3rem;
+}
+
+@media (min-width: 768px) {
+  .possibility-map__comparison {
+    margin-top: 4rem;
+  }
+}
+
+.possibility-map__comparison-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  .possibility-map__comparison-grid {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.possibility-map__pole-card {
+  position: relative;
+  display: flex;
+  min-height: 420px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 20px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  background: rgb(255 255 255 / 4%);
+  padding: 1.75rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .possibility-map__pole-card {
+    min-height: 460px;
+    padding: 2rem 1.75rem 1.75rem;
+  }
+}
+
+.possibility-map__pole-card--dynamis {
+  box-shadow:
+    0 0 0 1px rgb(46 134 222 / 12%),
+    0 24px 48px rgb(11 25 41 / 45%),
+    inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+.possibility-map__pole-card--energeia {
+  box-shadow:
+    0 0 0 1px rgb(217 74 56 / 18%),
+    0 24px 56px rgb(11 25 41 / 50%),
+    0 0 48px rgb(217 74 56 / 12%),
+    inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+.possibility-map__pole-prelude {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.possibility-map__pole-title {
+  margin: 0.75rem 0 0;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.possibility-map__pole-title--energeia {
+  background: linear-gradient(135deg, var(--red-warm) 0%, var(--red) 55%, #fff 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.possibility-map__pole-visual {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 220px;
+  margin-top: 1rem;
+}
+
+.possibility-map__pole-visual--energeia {
+  isolation: isolate;
+}
+
+.possibility-map__pole-tagline {
+  margin: 1rem 0 0;
+  max-width: 16rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 .possibility-map__energeia-column-glow {
   position: absolute;
-  inset: -8% -12%;
+  inset: 8% 5%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgb(217 74 56 / 35%) 0%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgb(217 74 56 / 38%) 0%, transparent 68%);
   pointer-events: none;
   opacity: 0;
-  transform: scale(0.85);
+  transform: scale(0.88);
   animation: possibility-map-glow-grow 700ms ease-out 1200ms both;
+}
+
+.possibility-map__expansion-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+@media (min-width: 768px) {
+  .possibility-map__expansion-arrow {
+    padding: 0;
+    align-self: center;
+  }
+}
+
+.possibility-map__expansion-arrow-glyph {
+  font-family: var(--font-display, Fraunces, serif);
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--red-warm);
+  text-shadow: 0 0 24px rgb(232 101 77 / 45%);
+}
+
+@media (min-width: 768px) {
+  .possibility-map__expansion-arrow-glyph {
+    font-size: 3rem;
+  }
+}
+
+.possibility-map__dimension-grid {
+  margin-top: 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .possibility-map__dimension-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .possibility-map__dimension-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.possibility-map__dimension-card {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  border-radius: 16px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  background: rgb(255 255 255 / 5%);
+  padding: 1.25rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.possibility-map__dimension-title {
+  margin: 1rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.possibility-map__dimension-leverage {
+  margin: 0.625rem 0 0;
+  font-size: 1.375rem;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, var(--red-warm), var(--red));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (min-width: 768px) {
+  .possibility-map__dimension-leverage {
+    font-size: 1.5rem;
+  }
+}
+
+.possibility-map__dimension-description {
+  margin: 0.75rem 0 0;
+  flex: 1;
+  font-size: 0.8125rem;
 }
 
 @keyframes possibility-map-fade-up {
@@ -42,32 +236,12 @@
 @keyframes possibility-map-glow-grow {
   from {
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.88);
   }
 
   to {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes possibility-map-arrow-draw {
-  from {
-    stroke-dashoffset: 100;
-  }
-
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes possibility-map-arrow-flow {
-  from {
-    stroke-dashoffset: 24;
-  }
-
-  to {
-    stroke-dashoffset: 0;
   }
 }
 
@@ -96,24 +270,8 @@
   animation: possibility-map-fade-up 700ms ease-out 1200ms both;
 }
 
-.possibility-map__reveal-arrow-draw {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  animation: possibility-map-arrow-draw 600ms ease-out 800ms forwards;
-}
-
-.possibility-map__reveal-arrow-flow {
-  opacity: 0;
-  stroke-dashoffset: 24;
-  animation:
-    possibility-map-arrow-flow-visible 0ms linear 1400ms forwards,
-    possibility-map-arrow-flow 3s linear 1400ms infinite;
-}
-
-@keyframes possibility-map-arrow-flow-visible {
-  to {
-    opacity: 1;
-  }
+.possibility-map__reveal-arrow {
+  animation: possibility-map-fade-up 500ms ease-out 900ms both;
 }
 
 .possibility-map__reveal-card {
@@ -127,36 +285,16 @@
   animation: possibility-map-energeia-pulse 3s ease-in-out infinite;
 }
 
-.possibility-map__arrow-column {
-  width: 80px;
-}
-
-.possibility-map__arrow-svg {
-  transform: rotate(90deg);
-}
-
-@media (min-width: 768px) {
-  .possibility-map__arrow-svg {
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .possibility-map__reveal-header,
   .possibility-map__reveal-dynamis,
   .possibility-map__reveal-energeia,
+  .possibility-map__reveal-arrow,
   .possibility-map__reveal-card,
   .possibility-map__energeia-column-glow {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
-  }
-
-  .possibility-map__reveal-arrow-draw,
-  .possibility-map__reveal-arrow-flow {
-    animation: none !important;
-    opacity: 1 !important;
-    stroke-dashoffset: 0 !important;
   }
 
   .possibility-map__energeia-pulse {

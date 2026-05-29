@@ -6,6 +6,7 @@ type StreakStatCardProps = {
 
 export function StreakStatCard({ streakDays }: StreakStatCardProps) {
   const { t } = useTranslation();
+  const subtitleKey = streakDays === 0 ? 'today.stats.streakZero' : 'today.stats.streakActive';
 
   return (
     <article className="rounded-[20px] border border-line-soft bg-white p-6 shadow-card">
@@ -13,7 +14,7 @@ export function StreakStatCard({ streakDays }: StreakStatCardProps) {
         <span aria-hidden>🔥 </span>
         {streakDays}
       </p>
-      <p className="mt-2 font-body text-sm text-ink-2">{t('today.stats.streakSubtitle')}</p>
+      <p className="mt-2 font-body text-sm text-ink-2">{t(subtitleKey)}</p>
     </article>
   );
 }

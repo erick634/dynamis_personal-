@@ -5,6 +5,8 @@ export type CouncilAgentStatus = 'suggested' | 'aligned';
 export type CouncilAgent = {
   id: CouncilAgentId;
   status: CouncilAgentStatus;
+  /** When set, overrides the default i18n status line for this agent. */
+  hint?: string;
 };
 
 export type TodayCouncil = {

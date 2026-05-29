@@ -26,10 +26,14 @@ export type VoiceServiceEvents = {
   onError: (error: string) => void;
 };
 
+export type VoiceServiceMode = 'full' | 'stt_only';
+
 export type VoiceServiceStartOptions = {
   sessionId: string;
   token: string;
   userId: string;
+  /** `stt_only` — transcription only (Discovery text input). Default runs full voice agent. */
+  mode?: VoiceServiceMode;
 };
 
 export class VoiceService {
@@ -51,17 +55,24 @@ export class VoiceService {
   private sessionId = '';
   private token = '';
   private userId = '';
+  private mode: VoiceServiceMode = 'full';
 
   constructor(events: VoiceServiceEvents) {
     this.events = events;
   }
 
-  async start({ sessionId, token, userId }: VoiceServiceStartOptions): Promise<void> {
+  async start({
+    sessionId,
+    token,
+    userId,
+    mode = 'full',
+  }: VoiceServiceStartOptions): Promise<void> {
     // Token may be empty when the backend is running with DEV_AUTH_BYPASS=true.
     // The WebSocket URL only adds `?token=` when one is provided.
     this.sessionId = sessionId;
     this.token = token;
     this.userId = userId;
+    this.mode = mode;
     this.stopped = false;
     this.chunksSent = 0;
 
@@ -186,6 +197,7 @@ export class VoiceService {
       session_id: this.sessionId,
       sample_rate: String(VOICE_SAMPLE_RATE),
       endpointing_ms: String(ENDPOINTING_MS),
+      mode: this.mode,
     });
     if (this.token.trim()) {
       params.set('token', this.token);

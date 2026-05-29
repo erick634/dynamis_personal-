@@ -91,8 +91,27 @@ const EDGES: [number, number][] = [
   [10, 18],
 ];
 
-export function EnergeiaConstellation() {
+type EnergeiaConstellationProps = {
+  visibleNodeCount?: number;
+  accentNodeCount?: number;
+};
+
+export function EnergeiaConstellation({
+  visibleNodeCount = NODES.length,
+  accentNodeCount = NODES.filter((node) => node.accent).length,
+}: EnergeiaConstellationProps) {
   const { t } = useTranslation();
+  const maxIndex = Math.min(visibleNodeCount, NODES.length);
+  const accentSlots = Math.min(accentNodeCount, maxIndex);
+  const visibleNodes = NODES.slice(0, maxIndex).map((node, index) => {
+    const isAccent = Boolean(node.accent) && index < accentSlots;
+    return {
+      ...node,
+      accent: isAccent,
+      pulse: isAccent && node.pulse,
+    };
+  });
+  const visibleEdges = EDGES.filter(([from, to]) => from < maxIndex && to < maxIndex);
 
   return (
     <svg
@@ -127,7 +146,7 @@ export function EnergeiaConstellation() {
 
       <circle cx="160" cy="160" r="140" fill="url(#energeia-radial-glow)" aria-hidden />
 
-      {EDGES.map(([from, to]) => {
+      {visibleEdges.map(([from, to]) => {
         const a = NODES[from];
         const b = NODES[to];
         if (!a || !b) return null;
@@ -145,7 +164,7 @@ export function EnergeiaConstellation() {
         );
       })}
 
-      {NODES.map((node, index) => (
+      {visibleNodes.map((node, index) => (
         <g
           key={index}
           filter={node.accent ? 'url(#energeia-strong-glow)' : 'url(#energeia-node-glow)'}

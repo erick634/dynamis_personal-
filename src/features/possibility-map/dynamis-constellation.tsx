@@ -43,8 +43,17 @@ const EDGES: [number, number][] = [
   [8, 13],
 ];
 
-export function DynamisConstellation() {
+type DynamisConstellationProps = {
+  visibleNodeCount?: number;
+};
+
+export function DynamisConstellation({
+  visibleNodeCount = NODES.length,
+}: DynamisConstellationProps) {
   const { t } = useTranslation();
+  const maxIndex = Math.min(visibleNodeCount, NODES.length);
+  const visibleNodes = NODES.slice(0, maxIndex);
+  const visibleEdges = EDGES.filter(([from, to]) => from < maxIndex && to < maxIndex);
 
   return (
     <svg
@@ -72,7 +81,7 @@ export function DynamisConstellation() {
         </filter>
       </defs>
 
-      {EDGES.map(([from, to]) => {
+      {visibleEdges.map(([from, to]) => {
         const a = NODES[from];
         const b = NODES[to];
         if (!a || !b) return null;
@@ -90,7 +99,7 @@ export function DynamisConstellation() {
         );
       })}
 
-      {NODES.map((node, index) => (
+      {visibleNodes.map((node, index) => (
         <g key={index} filter={node.accent ? 'url(#dynamis-blue-glow)' : 'url(#dynamis-soft-glow)'}>
           <circle
             cx={node.x}

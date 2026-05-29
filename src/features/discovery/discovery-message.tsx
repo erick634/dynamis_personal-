@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import type { DiscoveryMessage } from '@/features/discovery/discovery-types';
+import { useCurrentUser } from '@/stores/current-user';
 
 type DiscoveryMessageProps = {
   message: DiscoveryMessage;
@@ -8,8 +9,13 @@ type DiscoveryMessageProps = {
 
 export function DiscoveryMessageBubble({ message }: DiscoveryMessageProps) {
   const { t } = useTranslation();
+  const displayName = useCurrentUser((state) => state.user?.displayName);
   const isAgent = message.role === 'agent';
-  const body = message.contentKey ? t(message.contentKey) : (message.text ?? '');
+  const body = message.contentKey
+    ? t(message.contentKey, {
+        name: displayName?.trim() || t('discovery.greetingFallbackName'),
+      })
+    : (message.text ?? '');
 
   return (
     <div className={`flex gap-3 ${isAgent ? 'flex-row' : 'flex-row-reverse'}`}>

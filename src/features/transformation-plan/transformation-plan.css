@@ -1,0 +1,79 @@
+.dynamis-plan-constellation-card {
+  background: #0a1733;
+}
+
+.dynamis-plan-constellation__sky {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  border-radius: 1rem;
+  padding: 1.5rem 1.25rem 1.75rem;
+  background: radial-gradient(
+    circle at 50% 42%,
+    #152a52 0%,
+    #0f1f42 38%,
+    #0a1733 72%,
+    #060f22 100%
+  );
+}
+
+.dynamis-streak-pill {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-ink, #0b1929);
+  padding: 8px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.dynamis-plan-constellation__pulse {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: dynamis-plan-constellation-pulse 3s ease-in-out infinite;
+}
+
+@keyframes dynamis-plan-constellation-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.dynamis-plan-constellation__realize-enter {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: dynamis-plan-constellation-realize 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dynamis-plan-constellation-realize {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dynamis-plan-constellation__pulse,
+  .dynamis-plan-constellation__realize-enter {
+    animation: none;
+  }
+}

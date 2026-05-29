@@ -13,6 +13,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(today): proactive nudge driven by plan, Intent Profile, and Council — Mark Energeia action and deep links to plan/discovery
+- feat(ui): prominent shared End the day button on Discovery and Today (links to reflection check-in)
+- feat(discovery): microphone uses Live voice stack (`VoiceService` + AssemblyAI) in `stt_only` mode — transcribes into the chat input and sends via `/chat`
+- feat(discovery): Intent Profile signals and emerging insight driven by profile + chat history (`GET /discovery-signals`, returned on `POST /chat`)
+- feat(possibility-map): comparison cards layout (Dynamis ↔ Energeia), dimension cards with icon badges and leverage line per mockup v2
+- feat(possibility-map): map generated from Intent Profile (LLM + derived fallback), localStorage cache keyed by profile fingerprint, dynamic constellations and regenerate control
+- feat(today): dashboard wired to plan storage, streak, weekly Energeia, dynamic nudge, today agenda, and reflection completion state
+- feat(transformation-plan): reflection check-in `did_today` items appear under Today filter as completed activities (localStorage per day)
+- feat(discovery): reflection mode uses real `/chat`; `POST /reflection-summary` for end-of-day recap; Discovery → Reflection navigation
+- feat(ui): reusable `ConfirmDialog` replaces `window.confirm` on Transformation Plan "New plan"
+- feat(transformation-plan): persist plan per user in localStorage (`dynamis.plan.{userId}`), Duolingo-style streak, and "New plan" reset with LLM regen
+- feat(transformation-plan): replace Dynamis tree with goal-based constellation (dynamic stars, journey path, streak halo) on light background
+- feat(transformation-plan): `POST /transformation-plan` generates 5 LLM goals from Intent Profile; inline title edit (session-only); React Query cache `staleTime: Infinity`
+- feat(possibility-map): `POST /possibility-map` now asks Claude for per-dimension `leveragePercent` (120–400) with defensive parsing and fixed fallbacks
+- feat(possibility-map): `POST /possibility-map` backend endpoint generates dimension copy via Claude; frontend caches with React Query (`staleTime: Infinity`)
+- feat(possibility-map): derive dimension cards from Supabase Intent Profile (pure TS, no LLM); climate mock remains fallback when profile is absent
+- feat(discovery): personalized opening greeting with user name and today's objectives prompt; removed scripted seed messages
 - feat(you): `/you` now loads the real Intent Profile from Supabase `user_profiles` with loading, processing, error, and manual refresh states
 - feat(transformation-plan): polish Dynamis tree with depth layers, sway animation, falling leaves, sparkles, and Energeia fruit pulse — all CSS-only, respects prefers-reduced-motion
 - feat(transformation-plan): add subtle CSS animations to Dynamis tree — falling leaves background, gentle leaf sway, soft fruit pulse
@@ -21,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- fix(lint): resolve 18 ESLint strict-type errors across discovery, possibility-map, today, and transformation-plan features (non-null assertions, unnecessary conditionals, async handlers)
 - fix(transformation-plan): restructure Dynamis tree visual hierarchy — trunk widens at base, branches rise from the crown, leaves form dense clusters at branch tips, fruits sit inside clusters
 
 ### Added

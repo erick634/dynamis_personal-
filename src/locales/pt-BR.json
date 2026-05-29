@@ -1,4 +1,7 @@
 {
+  "common": {
+    "cancel": "Cancelar"
+  },
   "brand": {
     "name": "Dynamis"
   },
@@ -45,14 +48,16 @@
     "dynamis": {
       "label": "DYNAMIS",
       "subLabel": "Potencial, esperando",
-      "name": "dynamis",
+      "prelude": "— o que eu achava possível",
+      "name": "Dynamis",
       "tagline": "Potencial, esperando para ser realizado.",
       "ariaLabel": "Constelação Dynamis — estrelas azuis esparsas representando potencial não realizado"
     },
     "energeia": {
       "label": "ENERGEIA",
       "subLabel": "Potencial, tornando-se",
-      "name": "energeia",
+      "prelude": "— o que é realmente possível",
+      "name": "Energeia",
       "tagline": "Potencial, tornando-se atualidade.",
       "ariaLabel": "Constelação Energeia — estrelas vermelhas densas representando potencial tornando-se atualidade"
     },
@@ -60,6 +65,13 @@
       "label": "expansão"
     },
     "leveragePercent": "+{{percent}}%",
+    "leverageSuffix": "{{value}} de alavancagem",
+    "generating": "Montando seu mapa a partir do Perfil de Intenção…",
+    "regenerate": "Regenerar mapa",
+    "noProfile": {
+      "body": "Conclua a Descoberta primeiro para mapear seu potencial com suas próprias palavras — não o persona de demo.",
+      "cta": "Iniciar Descoberta"
+    },
     "dimensions": {
       "aiDisruption": {
         "name": "Navegando a Disrupção da IA",
@@ -82,6 +94,8 @@
   "discovery": {
     "title": "Descoberta",
     "subtitle": "Uma conversa que se adapta a você — não um questionário scriptado.",
+    "endTheDay": "Encerrar o dia",
+    "endTheDayTooltip": "Reflexão de fim de dia",
     "thinking": "O Lead Guide está refletindo…",
     "messages": {
       "label": "Conversa de descoberta"
@@ -93,12 +107,19 @@
       "label": "Sua mensagem",
       "placeholder": "Compartilhe o que está em sua mente…",
       "sendLabel": "Enviar mensagem",
-      "micLabel": "Iniciar conversa por voz",
-      "micStopLabel": "Encerrar conversa por voz"
+      "micLabel": "Iniciar entrada por voz",
+      "micStopLabel": "Parar entrada por voz"
+    },
+    "voice": {
+      "listening": "Ouvindo… suas palavras aparecem aqui enquanto você fala.",
+      "placeholder": "Fale agora…",
+      "errorMicDenied": "Acesso ao microfone negado. Permita o microfone nas configurações do navegador.",
+      "errorNoToken": "Entrada por voz precisa de token — verifique VITE_DYNAMIS_JWT ou VITE_ALLOW_EMPTY_TOKEN no dev local."
     },
     "sidePanel": {
       "profileTitle": "Sinais do Perfil de Intenção",
       "profileHint": "Capturados em tempo real enquanto você fala",
+      "updating": "Atualizando com sua última resposta…",
       "dimensions": {
         "values": "Valores",
         "mission": "Missão",
@@ -106,12 +127,15 @@
         "constraints": "Restrições"
       }
     },
+    "greeting": "Olá, {{name}}. Como estão indo os objetivos do dia de hoje?",
+    "greetingFallbackName": "você",
     "insight": {
       "title": "Insight emergente",
+      "fallback": "Comece a conversa — os sinais do Perfil de Intenção atualizam enquanto você fala.",
       "quote": "Padrão emergente: você retorna a \"climate\" duas vezes e \"starting\" três vezes — pode haver um fio entre cuidado e novos começos."
     },
     "mockMessages": {
-      "greeting": "Bem-vindo. Sou seu Lead Guide. Antes de mapear o que é possível, quero entender o que já importa para você. O que trouxe você aqui hoje?",
+      "greeting": "Olá, {{name}}. Como estão indo os objetivos do dia de hoje?",
       "userClimate": "Fico pensando em trabalho climático e se já é tarde demais para começar algo com significado.",
       "followUp": "Essa tensão entre urgência e timing merece atenção. Quando você diz \"começar,\" como seria o primeiro passo pequeno?",
       "agentReply": "Obrigado por compartilhar. Estou notando com que frequência o cuidado com o mundo e o cuidado com seu próprio caminho aparecem juntos no que você disse."
@@ -119,7 +143,7 @@
   },
   "transformationPlan": {
     "eyebrow": "Plano de Transformação",
-    "title": "Passos concretos. Uma árvore.",
+    "title": "O caminho toma forma.",
     "streak": "Sequência de {{days}} dias",
     "filters": {
       "label": "Filtrar itens do plano",
@@ -132,7 +156,8 @@
       "high": "Alta",
       "research": "Pesquisa",
       "build": "Construir",
-      "reflect": "Refletir"
+      "reflect": "Refletir",
+      "doneToday": "Feito hoje"
     },
     "schedule": {
       "todayAt": "Hoje · 14:00",
@@ -140,11 +165,21 @@
       "wed": "Qua",
       "fri": "Sex"
     },
+    "editTitle": "Editar título da tarefa",
+    "cancelEdit": "Cancelar edição",
+    "saveEdit": "Salvar título da tarefa",
     "item": {
       "markDone": "Marcar \"{{title}}\" como realizado",
       "markNotDone": "Marcar \"{{title}}\" como ainda não realizado"
     },
     "emptyFilter": "Nenhum passo corresponde a este filtro.",
+    "newPlanButton": "Novo plano",
+    "newPlanConfirmTitle": "Gerar um novo plano?",
+    "newPlanConfirmDescription": "Seu progresso atual será zerado. Isso não pode ser desfeito.",
+    "newPlanConfirmAction": "Gerar novo",
+    "constellation": {
+      "ariaLabel": "{{count}} metas, {{realized}} realizadas"
+    },
     "tree": {
       "streakPill": "{{count}} dias de sequência",
       "ariaLabel": "Sua árvore Dynamis — {{branches}} jornadas ativas, {{leaves}} ações cumpridas, {{fruits}} Energeia realizada, {{streakDays}} dias de sequência"
@@ -228,10 +263,14 @@
     "refreshButton": "Atualizar perfil"
   },
   "dailyReflection": {
+    "greeting": "Bem-vindo de volta. Vamos refletir sobre seu dia — o que aconteceu hoje, e o que está chamando sua atenção pra amanhã?",
+    "endCheckIn": "Finalizar check-in",
     "card": {
       "eyebrow": "Reflexão Diária",
       "title": "Reflexão de fim de dia",
-      "description": "3 perguntas, ~2 min · faz sua árvore crescer"
+      "description": "3 perguntas, ~2 min · faz sua árvore crescer",
+      "completedTitle": "Check-in de hoje concluído",
+      "completedDescription": "{{count}} atividades registradas · abra para revisar ou acrescentar"
     },
     "prompt": {
       "eyebrow": "Modo reflexão",
@@ -245,16 +284,17 @@
     "messages": {
       "label": "Conversa de reflexão diária"
     },
-    "questions": {
-      "q1": "Como foi o dia — com energia, esgotado, algo no meio?",
-      "q2": "Qual momento hoje ficou mais perto de quem você quer se tornar?",
-      "q3": "O que você faria diferente se amanhã fosse igual?"
-    },
-    "mockMessages": {
-      "ack": "Anotado. Vá no seu ritmo para a próxima quando estiver pronto.",
-      "closing": "Obrigado por fechar o ciclo hoje. Sua árvore vai lembrar disso."
+    "summary": {
+      "title": "Resumo do dia",
+      "didToday": "O que você fez hoje",
+      "planTomorrow": "Intenção para amanhã",
+      "done": "Concluído",
+      "generating": "Refletindo...",
+      "emptyDidToday": "Nada específico capturado",
+      "fallbackCelebration": "Você fez seu check-in hoje. Continue assim — cada conversa conta."
     },
     "insight": {
+      "fallback": "Continue refletindo — cada resposta afina o que capturamos para amanhã.",
       "quote": "Reflexões assim viram nós no diário — informam o Conselho de amanhã e sua próxima Energeia."
     }
   },
@@ -264,21 +304,73 @@
   "today": {
     "eyebrow": "Fase 06 · Hoje",
     "title": "Bom dia. Aqui está onde focar.",
+    "endTheDayHint": "Feche o dia com uma reflexão curta — cerca de dois minutos.",
     "nudge": {
       "eyebrow": "⚡ Sugestão proativa",
-      "title": "Suas entrevistas climáticas são hoje — o Lead Guide tem um enquadramento pronto.",
-      "subtitle": "Cinco conversas podem revelar a lacuna de ativação mais rápido que outra semana de pesquisa. Comece pelo bloco das 14:00.",
-      "primaryCta": "Abrir Descoberta",
-      "secondaryCta": "Ver Mapa de Possibilidades"
+      "markEnergeia": "Marcar Energeia",
+      "secondaryCta": "Ver Mapa de Possibilidades",
+      "source": {
+        "plan": "Do seu plano",
+        "profile": "Do seu perfil",
+        "council": "Do Conselho",
+        "reflection": "Reflexão diária",
+        "fallback": "Sua jornada"
+      },
+      "todayTask": {
+        "title": "Foco de hoje: {{taskTitle}}",
+        "subtitle": "Agendado para hoje no seu Plano de Transformação. Marque como Energeia quando concluir.",
+        "primaryCta": "Abrir Plano de Transformação",
+        "secondaryDiscovery": "Abrir Descoberta"
+      },
+      "upcomingTask": {
+        "title": "Próximo passo: {{taskTitle}}",
+        "subtitle": "No plano para {{schedule}} — aproveite o momentum.",
+        "primaryCta": "Abrir Plano de Transformação",
+        "secondaryDiscovery": "Abrir Descoberta"
+      },
+      "profileFocus": {
+        "title": "Seu foco ativo está pedindo atenção",
+        "subtitle": "{{focus}} — a Descoberta pode ajudar a definir o próximo passo.",
+        "primaryCta": "Abrir Descoberta",
+        "secondaryCta": "Ver Plano de Transformação"
+      },
+      "council": {
+        "title": "{{agentName}} tem uma sugestão para você",
+        "subtitle": "Da sessão do Conselho de hoje.",
+        "primaryCta": "Conversar sobre isso",
+        "secondaryCta": "Ver Plano de Transformação"
+      },
+      "reflection": {
+        "title": "Feche o dia com uma reflexão curta",
+        "subtitle": "Três perguntas, cerca de dois minutos — registre o que fez e o que importa para amanhã.",
+        "primaryCta": "Iniciar check-in",
+        "secondaryCta": "Ver Plano de Transformação"
+      },
+      "fallback": {
+        "title": "Seu plano está em dia por hoje",
+        "subtitle": "Revise seus passos ou explore como a IA amplia o possível no Mapa de Possibilidades.",
+        "primaryCta": "Abrir Plano de Transformação"
+      }
     },
     "stats": {
-      "streakSubtitle": "Maior sequência até aqui",
+      "streakZero": "Marque um passo no plano para começar",
+      "streakActive": "Sequência de dias — mantenha o ritmo",
       "energeiaEyebrow": "Energeia esta semana",
       "energeiaSubtitle": "Passos realizados em direção ao potencial ampliado"
     },
+    "agenda": {
+      "title": "Hoje no seu plano",
+      "subtitle": "Feito no check-in e agendado para hoje",
+      "viewPlan": "Ver plano completo",
+      "fromReflection": "Do check-in"
+    },
     "council": {
       "title": "Conselho",
-      "subtitle": "Sessão noturna — quatro perspectivas sobre sua semana"
+      "subtitle": "Sessão noturna — quatro perspectivas sobre sua semana",
+      "hints": {
+        "todayTask": "Conduza o foco de hoje — {{taskTitle}} — com uma pergunta: o que tornaria o próximo passo óbvio?",
+        "reflectionDone": "Você fechou o dia com um check-in. Amanhã, proteja energia antes de empilhar trabalho profundo."
+      }
     }
   },
   "council": {

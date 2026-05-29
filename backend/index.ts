@@ -100,11 +100,14 @@ type ProfileExtractionPayload = {
   active_focus?: string | null;
   notes?: string | null;
 };
+type VoiceSessionMode = 'full' | 'stt_only';
+
 type VoiceSessionContext = {
   userId: string;
   sessionId: string;
   sampleRate: number;
   endpointingMs?: number;
+  mode: VoiceSessionMode;
 };
 type AssemblyTurnMessage = {
   type: 'Turn';
@@ -258,6 +261,616 @@ function formatProfileForPrompt(profile: UserProfile | null): string | null {
     return null;
   }
   return lines.join('\n');
+}
+
+type ProfileDimensionId = 'values' | 'mission' | 'strengths' | 'constraints';
+type ProfileSignalsPayload = Record<ProfileDimensionId, number>;
+
+const PROFILE_DIMENSION_KEYWORDS: Record<ProfileDimensionId, string[]> = {
+  values: [
+    'value',
+    'values',
+    'family',
+    'integrity',
+    'balance',
+    'freedom',
+    'trust',
+    'care',
+    'health',
+    'relationship',
+  ],
+  mission: [
+    'goal',
+    'mission',
+    'purpose',
+    'career',
+    'build',
+    'startup',
+    'climate',
+    'project',
+    'aspiration',
+    'focus',
+    'objective',
+  ],
+  strengths: ['strength', 'skill', 'talent', 'excel', 'capable', 'good at', 'expert', 'experience'],
+  constraints: [
+    'worry',
+    'struggle',
+    'hard',
+    'fear',
+    'block',
+    'stress',
+    'weakness',
+    'constraint',
+    'limit',
+    'anxiety',
+  ],
+};
+
+const INSIGHT_STOP_WORDS = new Set([
+  'that',
+  'this',
+  'with',
+  'have',
+  'from',
+  'your',
+  'about',
+  'what',
+  'when',
+  'would',
+  'could',
+  'should',
+  'there',
+  'their',
+  'them',
+  'been',
+  'being',
+  'just',
+  'like',
+  'really',
+  'think',
+  'know',
+  'want',
+  'need',
+  'more',
+  'some',
+  'into',
+  'also',
+  'very',
+  'much',
+  'today',
+  'tomorrow',
+  'yesterday',
+]);
+
+function clampProfilePercent(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function textRichnessScore(text: string | null | undefined, targetChars = 120): number {
+  if (!text || !text.trim()) {
+    return 0;
+  }
+  const length = text.trim().length;
+  return clampProfilePercent(15 + (length / targetChars) * 85);
+}
+
+function computeProfileSignalsFromProfile(profile: UserProfile | null): ProfileSignalsPayload {
+  if (!profile) {
+    return { values: 8, mission: 8, strengths: 8, constraints: 8 };
+  }
+
+  const valuesList = profile.values_list ?? [];
+  let values = 0;
+  if (valuesList.length > 0) {
+    const combinedLength = valuesList.join(' ').length;
+    values = clampProfilePercent(valuesList.length * 12 + combinedLength / 2.5);
+  }
+
+  const mission = clampProfilePercent(
+    Math.max(
+      textRichnessScore(profile.aspirations, 200),
+      textRichnessScore(profile.role_context, 160) * 0.9,
+      textRichnessScore(profile.active_focus, 120) * 0.8,
+      textRichnessScore(profile.long_term_summary, 240) * 0.45,
+    ),
+  );
+
+  const strengths = textRichnessScore(profile.strengths, 150);
+  const constraints = textRichnessScore(profile.weaknesses, 150);
+
+  return { values, mission, strengths, constraints };
+}
+
+function conversationBoostFromMessages(messages: string[]): ProfileSignalsPayload {
+  const boosts: ProfileSignalsPayload = {
+    values: 0,
+    mission: 0,
+    strengths: 0,
+    constraints: 0,
+  };
+
+  for (const message of messages) {
+    const lower = message.toLowerCase();
+    for (const dimension of Object.keys(PROFILE_DIMENSION_KEYWORDS) as ProfileDimensionId[]) {
+      for (const keyword of PROFILE_DIMENSION_KEYWORDS[dimension]) {
+        if (lower.includes(keyword)) {
+          boosts[dimension] += 4;
+        }
+      }
+    }
+  }
+
+  return boosts;
+}
+
+function mergeProfileSignals(
+  base: ProfileSignalsPayload,
+  boost: ProfileSignalsPayload,
+): ProfileSignalsPayload {
+  return {
+    values: clampProfilePercent(base.values + boost.values),
+    mission: clampProfilePercent(base.mission + boost.mission),
+    strengths: clampProfilePercent(base.strengths + boost.strengths),
+    constraints: clampProfilePercent(base.constraints + boost.constraints),
+  };
+}
+
+async function loadRecentUserMessages(userId: string, limit = 24): Promise<string[]> {
+  const res = await db.query<{ message: string }>(
+    `SELECT message
+     FROM (
+       SELECT message, created_at, id
+       FROM chat_history
+       WHERE user_id = $1::uuid AND sender = 'user'
+       ORDER BY created_at DESC, id DESC
+       LIMIT $2
+     ) t
+     ORDER BY created_at ASC, id ASC`,
+    [userId, limit],
+  );
+  return res.rows
+    .map((row) => row.message.replace(/\s+/g, ' ').trim())
+    .filter((message) => message.length > 0);
+}
+
+function topRepeatedWords(messages: string[], minCount = 2): Array<[string, number]> {
+  const frequency = new Map<string, number>();
+
+  for (const message of messages) {
+    const matches = message.toLowerCase().match(/\b[a-z]{4,}\b/g) ?? [];
+    for (const word of matches) {
+      if (INSIGHT_STOP_WORDS.has(word)) {
+        continue;
+      }
+      frequency.set(word, (frequency.get(word) ?? 0) + 1);
+    }
+  }
+
+  return [...frequency.entries()]
+    .filter(([, count]) => count >= minCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+}
+
+function computeEmergingInsight(profile: UserProfile | null, userMessages: string[]): string {
+  const repeated = topRepeatedWords(userMessages, 2);
+
+  if (repeated.length >= 2) {
+    const [firstWord, firstCount] = repeated[0]!;
+    const [secondWord, secondCount] = repeated[1]!;
+    return (
+      `Pattern emerging: you return to "${firstWord}" ${String(firstCount)} times and ` +
+      `"${secondWord}" ${String(secondCount)} times — there may be a thread between ` +
+      'what you keep circling and what you want next.'
+    );
+  }
+
+  if (repeated.length === 1) {
+    const [word, count] = repeated[0]!;
+    return (
+      `Pattern emerging: "${word}" shows up ${String(count)} times in what you share — ` +
+      'worth naming explicitly in your next reply.'
+    );
+  }
+
+  const focus = profile?.active_focus?.trim();
+  if (focus) {
+    const snippet = focus.length > 90 ? `${focus.slice(0, 89)}…` : focus;
+    return `Early signal: your active focus — "${snippet}" — is anchoring how we read your Intent Profile.`;
+  }
+
+  const aspirations = profile?.aspirations?.trim();
+  if (aspirations) {
+    const snippet = aspirations.length > 90 ? `${aspirations.slice(0, 89)}…` : aspirations;
+    return `Early signal: your aspiration — "${snippet}" — is becoming the spine of your Intent Profile.`;
+  }
+
+  if (userMessages.length > 0) {
+    return 'Keep sharing — each reply sharpens the four dimensions of your Intent Profile.';
+  }
+
+  return 'Start the conversation — your Intent Profile signals update as you speak.';
+}
+
+async function buildDiscoverySignalsPayload(userId: string): Promise<{
+  profile_signals: ProfileSignalsPayload;
+  insight: string;
+}> {
+  const [profile, userMessages] = await Promise.all([
+    loadUserProfile(userId),
+    loadRecentUserMessages(userId),
+  ]);
+
+  const base = computeProfileSignalsFromProfile(profile);
+  const boost = conversationBoostFromMessages(userMessages);
+  const profile_signals = mergeProfileSignals(base, boost);
+  const insight = computeEmergingInsight(profile, userMessages);
+
+  return { profile_signals, insight };
+}
+
+const POSSIBILITY_MAP_DIMENSION_IDS = [
+  'aiDisruption',
+  'careerReinvention',
+  'healthLongevity',
+  'purposeMeaning',
+] as const;
+
+type PossibilityMapDimensionId = (typeof POSSIBILITY_MAP_DIMENSION_IDS)[number];
+
+const POSSIBILITY_MAP_FIXED_META: Record<
+  PossibilityMapDimensionId,
+  { name: string; icon: string }
+> = {
+  aiDisruption: {
+    name: 'Navigating AI Disruption',
+    icon: 'brain',
+  },
+  careerReinvention: {
+    name: 'Career Reinvention',
+    icon: 'briefcase',
+  },
+  healthLongevity: {
+    name: 'Health & Longevity',
+    icon: 'heart',
+  },
+  purposeMeaning: {
+    name: 'Purpose & Meaning',
+    icon: 'compass',
+  },
+};
+
+const POSSIBILITY_MAP_FALLBACK_LEVERAGE: Record<PossibilityMapDimensionId, number> = {
+  aiDisruption: 340,
+  careerReinvention: 220,
+  healthLongevity: 180,
+  purposeMeaning: 260,
+};
+
+const LEVERAGE_PERCENT_MIN = 50;
+const LEVERAGE_PERCENT_MAX = 999;
+
+const POSSIBILITY_MAP_FALLBACK_DESCRIPTIONS: Record<PossibilityMapDimensionId, string> = {
+  aiDisruption: 'AI is reshaping what one person can accomplish. The leverage is yours to claim.',
+  careerReinvention: 'The path you want is closer than it looks. The capability gap is collapsing.',
+  healthLongevity:
+    'Decade-long energy curve, not annual. Sleep, recovery, and cognition treated as compounding assets.',
+  purposeMeaning: 'The work that closes the gap between who you are and who you are becoming.',
+};
+
+const POSSIBILITY_MAP_SYSTEM_PROMPT = [
+  "You generate a 'Possibility Map' for a career-transformation product called Dynamis.",
+  "Given a user's intent profile, write 4 short, punchy, inspiring descriptions — one per fixed dimension.",
+  'The 4 dimensions are FIXED (do not invent new ones):',
+  '1. aiDisruption (how AI multiplies their leverage in their field)',
+  '2. careerReinvention (their aspiration is closer than it looks)',
+  '3. healthLongevity (sustaining energy/values over the long arc)',
+  '4. purposeMeaning (closing the gap toward what matters to them)',
+  "Each description: 1-2 sentences, max ~30 words, second person ('you/your'), grounded in the SPECIFIC profile details. Inspiring but not cheesy.",
+  "For each dimension, also produce a 'leveragePercent': an integer between 120 and 400 representing the directional magnitude of opportunity for THIS person in THIS dimension.",
+  "Vary the numbers meaningfully across the 4 dimensions based on where this person's profile suggests the biggest leverage. Don't make them all similar.",
+  'Higher = more transformative potential given their specific situation.',
+  'Output ONLY valid JSON, no markdown, no preamble, in this exact shape:',
+  '{"dimensions":[{"id":"aiDisruption","description":"...","leveragePercent":340},{"id":"careerReinvention","description":"...","leveragePercent":220},{"id":"healthLongevity","description":"...","leveragePercent":180},{"id":"purposeMeaning","description":"...","leveragePercent":260}]}',
+].join('\n');
+
+function formatProfileForPossibilityMapPrompt(profile: UserProfile): string {
+  const lines: string[] = [];
+  if (profile.role_context) {
+    lines.push(`role_context: ${profile.role_context}`);
+  }
+  if (profile.aspirations) {
+    lines.push(`aspirations: ${profile.aspirations}`);
+  }
+  if (profile.strengths) {
+    lines.push(`strengths: ${profile.strengths}`);
+  }
+  if (profile.weaknesses) {
+    lines.push(`weaknesses: ${profile.weaknesses}`);
+  }
+  if (profile.values_list.length > 0) {
+    lines.push(`values_list: ${profile.values_list.join(', ')}`);
+  }
+  if (profile.active_focus) {
+    lines.push(`active_focus: ${profile.active_focus}`);
+  }
+  if (profile.long_term_summary) {
+    lines.push(`long_term_summary: ${profile.long_term_summary}`);
+  }
+  if (lines.length === 0) {
+    return 'No profile fields captured yet. Write universal but warm second-person copy for each dimension.';
+  }
+  return lines.join('\n');
+}
+
+function extractJsonObjectFromText(text: string): unknown | null {
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // continue
+  }
+
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenceMatch?.[1]) {
+    try {
+      return JSON.parse(fenceMatch[1].trim());
+    } catch {
+      // continue
+    }
+  }
+
+  const start = trimmed.indexOf('{');
+  const end = trimmed.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(trimmed.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function isPossibilityMapDimensionId(value: string): value is PossibilityMapDimensionId {
+  return (POSSIBILITY_MAP_DIMENSION_IDS as readonly string[]).includes(value);
+}
+
+function parseLeveragePercent(raw: unknown, fallback: number): number {
+  let numeric: number;
+  if (typeof raw === 'number') {
+    numeric = raw;
+  } else if (typeof raw === 'string') {
+    numeric = Number(raw.trim());
+  } else {
+    return fallback;
+  }
+
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+
+  const rounded = Math.round(numeric);
+  if (rounded < LEVERAGE_PERCENT_MIN || rounded > LEVERAGE_PERCENT_MAX) {
+    return fallback;
+  }
+
+  return Math.min(LEVERAGE_PERCENT_MAX, Math.max(LEVERAGE_PERCENT_MIN, rounded));
+}
+
+function buildPossibilityMapDimensions(parsed: unknown): Array<{
+  id: PossibilityMapDimensionId;
+  name: string;
+  leveragePercent: number;
+  description: string;
+  icon: string;
+}> {
+  const descriptionById = new Map<PossibilityMapDimensionId, string>();
+  const leverageById = new Map<PossibilityMapDimensionId, number>();
+
+  if (parsed && typeof parsed === 'object' && 'dimensions' in parsed) {
+    const rawDimensions = (parsed as { dimensions?: unknown }).dimensions;
+    if (Array.isArray(rawDimensions)) {
+      for (const item of rawDimensions) {
+        if (!item || typeof item !== 'object') {
+          continue;
+        }
+        const id = String((item as { id?: unknown }).id ?? '').trim();
+        const description = String((item as { description?: unknown }).description ?? '').trim();
+        if (!isPossibilityMapDimensionId(id)) {
+          continue;
+        }
+        if (description) {
+          descriptionById.set(id, description);
+        }
+        const fallbackLeverage = POSSIBILITY_MAP_FALLBACK_LEVERAGE[id];
+        const leverage = parseLeveragePercent(
+          (item as { leveragePercent?: unknown }).leveragePercent,
+          fallbackLeverage,
+        );
+        leverageById.set(id, leverage);
+      }
+    }
+  }
+
+  return POSSIBILITY_MAP_DIMENSION_IDS.map((id) => {
+    const meta = POSSIBILITY_MAP_FIXED_META[id];
+    const fallbackLeverage = POSSIBILITY_MAP_FALLBACK_LEVERAGE[id];
+    return {
+      id,
+      name: meta.name,
+      leveragePercent: leverageById.get(id) ?? fallbackLeverage,
+      icon: meta.icon,
+      description: descriptionById.get(id) ?? POSSIBILITY_MAP_FALLBACK_DESCRIPTIONS[id],
+    };
+  });
+}
+
+const TRANSFORMATION_PLAN_GOAL_COUNT = 5;
+
+const TRANSFORMATION_PLAN_ALLOWED_TAGS = new Set(['research', 'build', 'reflect']);
+const TRANSFORMATION_PLAN_ALLOWED_PRIORITIES = new Set(['high', 'normal']);
+const TRANSFORMATION_PLAN_ALLOWED_DUE_KEYS = new Set(['todayAt', 'tomorrow', 'wed', 'fri']);
+
+const TRANSFORMATION_PLAN_SYSTEM_PROMPT = [
+  "You generate a 'Transformation Plan' for a career-transformation product called Dynamis.",
+  "Given a user's intent profile, write 5 concrete, actionable tasks that move this specific person toward their stated aspirations.",
+  "Each task should be: specific (not vague), doable in a week or less, second person ('You will...' implied), grounded in THEIR profile details. 8-14 words ideally. Examples of tone (DON'T copy literally, just tone):",
+  "'Interview 5 senior front-end devs about AI tooling adoption',",
+  "'Ship a 200-word post on what you learned this week',",
+  "'Build a tiny CLI that automates one repetitive task in your job'.",
+  "Spread tasks across difficulty: 1-2 quick research/reflect tasks, 2-3 build tasks. Mix priorities so 1-2 are 'high' priority.",
+  "Schedule across the week: 1 'todayAt', 1 'tomorrow', 1 'wed', 1 'fri', 1 with no schedule (general).",
+  'Output ONLY valid JSON, no markdown, no preamble, exact shape:',
+  '{"goals":[',
+  '{"id":"goal_1","title":"...","priority":"normal","tag":"research","dueLabelKey":"todayAt"},',
+  '{"id":"goal_2","title":"...","priority":"high","tag":"build","dueLabelKey":"tomorrow"},',
+  '... (5 total)',
+  ']}',
+  "Allowed tag values: 'research', 'build', 'reflect'.",
+  "Allowed priority values: 'high', 'normal'.",
+  "Allowed dueLabelKey values: 'todayAt', 'tomorrow', 'wed', 'fri', or OMIT the field for general/no-schedule task.",
+  "ids must be unique strings like 'goal_1' through 'goal_5'.",
+].join('\n');
+
+const TRANSFORMATION_PLAN_FALLBACK_GOALS = [
+  {
+    id: 'goal_1',
+    title: "Reflect on this week's biggest insight",
+    priority: 'normal',
+    tag: 'reflect',
+    dueLabelKey: 'todayAt',
+    realized: false,
+    realizedAt: null,
+  },
+  {
+    id: 'goal_2',
+    title: 'Identify one skill gap to close this month',
+    priority: 'high',
+    tag: 'research',
+    dueLabelKey: 'tomorrow',
+    realized: false,
+    realizedAt: null,
+  },
+  {
+    id: 'goal_3',
+    title: 'Ship a small prototype that automates one repetitive task',
+    priority: 'normal',
+    tag: 'build',
+    dueLabelKey: 'wed',
+    realized: false,
+    realizedAt: null,
+  },
+  {
+    id: 'goal_4',
+    title: 'Interview two people who have done what you aspire to do',
+    priority: 'high',
+    tag: 'research',
+    dueLabelKey: 'fri',
+    realized: false,
+    realizedAt: null,
+  },
+  {
+    id: 'goal_5',
+    title: 'Write a one-paragraph statement of your next career move',
+    priority: 'normal',
+    tag: 'reflect',
+    realized: false,
+    realizedAt: null,
+  },
+];
+
+function parseTransformationPlanTag(raw: unknown): string {
+  const value = String(raw ?? '').trim();
+  return TRANSFORMATION_PLAN_ALLOWED_TAGS.has(value) ? value : 'research';
+}
+
+function parseTransformationPlanPriority(raw: unknown): string {
+  const value = String(raw ?? '').trim();
+  return TRANSFORMATION_PLAN_ALLOWED_PRIORITIES.has(value) ? value : 'normal';
+}
+
+function parseTransformationPlanDueKey(raw: unknown): string | undefined {
+  if (raw === undefined || raw === null || raw === '') {
+    return undefined;
+  }
+  const value = String(raw).trim();
+  return TRANSFORMATION_PLAN_ALLOWED_DUE_KEYS.has(value) ? value : undefined;
+}
+
+function parseTransformationPlanGoalItem(
+  item: unknown,
+  seenIds: Set<string>,
+): {
+  id: string;
+  title: string;
+  priority: string;
+  tag: string;
+  dueLabelKey?: string;
+  realized: boolean;
+  realizedAt: null;
+} | null {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+
+  const rawId = String((item as { id?: unknown }).id ?? '').trim();
+  const title = String((item as { title?: unknown }).title ?? '').trim();
+  if (!rawId || !title || seenIds.has(rawId)) {
+    return null;
+  }
+
+  const goal = {
+    id: rawId,
+    title: title.slice(0, 240),
+    priority: parseTransformationPlanPriority((item as { priority?: unknown }).priority),
+    tag: parseTransformationPlanTag((item as { tag?: unknown }).tag),
+    realized: false,
+    realizedAt: null,
+  };
+
+  const dueLabelKey = parseTransformationPlanDueKey(
+    (item as { dueLabelKey?: unknown }).dueLabelKey,
+  );
+  if (dueLabelKey) {
+    return { ...goal, dueLabelKey };
+  }
+  return goal;
+}
+
+function buildTransformationPlanGoals(
+  parsed: unknown | null,
+): typeof TRANSFORMATION_PLAN_FALLBACK_GOALS {
+  const validated: typeof TRANSFORMATION_PLAN_FALLBACK_GOALS = [];
+  const seenIds = new Set<string>();
+
+  if (parsed && typeof parsed === 'object' && 'goals' in parsed) {
+    const rawGoals = (parsed as { goals?: unknown }).goals;
+    if (Array.isArray(rawGoals)) {
+      for (const item of rawGoals) {
+        const goal = parseTransformationPlanGoalItem(item, seenIds);
+        if (!goal) {
+          continue;
+        }
+        seenIds.add(goal.id);
+        validated.push(goal);
+        if (validated.length >= TRANSFORMATION_PLAN_GOAL_COUNT) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (validated.length >= TRANSFORMATION_PLAN_GOAL_COUNT) {
+    return validated.slice(0, TRANSFORMATION_PLAN_GOAL_COUNT);
+  }
+
+  return TRANSFORMATION_PLAN_FALLBACK_GOALS.map((goal) => ({ ...goal }));
 }
 
 async function countCrossSessionMessages(
@@ -1411,15 +2024,295 @@ app.post('/chat', async (req: import('express').Request, res: import('express').
     }
 
     const reply = await runAgentTurn(userId, sessionId, userMessage);
+    const { profile_signals, insight } = await buildDiscoverySignalsPayload(userId);
     return res.status(200).json({
       reply,
       session_id: sessionId,
+      profile_signals,
+      insight,
     });
   } catch (error) {
     console.error('POST /chat error:', error);
     return res.status(500).json({ error: 'Internal server error.' });
   }
 });
+
+app.get(
+  '/discovery-signals',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.query.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const payload = await buildDiscoverySignalsPayload(userId);
+      return res.status(200).json(payload);
+    } catch (error) {
+      console.error('GET /discovery-signals error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.post(
+  '/possibility-map',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const profile = await loadUserProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ error: 'profile not ready' });
+      }
+
+      const userPrompt = formatProfileForPossibilityMapPrompt(profile);
+      const llmRes = await anthropic.messages.create({
+        model: SUMMARY_MODEL,
+        system: POSSIBILITY_MAP_SYSTEM_PROMPT,
+        max_tokens: 600,
+        messages: [
+          {
+            role: 'user',
+            content: `Intent profile:\n${userPrompt}\n\nReturn the JSON now.`,
+          },
+        ],
+      });
+
+      const block = llmRes.content[0];
+      if (!block || block.type !== 'text') {
+        return res.status(500).json({ error: 'Failed to parse LLM response.' });
+      }
+
+      const parsed = extractJsonObjectFromText(block.text);
+      if (parsed === null) {
+        return res.status(500).json({ error: 'Failed to parse LLM response.' });
+      }
+
+      const dimensions = buildPossibilityMapDimensions(parsed);
+      return res.status(200).json({
+        dimensions,
+        generated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('POST /possibility-map error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.post(
+  '/transformation-plan',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const profile = await loadUserProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ error: 'profile not ready' });
+      }
+
+      const userPrompt = formatProfileForPossibilityMapPrompt(profile);
+      const llmRes = await anthropic.messages.create({
+        model: SUMMARY_MODEL,
+        system: TRANSFORMATION_PLAN_SYSTEM_PROMPT,
+        max_tokens: 800,
+        messages: [
+          {
+            role: 'user',
+            content: `Intent profile:\n${userPrompt}\n\nReturn the JSON now.`,
+          },
+        ],
+      });
+
+      const block = llmRes.content[0];
+      let parsed: unknown | null = null;
+      if (block && block.type === 'text') {
+        parsed = extractJsonObjectFromText(block.text);
+      }
+
+      const goals = buildTransformationPlanGoals(parsed);
+      return res.status(200).json({
+        goals,
+        generated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('POST /transformation-plan error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+const REFLECTION_SUMMARY_SYSTEM_PROMPT = [
+  "You are summarizing a user's daily check-in for Dynamis, a career transformation product. The user just had a conversation reflecting on their day.",
+  'Extract from the conversation:',
+  '1. What they actually did today (concrete actions, not feelings). 3-6 items.',
+  '2. What they said they want to do tomorrow. 2-4 items.',
+  "3. A short, warm celebration message (1-2 sentences) that acknowledges SPECIFIC things they accomplished — not generic 'great job!' fluff.",
+  "If the user didn't mention something for a category, leave that array empty. Don't invent things they didn't say.",
+  'Output ONLY valid JSON, no markdown, no preamble, exact shape:',
+  '{"did_today":["..."],"plan_tomorrow":["..."],"celebration":"..."}',
+].join('\n');
+
+const REFLECTION_SUMMARY_FALLBACK = {
+  did_today: [],
+  plan_tomorrow: [],
+  celebration: 'Você fez seu check-in hoje. Continue assim — cada conversa conta.',
+};
+
+function normalizeReflectionMessages(
+  raw: unknown,
+): Array<{ role: 'user' | 'assistant'; text: string }> | null {
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+
+  const messages: Array<{ role: 'user' | 'assistant'; text: string }> = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const role = String((item as { role?: unknown }).role ?? '').trim();
+    const text = String((item as { text?: unknown }).text ?? '').trim();
+    if (!text) {
+      continue;
+    }
+    if (role !== 'user' && role !== 'assistant') {
+      continue;
+    }
+    messages.push({ role, text });
+  }
+
+  return messages.length > 0 ? messages : null;
+}
+
+function formatReflectionConversation(
+  messages: Array<{ role: 'user' | 'assistant'; text: string }>,
+): string {
+  return messages
+    .map((message) => {
+      const speaker = message.role === 'user' ? 'User' : 'Agent';
+      return `${speaker}: ${message.text}`;
+    })
+    .join('\n');
+}
+
+function buildReflectionSummaryResult(parsed: unknown | null): typeof REFLECTION_SUMMARY_FALLBACK {
+  if (!parsed || typeof parsed !== 'object') {
+    return { ...REFLECTION_SUMMARY_FALLBACK };
+  }
+
+  const record = parsed as {
+    did_today?: unknown;
+    plan_tomorrow?: unknown;
+    celebration?: unknown;
+  };
+
+  const didToday = Array.isArray(record.did_today)
+    ? record.did_today
+        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+        .map((item) => item.trim())
+        .slice(0, 6)
+    : [];
+
+  const planTomorrow = Array.isArray(record.plan_tomorrow)
+    ? record.plan_tomorrow
+        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+        .map((item) => item.trim())
+        .slice(0, 4)
+    : [];
+
+  const celebration =
+    typeof record.celebration === 'string' && record.celebration.trim().length > 0
+      ? record.celebration.trim()
+      : REFLECTION_SUMMARY_FALLBACK.celebration;
+
+  return {
+    did_today: didToday,
+    plan_tomorrow: planTomorrow,
+    celebration,
+  };
+}
+
+app.post(
+  '/reflection-summary',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const messages = normalizeReflectionMessages(req.body?.messages);
+      if (!messages) {
+        return res.status(400).json({ error: 'empty conversation' });
+      }
+
+      const profile = await loadUserProfile(userId);
+      const profileContext = profile
+        ? formatProfileForPossibilityMapPrompt(profile)
+        : 'No intent profile captured yet.';
+
+      const conversation = formatReflectionConversation(messages);
+      const llmRes = await anthropic.messages.create({
+        model: SUMMARY_MODEL,
+        system: REFLECTION_SUMMARY_SYSTEM_PROMPT,
+        max_tokens: 600,
+        messages: [
+          {
+            role: 'user',
+            content: `Intent profile (context):\n${profileContext}\n\nConversation:\n${conversation}\n\nReturn the JSON now.`,
+          },
+        ],
+      });
+
+      const block = llmRes.content[0];
+      let parsed: unknown | null = null;
+      if (block && block.type === 'text') {
+        parsed = extractJsonObjectFromText(block.text);
+      }
+
+      const summary = buildReflectionSummaryResult(parsed);
+      return res.status(200).json({
+        ...summary,
+        generated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('POST /reflection-summary error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
 
 const voiceWss = new WebSocketServer({ noServer: true });
 
@@ -1471,9 +2364,16 @@ server.on('upgrade', (request, socket, head) => {
       return;
     }
 
-    const context: VoiceSessionContext = endpointingMs
-      ? { userId, sessionId, sampleRate, endpointingMs }
-      : { userId, sessionId, sampleRate };
+    const rawMode = incomingUrl.searchParams.get('mode') ?? 'full';
+    const mode: VoiceSessionMode = rawMode === 'stt_only' ? 'stt_only' : 'full';
+
+    const context: VoiceSessionContext = {
+      userId,
+      sessionId,
+      sampleRate,
+      mode,
+      ...(endpointingMs ? { endpointingMs } : {}),
+    };
     voiceWss.handleUpgrade(request, socket, head, (clientSocket) => {
       voiceWss.emit('connection', clientSocket, request, context);
     });
@@ -1835,7 +2735,7 @@ voiceWss.on(
         } else if (transcript) {
           console.log('[stt] partial', { session_id: context.sessionId, chars: transcript.length });
         }
-        if (endOfTurn && transcript) {
+        if (endOfTurn && transcript && context.mode !== 'stt_only') {
           enqueueResponse(transcript);
         }
       } else if (message.type === 'Termination') {

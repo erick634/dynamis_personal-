@@ -1,4 +1,7 @@
 {
+  "common": {
+    "cancel": "Cancel"
+  },
   "brand": {
     "name": "Dynamis"
   },
@@ -45,14 +48,16 @@
     "dynamis": {
       "label": "DYNAMIS",
       "subLabel": "Potential, waiting",
-      "name": "dynamis",
+      "prelude": "— what I thought was possible",
+      "name": "Dynamis",
       "tagline": "Potential, waiting to be realized.",
       "ariaLabel": "Dynamis constellation — sparse blue stars representing untapped potential"
     },
     "energeia": {
       "label": "ENERGEIA",
       "subLabel": "Potential, becoming",
-      "name": "energeia",
+      "prelude": "— what is actually possible",
+      "name": "Energeia",
       "tagline": "Potential, becoming actuality.",
       "ariaLabel": "Energeia constellation — dense red stars representing potential becoming actuality"
     },
@@ -60,6 +65,13 @@
       "label": "expansion"
     },
     "leveragePercent": "+{{percent}}%",
+    "leverageSuffix": "{{value}} leverage",
+    "generating": "Building your map from your Intent Profile…",
+    "regenerate": "Regenerate map",
+    "noProfile": {
+      "body": "Complete Discovery first so we can map your potential from your own words — not the demo persona.",
+      "cta": "Start Discovery"
+    },
     "dimensions": {
       "aiDisruption": {
         "name": "Navigating AI Disruption",
@@ -82,6 +94,8 @@
   "discovery": {
     "title": "Discovery",
     "subtitle": "A conversation that adapts to you — not a scripted survey.",
+    "endTheDay": "End the day",
+    "endTheDayTooltip": "End-of-day reflection",
     "thinking": "Lead Guide is reflecting…",
     "messages": {
       "label": "Discovery conversation"
@@ -93,12 +107,19 @@
       "label": "Your message",
       "placeholder": "Share what is on your mind…",
       "sendLabel": "Send message",
-      "micLabel": "Start voice conversation",
-      "micStopLabel": "Stop voice conversation"
+      "micLabel": "Start voice input",
+      "micStopLabel": "Stop voice input"
+    },
+    "voice": {
+      "listening": "Listening… your words appear here as you speak.",
+      "placeholder": "Speak now…",
+      "errorMicDenied": "Microphone access was denied. Allow the mic in your browser settings.",
+      "errorNoToken": "Voice input needs a token — check VITE_DYNAMIS_JWT or enable VITE_ALLOW_EMPTY_TOKEN for local dev."
     },
     "sidePanel": {
       "profileTitle": "Intent Profile signals",
       "profileHint": "Captured live as you speak",
+      "updating": "Updating from your latest reply…",
       "dimensions": {
         "values": "Values",
         "mission": "Mission",
@@ -106,12 +127,15 @@
         "constraints": "Constraints"
       }
     },
+    "greeting": "Hello, {{name}}. How are today's objectives going?",
+    "greetingFallbackName": "there",
     "insight": {
       "title": "Emerging insight",
+      "fallback": "Start the conversation — your Intent Profile signals update as you speak.",
       "quote": "Pattern emerging: you return to \"climate\" twice and \"starting\" three times — there may be a thread between stewardship and new beginnings."
     },
     "mockMessages": {
-      "greeting": "Welcome. I am your Lead Guide. Before we map what is possible, I want to understand what already matters to you. What brought you here today?",
+      "greeting": "Hello, {{name}}. How are today's objectives going?",
       "userClimate": "I keep thinking about climate work and whether I am too late to start something meaningful.",
       "followUp": "That tension between urgency and timing is worth sitting with. When you say \"starting,\" what would the first small step look like?",
       "agentReply": "Thank you for sharing that. I am noticing how often care for the world and care for your own path appear together in what you said."
@@ -119,7 +143,7 @@
   },
   "transformationPlan": {
     "eyebrow": "Transformation Plan",
-    "title": "Concrete steps. One tree.",
+    "title": "The path takes shape.",
     "streak": "{{days}} day streak",
     "filters": {
       "label": "Filter plan items",
@@ -132,7 +156,8 @@
       "high": "High",
       "research": "Research",
       "build": "Build",
-      "reflect": "Reflect"
+      "reflect": "Reflect",
+      "doneToday": "Done today"
     },
     "schedule": {
       "todayAt": "Today · 14:00",
@@ -140,11 +165,21 @@
       "wed": "Wed",
       "fri": "Fri"
     },
+    "editTitle": "Edit task title",
+    "cancelEdit": "Cancel editing",
+    "saveEdit": "Save task title",
     "item": {
       "markDone": "Mark \"{{title}}\" as realized",
       "markNotDone": "Mark \"{{title}}\" as not yet realized"
     },
     "emptyFilter": "No steps match this filter.",
+    "newPlanButton": "New plan",
+    "newPlanConfirmTitle": "Generate a new plan?",
+    "newPlanConfirmDescription": "Your current progress will be reset. This can't be undone.",
+    "newPlanConfirmAction": "Generate new",
+    "constellation": {
+      "ariaLabel": "{{count}} goals, {{realized}} realized"
+    },
     "tree": {
       "streakPill": "{{count}} day streak",
       "ariaLabel": "Your Dynamis tree — {{branches}} active journeys, {{leaves}} actions taken, {{fruits}} Energeia realized, {{streakDays}} day streak"
@@ -228,10 +263,14 @@
     "refreshButton": "Refresh profile"
   },
   "dailyReflection": {
+    "greeting": "Welcome back. Let's reflect on your day — what happened today, and what's calling your attention for tomorrow?",
+    "endCheckIn": "End check-in",
     "card": {
       "eyebrow": "Daily Reflection",
       "title": "End-of-day reflection",
-      "description": "3 questions, ~2 min · grows your tree"
+      "description": "3 questions, ~2 min · grows your tree",
+      "completedTitle": "Check-in complete for today",
+      "completedDescription": "{{count}} activities captured · open to review or add more"
     },
     "prompt": {
       "eyebrow": "Reflection mode",
@@ -245,16 +284,17 @@
     "messages": {
       "label": "Daily reflection conversation"
     },
-    "questions": {
-      "q1": "How did today feel — energetic, drained, somewhere between?",
-      "q2": "Which moment today felt closest to who you want to become?",
-      "q3": "What's one thing you'd do differently if tomorrow was the same?"
-    },
-    "mockMessages": {
-      "ack": "Noted. Take your time with the next one when you're ready.",
-      "closing": "Thank you for closing the loop today. Your tree will remember this."
+    "summary": {
+      "title": "Today's recap",
+      "didToday": "What you did today",
+      "planTomorrow": "Tomorrow's intent",
+      "done": "Done",
+      "generating": "Reflecting...",
+      "emptyDidToday": "No specific items captured",
+      "fallbackCelebration": "You showed up for your check-in today. Keep going — each conversation counts."
     },
     "insight": {
+      "fallback": "Keep reflecting — each reply sharpens what we capture for tomorrow.",
       "quote": "Reflections like this become journal nodes — they inform tomorrow's Council and your next Energeia."
     }
   },
@@ -264,21 +304,73 @@
   "today": {
     "eyebrow": "Phase 06 · Today",
     "title": "Good morning. Here's where to lean.",
+    "endTheDayHint": "Close the day with a short reflection — about two minutes.",
     "nudge": {
       "eyebrow": "⚡ Proactive nudge",
-      "title": "Your climate interviews are today — the Lead Guide has a framing ready.",
-      "subtitle": "Five conversations can surface the activation gap faster than another week of research. Start with the 14:00 block.",
-      "primaryCta": "Open Discovery",
-      "secondaryCta": "View Possibility Map"
+      "markEnergeia": "Mark Energeia",
+      "secondaryCta": "View Possibility Map",
+      "source": {
+        "plan": "From your plan",
+        "profile": "From your profile",
+        "council": "From Council",
+        "reflection": "Daily reflection",
+        "fallback": "Your journey"
+      },
+      "todayTask": {
+        "title": "Today's focus: {{taskTitle}}",
+        "subtitle": "Scheduled for today in your Transformation Plan. Mark it Energeia when it's done.",
+        "primaryCta": "Open Transformation Plan",
+        "secondaryDiscovery": "Open Discovery"
+      },
+      "upcomingTask": {
+        "title": "Next up: {{taskTitle}}",
+        "subtitle": "On your plan for {{schedule}} — line it up while you have momentum.",
+        "primaryCta": "Open Transformation Plan",
+        "secondaryDiscovery": "Open Discovery"
+      },
+      "profileFocus": {
+        "title": "Your active focus is calling",
+        "subtitle": "{{focus}} — Discovery can help you sharpen the next step.",
+        "primaryCta": "Open Discovery",
+        "secondaryCta": "View Transformation Plan"
+      },
+      "council": {
+        "title": "{{agentName}} has a nudge for you",
+        "subtitle": "From today's Council session.",
+        "primaryCta": "Talk it through",
+        "secondaryCta": "View Transformation Plan"
+      },
+      "reflection": {
+        "title": "Close the day with a short reflection",
+        "subtitle": "Three questions, about two minutes — capture what you did and what matters for tomorrow.",
+        "primaryCta": "Start check-in",
+        "secondaryCta": "View Transformation Plan"
+      },
+      "fallback": {
+        "title": "Your plan is on track for today",
+        "subtitle": "Review your steps or explore how AI expands what's possible on your Possibility Map.",
+        "primaryCta": "Open Transformation Plan"
+      }
     },
     "stats": {
-      "streakSubtitle": "Longest yet",
+      "streakZero": "Mark a step in your plan to start",
+      "streakActive": "Day streak — keep it going",
       "energeiaEyebrow": "Energeia this week",
       "energeiaSubtitle": "Realized steps toward expanded potential"
     },
+    "agenda": {
+      "title": "Today on your plan",
+      "subtitle": "Done from check-in and scheduled for today",
+      "viewPlan": "View full plan",
+      "fromReflection": "From check-in"
+    },
     "council": {
       "title": "Council",
-      "subtitle": "Overnight session — four perspectives on your week"
+      "subtitle": "Overnight session — four perspectives on your week",
+      "hints": {
+        "todayTask": "Lead today's focus — {{taskTitle}} — with one question: what would make the next step obvious?",
+        "reflectionDone": "You closed the day with a check-in. Tomorrow, protect energy before stacking deep work."
+      }
     }
   },
   "council": {

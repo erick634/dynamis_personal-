@@ -1,17 +1,35 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RefreshCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
 import { BrandMark } from '@/components/ui/brand-mark';
-import { DynamisTree } from '@/features/transformation-plan/dynamis-tree';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { DynamisConstellation } from '@/features/transformation-plan/dynamis-constellation';
 import { PlanFilter, type PlanFilterId } from '@/features/transformation-plan/plan-filter';
 import { PlanItem } from '@/features/transformation-plan/plan-item';
-import { DEMO_STREAK_DAYS } from '@/features/transformation-plan/transformation-plan-constants';
+import {
+  applyStreakOnMark,
+  calculateDisplayStreak,
+  createEmptyStreakData,
+  getPlanForUser,
+  savePlanForUser,
+  clearPlanForUser,
+  type StreakData,
+} from '@/features/transformation-plan/plan-storage';
+import { fetchGeneratedPlan } from '@/features/transformation-plan/transformation-plan-llm-api';
 import { MOCK_PLAN_GOALS } from '@/features/transformation-plan/transformation-plan-mock';
+import {
+  getReflectionDidToday,
+  isReflectionTodayGoalId,
+  reflectionItemsToGoals,
+} from '@/features/transformation-plan/reflection-today-storage';
+import { queryClient } from '@/lib/api';
+import { useCurrentUser } from '@/stores/current-user';
 import type { DynamisGoal } from '@/types/energeia';
 
-const DEMO_BRANCH_COUNT = 4;
-
-function filterGoals(goals: DynamisGoal[], filter: PlanFilterId): DynamisGoal[] {
+function filterPlanGoals(goals: DynamisGoal[], filter: PlanFilterId): DynamisGoal[] {
   switch (filter) {
     case 'today':
       return goals.filter((goal) => goal.dueLabelKey === 'todayAt');
@@ -24,47 +42,247 @@ function filterGoals(goals: DynamisGoal[], filter: PlanFilterId): DynamisGoal[] 
   }
 }
 
+function buildVisibleGoals(
+  planGoals: DynamisGoal[],
+  reflectionTodayGoals: DynamisGoal[],
+  filter: PlanFilterId,
+): DynamisGoal[] {
+  if (filter === 'today') {
+    const scheduledToday = planGoals.filter((goal) => goal.dueLabelKey === 'todayAt');
+    return [...reflectionTodayGoals, ...scheduledToday];
+  }
+  return filterPlanGoals(planGoals, filter);
+}
+
 function buildInitialRealizedIds(goals: DynamisGoal[]): Set<string> {
   return new Set(goals.filter((goal) => goal.realized).map((goal) => goal.id));
 }
 
+function syncGoalsWithRealizedIds(goals: DynamisGoal[], realizedIds: Set<string>): DynamisGoal[] {
+  return goals.map((goal) => {
+    const realized = realizedIds.has(goal.id);
+    return {
+      ...goal,
+      realized,
+      realizedAt: realized ? (goal.realizedAt ?? new Date().toISOString()) : null,
+    };
+  });
+}
+
+const PLAN_FILTER_IDS: PlanFilterId[] = ['all', 'today', 'high', 'build'];
+
+function isPlanFilterId(value: string | null): value is PlanFilterId {
+  return value != null && PLAN_FILTER_IDS.includes(value as PlanFilterId);
+}
+
 export function TransformationPlanScreen() {
   const { t } = useTranslation();
-  const [activeFilter, setActiveFilter] = useState<PlanFilterId>('all');
+  const [searchParams] = useSearchParams();
+  const userId = useCurrentUser((state) => state.user?.userId);
+  const [activeFilter, setActiveFilter] = useState<PlanFilterId>(() => {
+    const fromUrl = searchParams.get('filter');
+    return isPlanFilterId(fromUrl) ? fromUrl : 'all';
+  });
   const [goals, setGoals] = useState<DynamisGoal[]>(MOCK_PLAN_GOALS);
   const [realizedIds, setRealizedIds] = useState<Set<string>>(() =>
     buildInitialRealizedIds(MOCK_PLAN_GOALS),
   );
+  const [streakData, setStreakData] = useState<StreakData>(createEmptyStreakData);
+  const [generatedAt, setGeneratedAt] = useState<string>(() => new Date().toISOString());
+  const [hasPersistedPlan, setHasPersistedPlan] = useState(false);
+  const [planStorageReady, setPlanStorageReady] = useState(false);
+  const [showNewPlanConfirm, setShowNewPlanConfirm] = useState(false);
+  const [reflectionTodayGoals, setReflectionTodayGoals] = useState<DynamisGoal[]>([]);
 
-  const filteredGoals = useMemo(() => filterGoals(goals, activeFilter), [goals, activeFilter]);
+  const goalsHydratedRef = useRef(false);
+  const streakDataRef = useRef(streakData);
+
+  useEffect(() => {
+    streakDataRef.current = streakData;
+  }, [streakData]);
+
+  useEffect(() => {
+    const fromUrl = searchParams.get('filter');
+    if (isPlanFilterId(fromUrl)) {
+      setActiveFilter(fromUrl);
+    }
+  }, [searchParams]);
+
+  const displayStreak = useMemo(() => calculateDisplayStreak(streakData), [streakData]);
+
+  const persistPlan = useCallback(
+    (
+      nextGoals: DynamisGoal[],
+      nextRealizedIds: Set<string>,
+      nextStreakData: StreakData,
+      nextGeneratedAt: string,
+    ) => {
+      if (!userId) {
+        return;
+      }
+      savePlanForUser(userId, {
+        userId,
+        goals: nextGoals,
+        realizedIds: Array.from(nextRealizedIds),
+        streakData: nextStreakData,
+        generatedAt: nextGeneratedAt,
+      });
+    },
+    [userId],
+  );
+
+  useEffect(() => {
+    goalsHydratedRef.current = false;
+    setPlanStorageReady(false);
+    setHasPersistedPlan(false);
+
+    if (!userId) {
+      setGoals(MOCK_PLAN_GOALS);
+      setRealizedIds(buildInitialRealizedIds(MOCK_PLAN_GOALS));
+      setStreakData(createEmptyStreakData());
+      setPlanStorageReady(true);
+      return;
+    }
+
+    const persisted = getPlanForUser(userId);
+    if (persisted) {
+      const loadedRealizedIds = new Set(persisted.realizedIds);
+      setGoals(syncGoalsWithRealizedIds(persisted.goals, loadedRealizedIds));
+      setRealizedIds(loadedRealizedIds);
+      setStreakData(persisted.streakData);
+      setGeneratedAt(persisted.generatedAt);
+      setHasPersistedPlan(true);
+      goalsHydratedRef.current = true;
+    }
+
+    setPlanStorageReady(true);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      setReflectionTodayGoals([]);
+      return;
+    }
+    setReflectionTodayGoals(reflectionItemsToGoals(getReflectionDidToday(userId)));
+  }, [userId]);
+
+  const { data: llmGoals, isLoading: isPlanLoading } = useQuery({
+    queryKey: ['transformation-plan-llm', userId],
+    queryFn: () => {
+      if (!userId) {
+        throw new Error('userId is required');
+      }
+      return fetchGeneratedPlan(userId);
+    },
+    enabled: Boolean(userId) && planStorageReady && !hasPersistedPlan,
+    staleTime: Infinity,
+    gcTime: Number.POSITIVE_INFINITY,
+  });
+
+  useEffect(() => {
+    if (!userId || hasPersistedPlan) {
+      return;
+    }
+    if (goalsHydratedRef.current) {
+      return;
+    }
+    if (isPlanLoading) {
+      return;
+    }
+
+    const rawGoals = llmGoals != null && llmGoals.length > 0 ? llmGoals : MOCK_PLAN_GOALS;
+    const nextRealizedIds = new Set<string>();
+    const nextGoals = syncGoalsWithRealizedIds(rawGoals, nextRealizedIds);
+    const nextGeneratedAt = new Date().toISOString();
+
+    setGoals(nextGoals);
+    setRealizedIds(nextRealizedIds);
+    setGeneratedAt(nextGeneratedAt);
+
+    persistPlan(nextGoals, nextRealizedIds, streakDataRef.current, nextGeneratedAt);
+    setHasPersistedPlan(true);
+    goalsHydratedRef.current = true;
+  }, [userId, hasPersistedPlan, isPlanLoading, llmGoals, persistPlan]);
+
+  const filteredGoals = useMemo(
+    () => buildVisibleGoals(goals, reflectionTodayGoals, activeFilter),
+    [goals, reflectionTodayGoals, activeFilter],
+  );
+
+  const goalStates = useMemo(() => {
+    const merged = [...reflectionTodayGoals, ...goals];
+    return merged.map((goal) => ({
+      id: goal.id,
+      realized: isReflectionTodayGoalId(goal.id) ? true : realizedIds.has(goal.id),
+    }));
+  }, [goals, reflectionTodayGoals, realizedIds]);
 
   const handleToggleRealized = (goalId: string, realized: boolean) => {
-    setRealizedIds((prev) => {
-      const next = new Set(prev);
-      if (realized) {
-        next.add(goalId);
-      } else {
-        next.delete(goalId);
+    if (isReflectionTodayGoalId(goalId)) {
+      return;
+    }
+
+    const wasRealized = realizedIds.has(goalId);
+
+    let nextStreakData = streakData;
+    if (realized && !wasRealized) {
+      nextStreakData = applyStreakOnMark(streakData);
+    }
+    // POC: unmarking a goal does not roll back streak (already counted for the day).
+
+    const nextRealizedIds = new Set(realizedIds);
+    if (realized) {
+      nextRealizedIds.add(goalId);
+    } else {
+      nextRealizedIds.delete(goalId);
+    }
+
+    const nextGoals = goals.map((goal) => {
+      if (goal.id !== goalId) {
+        return goal;
       }
-      return next;
+      if (realized) {
+        // eslint-disable-next-line no-console -- TODO(livekit): replace with data channel emit
+        console.warn('TODO: emit energeia.realized via data channel', { goal_id: goalId });
+      }
+      return {
+        ...goal,
+        realized,
+        realizedAt: realized ? new Date().toISOString() : null,
+      };
     });
 
-    setGoals((prev) =>
-      prev.map((goal) => {
-        if (goal.id !== goalId) {
-          return goal;
-        }
-        if (realized) {
-          // eslint-disable-next-line no-console -- TODO(livekit): replace with data channel emit
-          console.warn('TODO: emit energeia.realized via data channel', { goal_id: goalId });
-        }
-        return {
-          ...goal,
-          realized,
-          realizedAt: realized ? new Date().toISOString() : null,
-        };
-      }),
+    setRealizedIds(nextRealizedIds);
+    setGoals(nextGoals);
+    setStreakData(nextStreakData);
+    persistPlan(nextGoals, nextRealizedIds, nextStreakData, generatedAt);
+  };
+
+  const handleTitleChange = (goalId: string, newTitle: string) => {
+    if (isReflectionTodayGoalId(goalId)) {
+      return;
+    }
+
+    const nextGoals = goals.map((goal) =>
+      goal.id === goalId ? { ...goal, title: newTitle } : goal,
     );
+    setGoals(nextGoals);
+    persistPlan(nextGoals, realizedIds, streakData, generatedAt);
+  };
+
+  const handleConfirmNewPlan = async () => {
+    if (!userId) {
+      return;
+    }
+
+    setShowNewPlanConfirm(false);
+    clearPlanForUser(userId);
+    setHasPersistedPlan(false);
+    goalsHydratedRef.current = false;
+
+    await queryClient.invalidateQueries({
+      queryKey: ['transformation-plan-llm', userId],
+    });
   };
 
   return (
@@ -83,21 +301,34 @@ export function TransformationPlanScreen() {
 
         <div className="mt-10 flex flex-col gap-8 lg:flex-row lg:gap-10">
           <aside className="w-full shrink-0 lg:w-[360px]">
-            <DynamisTree
-              branches={DEMO_BRANCH_COUNT}
-              leaves={DEMO_STREAK_DAYS}
-              fruits={realizedIds.size}
-              streakDays={DEMO_STREAK_DAYS}
-            />
+            <DynamisConstellation goals={goalStates} streakDays={displayStreak} />
           </aside>
 
           <section className="min-w-0 flex-1">
-            <PlanFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <PlanFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+              <button
+                type="button"
+                onClick={() => {
+                  if (userId) {
+                    setShowNewPlanConfirm(true);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 font-body text-xs font-medium text-ink-2 transition-colors hover:text-ink"
+              >
+                <RefreshCcw className="h-3.5 w-3.5" aria-hidden />
+                {t('transformationPlan.newPlanButton')}
+              </button>
+            </div>
 
             <ul className="mt-5 flex flex-col gap-3">
               {filteredGoals.map((goal) => (
                 <li key={goal.id}>
-                  <PlanItem goal={goal} onToggleRealized={handleToggleRealized} />
+                  <PlanItem
+                    goal={goal}
+                    onToggleRealized={handleToggleRealized}
+                    onTitleChange={handleTitleChange}
+                  />
                 </li>
               ))}
             </ul>
@@ -110,6 +341,21 @@ export function TransformationPlanScreen() {
           </section>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showNewPlanConfirm}
+        title={t('transformationPlan.newPlanConfirmTitle')}
+        description={t('transformationPlan.newPlanConfirmDescription')}
+        confirmLabel={t('transformationPlan.newPlanConfirmAction')}
+        cancelLabel={t('common.cancel')}
+        destructive={false}
+        onConfirm={() => {
+          void handleConfirmNewPlan();
+        }}
+        onCancel={() => {
+          setShowNewPlanConfirm(false);
+        }}
+      />
     </div>
   );
 }

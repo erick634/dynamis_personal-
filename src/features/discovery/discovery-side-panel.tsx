@@ -51,9 +51,14 @@ function ProgressRing({ percent, label }: ProgressRingProps) {
 type DiscoverySidePanelProps = {
   profileSignals: ProfileSignals;
   insightQuote: string;
+  isUpdating?: boolean;
 };
 
-export function DiscoverySidePanel({ profileSignals, insightQuote }: DiscoverySidePanelProps) {
+export function DiscoverySidePanel({
+  profileSignals,
+  insightQuote,
+  isUpdating = false,
+}: DiscoverySidePanelProps) {
   const { t } = useTranslation();
 
   return (
@@ -65,7 +70,13 @@ export function DiscoverySidePanel({ profileSignals, insightQuote }: DiscoverySi
         <p className="mt-1 font-body text-sm text-ink-2">{t('discovery.sidePanel.profileHint')}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div
+        className={[
+          'grid grid-cols-2 gap-6 transition-opacity',
+          isUpdating ? 'opacity-70' : '',
+        ].join(' ')}
+        aria-busy={isUpdating}
+      >
         {DIMENSIONS.map((dimension) => (
           <ProgressRing
             key={dimension}
@@ -74,6 +85,12 @@ export function DiscoverySidePanel({ profileSignals, insightQuote }: DiscoverySi
           />
         ))}
       </div>
+
+      {isUpdating ? (
+        <p className="font-body text-xs text-ink-3" role="status">
+          {t('discovery.sidePanel.updating')}
+        </p>
+      ) : null}
 
       <div className="rounded-[16px] bg-bg-deep px-5 py-5 text-white">
         <p className="font-body text-xs font-semibold tracking-wide text-red-warm uppercase">

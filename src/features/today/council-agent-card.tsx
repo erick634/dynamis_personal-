@@ -26,6 +26,7 @@ export function CouncilAgentCard({ agent }: CouncilAgentCardProps) {
   const nameKey = `council.agents.${agent.id}.name`;
   const roleKey = `council.agents.${agent.id}.role`;
   const statusKey = `council.agents.${agent.id}.status`;
+  const statusText = agent.hint ?? t(statusKey);
 
   const pillKey = agent.status === 'aligned' ? 'council.pills.aligned' : 'council.pills.suggested';
 
@@ -55,7 +56,7 @@ export function CouncilAgentCard({ agent }: CouncilAgentCardProps) {
 
       <h3 className="mt-4 pr-16 font-display text-lg font-semibold text-ink">{t(nameKey)}</h3>
       <p className="font-body text-xs font-medium text-ink-3">{t(roleKey)}</p>
-      <p className="mt-3 flex-1 font-body text-sm leading-relaxed text-ink-2">{t(statusKey)}</p>
+      <p className="mt-3 flex-1 font-body text-sm leading-relaxed text-ink-2">{statusText}</p>
     </article>
   );
 }
