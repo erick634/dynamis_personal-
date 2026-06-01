@@ -30,11 +30,26 @@ export function useIntentProfile(): UseIntentProfileResult {
     setIsLoading(true);
     setError(null);
 
-    const { data, error: queryError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', user.userId)
-      .maybeSingle<IntentProfileRow>();
+    let data: IntentProfileRow | null = null;
+    let queryError: { code?: string; message: string } | null = null;
+
+    try {
+      ({ data, error: queryError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.userId)
+        .maybeSingle<IntentProfileRow>());
+
+      // eslint-disable-next-line no-console
+      console.warn('[pdbg] user:', user.userId, 'data:', data, 'err:', queryError);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[pdbg] EXCEPTION:', err);
+      setProfile(null);
+      setIsLoading(false);
+      setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
 
     if (queryError) {
       // Treat "no rows" as a processing state, not as an error.
