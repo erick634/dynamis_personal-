@@ -1,4 +1,4 @@
-import { CalendarDays, ListTodo, Map, MessageCircle, Radio, UserRound } from 'lucide-react';
+import { CalendarDays, Compass, ListTodo, Radio, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -12,10 +12,9 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { to: '/today', labelKey: 'nav.today', icon: CalendarDays },
   { to: '/plan', labelKey: 'nav.plan', icon: ListTodo },
-  { to: '/map', labelKey: 'nav.possibilityMap', icon: Map },
-  { to: '/guide', labelKey: 'nav.guide', icon: MessageCircle },
+  { to: '/map', labelKey: 'nav.explore', icon: Compass },
   { to: '/live', labelKey: 'nav.live', icon: Radio },
-  { to: '/you', labelKey: 'nav.you', icon: UserRound },
+  { to: '/you', labelKey: 'nav.profile', icon: UserRound },
 ];
 
 export function AppLayout() {
@@ -40,9 +39,7 @@ export function AppLayout() {
                   className={({ isActive }) =>
                     [
                       'flex flex-col items-center gap-1 rounded-xl px-2 py-2 font-body text-[11px] font-medium transition-colors md:flex-row md:gap-3 md:px-3 md:py-2.5 md:text-sm',
-                      isActive
-                        ? 'bg-blue text-white'
-                        : 'text-ink-2 hover:bg-bg-soft hover:text-ink',
+                      isActive ? 'text-blue' : 'text-ink-3 hover:text-ink',
                     ].join(' ')
                   }
                 >

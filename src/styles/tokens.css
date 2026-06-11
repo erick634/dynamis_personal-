@@ -1,45 +1,62 @@
 :root {
-  /* Background and surface */
-  --bg: #fafbfd;
-  --bg-soft: #f1f5fa;
+  /* Background and surface — warm paper palette */
+  --bg: #f4efe3;
+  --bg-soft: #ece5d2;
+  --bg-deep-cream: #dcd3ba;
+  --paper: #fbf8f0;
+  --paper-2: #f7f2e5;
   --bg-awakening-start: #0f2d52;
   --bg-deep: #0b1929;
   --bg-deep-end: #050d17;
 
   /* Ink (text) */
-  --ink: #0b1929;
-  --ink-2: #475569;
-  --ink-3: #94a3b8;
+  --ink: #0c1b36;
+  --ink-2: #3a4a66;
+  --ink-3: #788499;
+  --ink-4: #b0b7c4;
 
   /* Borders */
-  --line: #e2e8f0;
-  --line-soft: #eef2f7;
+  --line: #d7cfbc;
+  --line-soft: #e5dfcc;
 
   /* Blue — memory / brand */
-  --blue: #1b5e9f;
-  --blue-2: #2e86de;
-  --blue-soft: #dce9f7;
+  --blue: #1f44e0;
+  --blue-2: #122c99;
+  --blue-soft: #dde5ff;
+  --blue-mist: #eef2ff;
 
-  /* Red — achievement / Energeia */
+  /* Red — achievement / Energeia (kept for compatibility) */
   --red: #d94a38;
   --red-2: #c73e2c;
   --red-warm: #e8654d;
 
-  /* Green — suggestion / growth */
-  --success: #2ebc8f;
+  /* Ember — drag reduction / streak */
+  --ember: #d96a2b;
+  --ember-soft: #f7ddc9;
+
+  /* Gold — rewards */
+  --gold: #b98a1a;
+  --gold-soft: #f1e3b4;
+
+  /* Moss — trails / growth */
+  --moss: #4f7a4a;
+  --moss-soft: #dce7d3;
+
+  /* Green — suggestion / growth (kept) */
+  --success: #4f7a4a;
   --success-deep: #15803d;
 
-  /* Destructive (not achievement red) */
+  /* Destructive */
   --destructive: #9b2c2c;
 
   /* Typography */
   --font-display: 'Fraunces', Georgia, serif;
   --font-body: 'Manrope', system-ui, sans-serif;
 
-  /* Shadows */
-  --shadow-soft: 0 4px 24px rgb(11 25 41 / 6%);
-  --shadow-card: 0 8px 32px rgb(11 25 41 / 8%);
-  --shadow-elevated: 0 16px 48px rgb(11 25 41 / 12%);
-  --shadow-glow-red: 0 0 40px rgb(217 74 56 / 25%);
-  --shadow-glow-success: 0 0 32px rgb(46 188 143 / 20%);
+  /* Shadows — warm ink */
+  --shadow-soft: 0 1px 2px rgb(12 27 54 / 6%), 0 8px 24px rgb(12 27 54 / 7%);
+  --shadow-card: 0 1px 2px rgb(12 27 54 / 6%), 0 8px 24px rgb(12 27 54 / 7%);
+  --shadow-elevated: 0 16px 48px rgb(12 27 54 / 12%);
+  --shadow-glow-red: 0 0 40px rgb(217 106 43 / 25%);
+  --shadow-glow-success: 0 0 32px rgb(79 122 74 / 20%);
 }

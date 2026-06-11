@@ -306,6 +306,13 @@
   "today": {
     "eyebrow": "Fase 06 · Hoje",
     "title": "Bom dia. Aqui está onde focar.",
+    "greeting": {
+      "title": "Bom dia. É aqui que você avança.",
+      "subtitle": "Dois minutos para mover seu plano."
+    },
+    "missionsHead": "Missões diárias",
+    "trailsHead": "Suas trilhas",
+    "seeAll": "Ver tudo",
     "endTheDayHint": "Feche o dia no Diário de Bordo — cerca de dois minutos.",
     "nudge": {
       "eyebrow": "⚡ Sugestão proativa",
@@ -479,10 +486,11 @@
     "discovery": "Descoberta",
     "guide": "Descoberta",
     "live": "Live",
-    "profile": "Perfil de Intenção",
+    "profile": "Perfil",
     "you": "Perfil de Intenção",
     "possibilityMap": "Mapa de Possibilidades",
-    "plan": "Plano de Transformação",
+    "explore": "Explorar",
+    "plan": "Plano",
     "today": "Hoje"
   },
   "routes": {

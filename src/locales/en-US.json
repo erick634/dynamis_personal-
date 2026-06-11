@@ -306,6 +306,13 @@
   "today": {
     "eyebrow": "Phase 06 · Today",
     "title": "Good morning. Here's where to lean.",
+    "greeting": {
+      "title": "Good morning. Here's where to lean.",
+      "subtitle": "Two minutes to move your plan forward."
+    },
+    "missionsHead": "Daily missions",
+    "trailsHead": "Your trails",
+    "seeAll": "See all",
     "endTheDayHint": "Close the day in your Captain's Log — about two minutes.",
     "nudge": {
       "eyebrow": "⚡ Proactive nudge",
@@ -479,10 +486,11 @@
     "discovery": "Discovery",
     "guide": "Discovery",
     "live": "Live",
-    "profile": "Intent Profile",
+    "profile": "Profile",
     "you": "Intent Profile",
     "possibilityMap": "Possibility Map",
-    "plan": "Transformation Plan",
+    "explore": "Explore",
+    "plan": "Plan",
     "today": "Today"
   },
   "routes": {

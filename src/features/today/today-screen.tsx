@@ -1,60 +1,69 @@
 import { useTranslation } from 'react-i18next';
 
-import { DailyReflectionCard } from '@/features/daily-reflection/daily-reflection-card';
-import { EndTheDayButton } from '@/features/daily-reflection/end-the-day-button';
-import { CouncilSection } from '@/features/today/council-section';
-import { ProactiveNudgeCard } from '@/features/today/proactive-nudge-card';
-import { StreakStatCard } from '@/features/today/streak-stat-card';
-import { TodayAgendaSection } from '@/features/today/today-agenda-section';
+import { MissionCard } from '@/features/today/mission-card';
+import { StatStrip } from '@/features/today/stat-strip';
+import { TodayGreeting } from '@/features/today/today-greeting';
+import { MOCK_TODAY_GAMIFICATION } from '@/features/today/today-gamification-mock';
+import { TrailRow } from '@/features/today/trail-row';
 import { useTodayDashboard } from '@/features/today/use-today-dashboard';
-import { WeeklyStatCard } from '@/features/today/weekly-stat-card';
+import { XpCard } from '@/features/today/xp-card';
 import { useDemoUserId } from '@/hooks/use-demo-user-id';
 
 export function TodayScreen() {
   const { t } = useTranslation();
   const userId = useDemoUserId();
   const dashboard = useTodayDashboard(userId);
+  const mock = MOCK_TODAY_GAMIFICATION;
 
   return (
-    <div className="px-4 py-8 md:px-8 md:py-10">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-2xl">
-          <p className="font-body text-xs font-semibold tracking-[0.18em] text-blue uppercase">
-            {t('today.eyebrow')}
-          </p>
-          <h1 className="mt-2 font-display text-[clamp(1.75rem,3vw,2.5rem)] font-semibold text-ink">
-            {t('today.title')}
-          </h1>
-          <p className="mt-2 font-body text-sm text-ink-2">{t('today.endTheDayHint')}</p>
-        </div>
-        <EndTheDayButton className="self-start" />
-      </header>
+    <div className="mx-auto max-w-lg px-4 py-6 md:max-w-2xl md:px-8 md:py-8">
+      <TodayGreeting
+        initial={mock.userInitial}
+        title={t('today.greeting.title')}
+        subtitle={t('today.greeting.subtitle')}
+      />
 
-      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
-        <ProactiveNudgeCard
-          nudge={dashboard.nudge}
-          canMarkEnergeia={dashboard.canMarkNudgeEnergeia}
-          onMarkEnergeia={dashboard.markNudgeGoalEnergeia}
-        />
-        <div className="flex flex-col gap-5">
-          <StreakStatCard streakDays={dashboard.streakDays} />
-          <WeeklyStatCard
-            realized={dashboard.weeklyEnergeia.realized}
-            total={dashboard.weeklyEnergeia.total}
-          />
-        </div>
+      <div className="mt-5">
+        <StatStrip streakDays={dashboard.streakDays} level={mock.level} />
       </div>
 
-      <TodayAgendaSection items={dashboard.agendaItems} />
+      <section className="mt-6" aria-labelledby="today-missions-heading">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 id="today-missions-heading" className="font-display text-base font-semibold text-ink">
+            {t('today.missionsHead')}
+          </h2>
+          <button type="button" className="font-body text-xs font-medium text-blue">
+            {t('today.seeAll')}
+          </button>
+        </div>
+        <ul className="flex flex-col gap-3">
+          {mock.missions.map((mission, index) => (
+            <li key={mission.id}>
+              <MissionCard mission={mission} index={index} />
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <div className="mt-6">
-        <DailyReflectionCard
-          completedToday={dashboard.reflectionDoneToday}
-          itemCount={dashboard.reflectionItemCount}
-        />
+      <div className="mt-5">
+        <XpCard xpCurrent={mock.xpCurrent} xpToNext={mock.xpToNext} />
       </div>
 
-      <CouncilSection agents={dashboard.councilAgents} />
+      <section className="mt-6" aria-labelledby="today-trails-heading">
+        <h2
+          id="today-trails-heading"
+          className="mb-3 font-display text-base font-semibold text-ink"
+        >
+          {t('today.trailsHead')}
+        </h2>
+        <ul className="flex flex-col gap-2.5">
+          {mock.trails.map((trail) => (
+            <li key={trail.id}>
+              <TrailRow trail={trail} />
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

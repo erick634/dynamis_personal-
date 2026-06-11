@@ -5,6 +5,9 @@
   /* Colors — semantic tokens only */
   --color-bg: var(--bg);
   --color-bg-soft: var(--bg-soft);
+  --color-bg-deep-cream: var(--bg-deep-cream);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
   --color-bg-awakening-start: var(--bg-awakening-start);
   --color-bg-deep: var(--bg-deep);
   --color-bg-deep-end: var(--bg-deep-end);
@@ -12,6 +15,7 @@
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
 
   --color-line: var(--line);
   --color-line-soft: var(--line-soft);
@@ -19,6 +23,14 @@
   --color-blue: var(--blue);
   --color-blue-accent: var(--blue-2);
   --color-blue-soft: var(--blue-soft);
+  --color-blue-mist: var(--blue-mist);
+
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-moss: var(--moss);
+  --color-moss-soft: var(--moss-soft);
 
   --color-red: var(--red);
   --color-red-deep: var(--red-2);

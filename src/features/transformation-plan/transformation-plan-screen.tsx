@@ -6,12 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { DynamisConstellation } from '@/features/transformation-plan/dynamis-constellation';
 import { PlanFilter, type PlanFilterId } from '@/features/transformation-plan/plan-filter';
-import { PlanItem } from '@/features/transformation-plan/plan-item';
+import { PlanTrailMap, type TrailNode } from '@/features/transformation-plan/plan-trail-map';
 import {
   applyStreakOnMark,
-  calculateDisplayStreak,
   createEmptyStreakData,
   getPlanForUser,
   savePlanForUser,
@@ -107,8 +105,6 @@ export function TransformationPlanScreen() {
       setActiveFilter(fromUrl);
     }
   }, [searchParams]);
-
-  const displayStreak = useMemo(() => calculateDisplayStreak(streakData), [streakData]);
 
   const persistPlan = useCallback(
     (
@@ -209,13 +205,31 @@ export function TransformationPlanScreen() {
     [goals, reflectionTodayGoals, activeFilter],
   );
 
-  const goalStates = useMemo(() => {
-    const merged = [...reflectionTodayGoals, ...goals];
-    return merged.map((goal) => ({
-      id: goal.id,
-      realized: isReflectionTodayGoalId(goal.id) ? true : realizedIds.has(goal.id),
-    }));
-  }, [goals, reflectionTodayGoals, realizedIds]);
+  const trailNodes = useMemo((): TrailNode[] => {
+    let foundCurrent = false;
+
+    return filteredGoals.map((goal) => {
+      const resolvedTitle = goal.title ?? t(`transformationPlan.items.${goal.id}.title`);
+      const isDone = goal.realized;
+      let state: TrailNode['state'];
+
+      if (isDone) {
+        state = 'done';
+      } else if (!foundCurrent) {
+        state = 'current';
+        foundCurrent = true;
+      } else {
+        state = 'locked';
+      }
+
+      return {
+        goal,
+        resolvedTitle,
+        state,
+        tone: goal.tag === 'build' ? 'ember' : 'blue',
+      };
+    });
+  }, [filteredGoals, t]);
 
   const handleToggleRealized = (goalId: string, realized: boolean) => {
     if (isReflectionTodayGoalId(goalId)) {
@@ -258,18 +272,6 @@ export function TransformationPlanScreen() {
     persistPlan(nextGoals, nextRealizedIds, nextStreakData, generatedAt);
   };
 
-  const handleTitleChange = (goalId: string, newTitle: string) => {
-    if (isReflectionTodayGoalId(goalId)) {
-      return;
-    }
-
-    const nextGoals = goals.map((goal) =>
-      goal.id === goalId ? { ...goal, title: newTitle } : goal,
-    );
-    setGoals(nextGoals);
-    persistPlan(nextGoals, realizedIds, streakData, generatedAt);
-  };
-
   const handleConfirmNewPlan = async () => {
     if (!userId) {
       return;
@@ -292,53 +294,37 @@ export function TransformationPlanScreen() {
       </header>
 
       <div className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
-        <p className="font-body text-xs font-semibold tracking-[0.18em] text-red uppercase">
+        <p className="font-body text-xs font-semibold tracking-[0.18em] text-blue uppercase">
           {t('transformationPlan.eyebrow')}
         </p>
         <h1 className="mt-2 font-display text-[clamp(1.75rem,3vw,2.5rem)] font-semibold text-ink">
           {t('transformationPlan.title')}
         </h1>
 
-        <div className="mt-10 flex flex-col gap-8 lg:flex-row lg:gap-10">
-          <aside className="w-full shrink-0 lg:w-[360px]">
-            <DynamisConstellation goals={goalStates} streakDays={displayStreak} />
-          </aside>
+        <div className="mt-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <PlanFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+            <button
+              type="button"
+              onClick={() => {
+                if (userId) {
+                  setShowNewPlanConfirm(true);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 font-body text-xs font-medium text-ink-2 transition-colors hover:text-ink"
+            >
+              <RefreshCcw className="h-3.5 w-3.5" aria-hidden />
+              {t('transformationPlan.newPlanButton')}
+            </button>
+          </div>
 
-          <section className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <PlanFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-              <button
-                type="button"
-                onClick={() => {
-                  if (userId) {
-                    setShowNewPlanConfirm(true);
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 font-body text-xs font-medium text-ink-2 transition-colors hover:text-ink"
-              >
-                <RefreshCcw className="h-3.5 w-3.5" aria-hidden />
-                {t('transformationPlan.newPlanButton')}
-              </button>
-            </div>
+          <PlanTrailMap nodes={trailNodes} onToggleRealized={handleToggleRealized} />
 
-            <ul className="mt-5 flex flex-col gap-3">
-              {filteredGoals.map((goal) => (
-                <li key={goal.id}>
-                  <PlanItem
-                    goal={goal}
-                    onToggleRealized={handleToggleRealized}
-                    onTitleChange={handleTitleChange}
-                  />
-                </li>
-              ))}
-            </ul>
-
-            {filteredGoals.length === 0 ? (
-              <p className="mt-6 font-body text-sm text-ink-2">
-                {t('transformationPlan.emptyFilter')}
-              </p>
-            ) : null}
-          </section>
+          {filteredGoals.length === 0 ? (
+            <p className="mt-6 font-body text-sm text-ink-2">
+              {t('transformationPlan.emptyFilter')}
+            </p>
+          ) : null}
         </div>
       </div>
 
