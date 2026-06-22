@@ -66,3 +66,37 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+@layer utilities {
+  /* Dark surfaces (awakening / welcome live transcript) */
+  .scrollbar-on-dark {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 28%) transparent;
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 22%);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar-thumb:hover {
+    background: rgb(255 255 255 / 38%);
+    background-clip: padding-box;
+  }
+
+  .scrollbar-on-dark::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+}

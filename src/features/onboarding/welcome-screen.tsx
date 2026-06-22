@@ -69,7 +69,7 @@ function WelcomeInlineTranscript({ messages, partial }: WelcomeInlineTranscriptP
   return (
     <div
       ref={scrollerRef}
-      className="flex max-h-[min(42vh,360px)] flex-col gap-3 overflow-y-auto px-1 py-2 text-left"
+      className="scrollbar-on-dark flex max-h-[min(42vh,360px)] flex-col gap-3 overflow-y-auto px-1 py-2 pr-2 text-left"
       aria-live="polite"
     >
       {isEmpty ? (
