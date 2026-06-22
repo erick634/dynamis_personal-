@@ -2,7 +2,7 @@ const { randomUUID, timingSafeEqual } = require('node:crypto') as typeof import(
 const { createServer } = require('node:http') as typeof import('node:http');
 const express = require('express') as typeof import('express');
 const cors = require('cors') as typeof import('cors');
-const { Pool } = require('pg') as typeof import('pg');
+const { MongoClient } = require('mongodb') as typeof import('mongodb');
 const Anthropic = require('@anthropic-ai/sdk')
   .default as typeof import('@anthropic-ai/sdk').default;
 const { WebSocket, WebSocketServer } = require('ws') as typeof import('ws');
@@ -64,10 +64,26 @@ const ASSISTANT_SYSTEM_PROMPT =
     '- Be human, warm, direct, and supportive.',
   ].join('\n');
 
-const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+const MONGODB_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017';
+const MONGODB_DB_NAME = process.env.MONGODB_DB ?? 'dynamis';
+
+let mongoClient: import('mongodb').MongoClient;
+let mongoDb: import('mongodb').Db;
+
+async function connectMongo(): Promise<void> {
+  mongoClient = new MongoClient(MONGODB_URI);
+  await mongoClient.connect();
+  mongoDb = mongoClient.db(MONGODB_DB_NAME);
+  console.log('[mongo] connected', { db: MONGODB_DB_NAME });
+}
+
+function chatHistoryCollection(): import('mongodb').Collection {
+  return mongoDb.collection('chat_history');
+}
+
+function userProfilesCollection(): import('mongodb').Collection {
+  return mongoDb.collection('user_profiles');
+}
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -161,21 +177,20 @@ async function loadRecentHistory(
   sessionId: string,
   limit: number,
 ): Promise<ChatMessage[]> {
-  const res = await db.query<{ sender: string; message: string }>(
-    `SELECT sender, message
-     FROM chat_history
-     WHERE user_id = $1::uuid AND session_id = $2::uuid
-     ORDER BY created_at ASC, id ASC
-     LIMIT $3`,
-    [userId, sessionId, limit],
-  );
+  const rows = await chatHistoryCollection()
+    .find({ user_id: userId, session_id: sessionId })
+    .sort({ created_at: 1, _id: 1 })
+    .limit(limit)
+    .toArray();
 
   const out: ChatMessage[] = [];
-  for (const row of res.rows) {
-    if (row.sender === 'user') {
-      out.push({ role: 'user', content: row.message });
-    } else if (row.sender === 'agent') {
-      out.push({ role: 'assistant', content: row.message });
+  for (const row of rows) {
+    const sender = String(row.sender ?? '');
+    const message = String(row.message ?? '');
+    if (sender === 'user') {
+      out.push({ role: 'user', content: message });
+    } else if (sender === 'agent') {
+      out.push({ role: 'assistant', content: message });
     }
   }
   return out;
@@ -186,39 +201,15 @@ async function loadRecentHistory(
  * Used to trigger a one-time self-introduction in the very first reply.
  */
 async function isFirstEverInteraction(userId: string): Promise<boolean> {
-  const res = await db.query<{ exists: boolean }>(
-    `SELECT EXISTS (
-       SELECT 1 FROM chat_history
-       WHERE user_id = $1::uuid AND sender = 'agent'
-       LIMIT 1
-     ) AS exists`,
-    [userId],
+  const existing = await chatHistoryCollection().findOne(
+    { user_id: userId, sender: 'agent' },
+    { projection: { _id: 1 } },
   );
-  return res.rows[0]?.exists === false;
+  return existing === null;
 }
 
 async function loadUserProfile(userId: string): Promise<UserProfile | null> {
-  const res = await db.query<{
-    user_id: string;
-    display_name: string | null;
-    role_context: string | null;
-    aspirations: string | null;
-    strengths: string | null;
-    weaknesses: string | null;
-    values_list: unknown;
-    active_focus: string | null;
-    notes: string | null;
-    long_term_summary: string | null;
-    long_term_summary_at: Date | null;
-    long_term_summary_msg_count: number | null;
-  }>(
-    `SELECT user_id, display_name, role_context, aspirations, strengths, weaknesses,
-            values_list, active_focus, notes, long_term_summary, long_term_summary_at,
-            long_term_summary_msg_count
-     FROM user_profiles WHERE user_id = $1::uuid`,
-    [userId],
-  );
-  const row = res.rows[0];
+  const row = await userProfilesCollection().findOne({ user_id: userId });
   if (!row) {
     return null;
   }
@@ -227,17 +218,17 @@ async function loadUserProfile(userId: string): Promise<UserProfile | null> {
     values = (row.values_list as unknown[]).filter((v): v is string => typeof v === 'string');
   }
   return {
-    user_id: row.user_id,
-    display_name: row.display_name,
-    role_context: row.role_context,
-    aspirations: row.aspirations,
-    strengths: row.strengths,
-    weaknesses: row.weaknesses,
+    user_id: String(row.user_id),
+    display_name: (row.display_name as string | null) ?? null,
+    role_context: (row.role_context as string | null) ?? null,
+    aspirations: (row.aspirations as string | null) ?? null,
+    strengths: (row.strengths as string | null) ?? null,
+    weaknesses: (row.weaknesses as string | null) ?? null,
     values_list: values,
-    active_focus: row.active_focus,
-    notes: row.notes,
-    long_term_summary: row.long_term_summary,
-    long_term_summary_at: row.long_term_summary_at,
+    active_focus: (row.active_focus as string | null) ?? null,
+    notes: (row.notes as string | null) ?? null,
+    long_term_summary: (row.long_term_summary as string | null) ?? null,
+    long_term_summary_at: (row.long_term_summary_at as Date | null) ?? null,
     long_term_summary_msg_count: Number(row.long_term_summary_msg_count ?? 0),
   };
 }
@@ -420,20 +411,18 @@ function mergeProfileSignals(
 }
 
 async function loadRecentUserMessages(userId: string, limit = 24): Promise<string[]> {
-  const res = await db.query<{ message: string }>(
-    `SELECT message
-     FROM (
-       SELECT message, created_at, id
-       FROM chat_history
-       WHERE user_id = $1::uuid AND sender = 'user'
-       ORDER BY created_at DESC, id DESC
-       LIMIT $2
-     ) t
-     ORDER BY created_at ASC, id ASC`,
-    [userId, limit],
-  );
-  return res.rows
-    .map((row) => row.message.replace(/\s+/g, ' ').trim())
+  const rows = await chatHistoryCollection()
+    .find({ user_id: userId, sender: 'user' })
+    .sort({ created_at: -1, _id: -1 })
+    .limit(limit)
+    .toArray();
+  rows.reverse();
+  return rows
+    .map((row) =>
+      String(row.message ?? '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    )
     .filter((message) => message.length > 0);
 }
 
@@ -877,13 +866,10 @@ async function countCrossSessionMessages(
   userId: string,
   excludeSessionId: string,
 ): Promise<number> {
-  const res = await db.query<{ total: string }>(
-    `SELECT COUNT(*)::text AS total
-     FROM chat_history
-     WHERE user_id = $1::uuid AND session_id <> $2::uuid`,
-    [userId, excludeSessionId],
-  );
-  return Number(res.rows[0]?.total ?? 0);
+  return chatHistoryCollection().countDocuments({
+    user_id: userId,
+    session_id: { $ne: excludeSessionId },
+  });
 }
 
 async function fetchCrossSessionMessages(
@@ -891,19 +877,16 @@ async function fetchCrossSessionMessages(
   excludeSessionId: string,
   limit: number,
 ): Promise<{ sender: string; message: string }[]> {
-  const res = await db.query<{ sender: string; message: string }>(
-    `SELECT sender, message
-     FROM (
-       SELECT sender, message, created_at, id
-       FROM chat_history
-       WHERE user_id = $1::uuid AND session_id <> $2::uuid
-       ORDER BY created_at DESC, id DESC
-       LIMIT $3
-     ) t
-     ORDER BY created_at ASC, id ASC`,
-    [userId, excludeSessionId, limit],
-  );
-  return res.rows;
+  const rows = await chatHistoryCollection()
+    .find({ user_id: userId, session_id: { $ne: excludeSessionId } })
+    .sort({ created_at: -1, _id: -1 })
+    .limit(limit)
+    .toArray();
+  rows.reverse();
+  return rows.map((row) => ({
+    sender: String(row.sender ?? ''),
+    message: String(row.message ?? ''),
+  }));
 }
 
 async function generateUserSummary(
@@ -998,15 +981,22 @@ async function ensureUserSummaryFresh(
   try {
     const rows = await fetchCrossSessionMessages(userId, currentSessionId, SUMMARY_MESSAGE_LIMIT);
     const summary = await generateUserSummary(userId, rows);
-    await db.query(
-      `INSERT INTO user_profiles (user_id, long_term_summary, long_term_summary_at, long_term_summary_msg_count, updated_at)
-       VALUES ($1::uuid, $2, NOW(), $3, NOW())
-       ON CONFLICT (user_id) DO UPDATE SET
-         long_term_summary = EXCLUDED.long_term_summary,
-         long_term_summary_at = EXCLUDED.long_term_summary_at,
-         long_term_summary_msg_count = EXCLUDED.long_term_summary_msg_count,
-         updated_at = NOW()`,
-      [userId, summary, totalMessages],
+    const now = new Date();
+    await userProfilesCollection().updateOne(
+      { user_id: userId },
+      {
+        $set: {
+          long_term_summary: summary,
+          long_term_summary_at: now,
+          long_term_summary_msg_count: totalMessages,
+          updated_at: now,
+        },
+        $setOnInsert: {
+          user_id: userId,
+          created_at: now,
+        },
+      },
+      { upsert: true },
     );
     console.log('[summary] rebuilt', {
       user_id: userId,
@@ -1025,25 +1015,21 @@ async function extractProfileFromConversation(
   userId: string,
   current: UserProfile | null,
 ): Promise<ProfileExtractionPayload | null> {
-  const recentRes = await db.query<{ sender: string; message: string }>(
-    `SELECT sender, message
-     FROM (
-       SELECT sender, message, created_at, id
-       FROM chat_history
-       WHERE user_id = $1::uuid
-       ORDER BY created_at DESC, id DESC
-       LIMIT $2
-     ) t
-     ORDER BY created_at ASC, id ASC`,
-    [userId, PROFILE_EXTRACTION_MESSAGE_LIMIT],
-  );
-  if (recentRes.rowCount === 0) {
+  const recentRows = await chatHistoryCollection()
+    .find({ user_id: userId })
+    .sort({ created_at: -1, _id: -1 })
+    .limit(PROFILE_EXTRACTION_MESSAGE_LIMIT)
+    .toArray();
+  if (recentRows.length === 0) {
     return null;
   }
-  const transcript = recentRes.rows
+  const transcript = recentRows
+    .reverse()
     .map((r) => {
-      const role = r.sender === 'user' ? 'User' : 'Dynamis';
-      const clean = r.message.replace(/\s+/g, ' ').trim();
+      const role = String(r.sender ?? '') === 'user' ? 'User' : 'Dynamis';
+      const clean = String(r.message ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
       return `${role}: ${clean.slice(0, 600)}`;
     })
     .join('\n');
@@ -1178,31 +1164,27 @@ async function persistProfileUpdate(
     return fieldsChanged;
   }
 
-  await db.query(
-    `INSERT INTO user_profiles (user_id, display_name, role_context, aspirations, strengths, weaknesses,
-       values_list, active_focus, notes, updated_at)
-     VALUES ($1::uuid, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, NOW())
-     ON CONFLICT (user_id) DO UPDATE SET
-       display_name = EXCLUDED.display_name,
-       role_context = EXCLUDED.role_context,
-       aspirations = EXCLUDED.aspirations,
-       strengths = EXCLUDED.strengths,
-       weaknesses = EXCLUDED.weaknesses,
-       values_list = EXCLUDED.values_list,
-       active_focus = EXCLUDED.active_focus,
-       notes = EXCLUDED.notes,
-       updated_at = NOW()`,
-    [
-      userId,
-      next.display_name,
-      next.role_context,
-      next.aspirations,
-      next.strengths,
-      next.weaknesses,
-      JSON.stringify(next.values_list ?? []),
-      next.active_focus,
-      next.notes,
-    ],
+  const now = new Date();
+  await userProfilesCollection().updateOne(
+    { user_id: userId },
+    {
+      $set: {
+        display_name: next.display_name,
+        role_context: next.role_context,
+        aspirations: next.aspirations,
+        strengths: next.strengths,
+        weaknesses: next.weaknesses,
+        values_list: next.values_list ?? [],
+        active_focus: next.active_focus,
+        notes: next.notes,
+        updated_at: now,
+      },
+      $setOnInsert: {
+        user_id: userId,
+        created_at: now,
+      },
+    },
+    { upsert: true },
   );
   return fieldsChanged;
 }
@@ -1242,26 +1224,24 @@ async function persistTurn(
   userMessage: string,
   aiResponse: string,
 ): Promise<void> {
-  const client = await db.connect();
-  try {
-    await client.query('BEGIN');
-    await client.query(
-      `INSERT INTO chat_history (user_id, session_id, sender, message)
-       VALUES ($1::uuid, $2::uuid, 'user', $3)`,
-      [userId, sessionId, userMessage],
-    );
-    await client.query(
-      `INSERT INTO chat_history (user_id, session_id, sender, message)
-       VALUES ($1::uuid, $2::uuid, 'agent', $3)`,
-      [userId, sessionId, aiResponse],
-    );
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  const userCreatedAt = new Date();
+  const agentCreatedAt = new Date();
+  await chatHistoryCollection().insertMany([
+    {
+      user_id: userId,
+      session_id: sessionId,
+      sender: 'user',
+      message: userMessage,
+      created_at: userCreatedAt,
+    },
+    {
+      user_id: userId,
+      session_id: sessionId,
+      sender: 'agent',
+      message: aiResponse,
+      created_at: agentCreatedAt,
+    },
+  ]);
 }
 
 async function runAgentTurn(
@@ -2860,17 +2840,24 @@ voiceWss.on(
   },
 );
 
-server.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-  console.log('[tts] init', {
-    has_key: Boolean(process.env.CARTESIA_API_KEY),
-    voice_id: process.env.CARTESIA_VOICE_ID ?? '794f9389-aac1-45b6-b726-9d9369183238',
-    model_id: process.env.CARTESIA_MODEL_ID ?? 'sonic-2',
-    language: process.env.CARTESIA_LANGUAGE ?? 'pt',
-    mode: VOICE_TTS_MODE,
-    min_sentence_chars: MIN_SENTENCE_CHARS,
-    soft_flush_chars: SOFT_FLUSH_CHARS,
-    hard_flush_chars: HARD_FLUSH_CHARS,
-    max_concurrency: CARTESIA_TTS_MAX_CONCURRENCY,
+void connectMongo()
+  .then(() => {
+    server.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
+      console.log('[tts] init', {
+        has_key: Boolean(process.env.CARTESIA_API_KEY),
+        voice_id: process.env.CARTESIA_VOICE_ID ?? '794f9389-aac1-45b6-b726-9d9369183238',
+        model_id: process.env.CARTESIA_MODEL_ID ?? 'sonic-2',
+        language: process.env.CARTESIA_LANGUAGE ?? 'pt',
+        mode: VOICE_TTS_MODE,
+        min_sentence_chars: MIN_SENTENCE_CHARS,
+        soft_flush_chars: SOFT_FLUSH_CHARS,
+        hard_flush_chars: HARD_FLUSH_CHARS,
+        max_concurrency: CARTESIA_TTS_MAX_CONCURRENCY,
+      });
+    });
+  })
+  .catch((error) => {
+    console.error('[mongo] connection failed', error);
+    process.exit(1);
   });
-});
