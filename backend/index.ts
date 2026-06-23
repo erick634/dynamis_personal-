@@ -2,7 +2,7 @@ const { randomUUID, timingSafeEqual } = require('node:crypto') as typeof import(
 const { createServer } = require('node:http') as typeof import('node:http');
 const express = require('express') as typeof import('express');
 const cors = require('cors') as typeof import('cors');
-const { MongoClient } = require('mongodb') as typeof import('mongodb');
+const { PrismaClient } = require('./generated/prisma') as typeof import('./generated/prisma');
 const Anthropic = require('@anthropic-ai/sdk')
   .default as typeof import('@anthropic-ai/sdk').default;
 const { WebSocket, WebSocketServer } = require('ws') as typeof import('ws');
@@ -64,25 +64,11 @@ const ASSISTANT_SYSTEM_PROMPT =
     '- Be human, warm, direct, and supportive.',
   ].join('\n');
 
-const MONGODB_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017';
-const MONGODB_DB_NAME = process.env.MONGODB_DB ?? 'dynamis';
+const prisma = new PrismaClient();
 
-let mongoClient: import('mongodb').MongoClient;
-let mongoDb: import('mongodb').Db;
-
-async function connectMongo(): Promise<void> {
-  mongoClient = new MongoClient(MONGODB_URI);
-  await mongoClient.connect();
-  mongoDb = mongoClient.db(MONGODB_DB_NAME);
-  console.log('[mongo] connected', { db: MONGODB_DB_NAME });
-}
-
-function chatHistoryCollection(): import('mongodb').Collection {
-  return mongoDb.collection('chat_history');
-}
-
-function userProfilesCollection(): import('mongodb').Collection {
-  return mongoDb.collection('user_profiles');
+async function connectPrisma(): Promise<void> {
+  await prisma.$connect();
+  console.log('[prisma] connected');
 }
 
 const anthropic = new Anthropic({
@@ -177,11 +163,11 @@ async function loadRecentHistory(
   sessionId: string,
   limit: number,
 ): Promise<ChatMessage[]> {
-  const rows = await chatHistoryCollection()
-    .find({ user_id: userId, session_id: sessionId })
-    .sort({ created_at: 1, _id: 1 })
-    .limit(limit)
-    .toArray();
+  const rows = await prisma.chatHistory.findMany({
+    where: { user_id: userId, session_id: sessionId },
+    orderBy: [{ created_at: 'asc' }, { id: 'asc' }],
+    take: limit,
+  });
 
   const out: ChatMessage[] = [];
   for (const row of rows) {
@@ -201,15 +187,17 @@ async function loadRecentHistory(
  * Used to trigger a one-time self-introduction in the very first reply.
  */
 async function isFirstEverInteraction(userId: string): Promise<boolean> {
-  const existing = await chatHistoryCollection().findOne(
-    { user_id: userId, sender: 'agent' },
-    { projection: { _id: 1 } },
-  );
+  const existing = await prisma.chatHistory.findFirst({
+    where: { user_id: userId, sender: 'agent' },
+    select: { id: true },
+  });
   return existing === null;
 }
 
 async function loadUserProfile(userId: string): Promise<UserProfile | null> {
-  const row = await userProfilesCollection().findOne({ user_id: userId });
+  const row = await prisma.userProfile.findUnique({
+    where: { user_id: userId },
+  });
   if (!row) {
     return null;
   }
@@ -411,11 +399,11 @@ function mergeProfileSignals(
 }
 
 async function loadRecentUserMessages(userId: string, limit = 24): Promise<string[]> {
-  const rows = await chatHistoryCollection()
-    .find({ user_id: userId, sender: 'user' })
-    .sort({ created_at: -1, _id: -1 })
-    .limit(limit)
-    .toArray();
+  const rows = await prisma.chatHistory.findMany({
+    where: { user_id: userId, sender: 'user' },
+    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    take: limit,
+  });
   rows.reverse();
   return rows
     .map((row) =>
@@ -866,9 +854,11 @@ async function countCrossSessionMessages(
   userId: string,
   excludeSessionId: string,
 ): Promise<number> {
-  return chatHistoryCollection().countDocuments({
-    user_id: userId,
-    session_id: { $ne: excludeSessionId },
+  return prisma.chatHistory.count({
+    where: {
+      user_id: userId,
+      session_id: { not: excludeSessionId },
+    },
   });
 }
 
@@ -877,11 +867,14 @@ async function fetchCrossSessionMessages(
   excludeSessionId: string,
   limit: number,
 ): Promise<{ sender: string; message: string }[]> {
-  const rows = await chatHistoryCollection()
-    .find({ user_id: userId, session_id: { $ne: excludeSessionId } })
-    .sort({ created_at: -1, _id: -1 })
-    .limit(limit)
-    .toArray();
+  const rows = await prisma.chatHistory.findMany({
+    where: {
+      user_id: userId,
+      session_id: { not: excludeSessionId },
+    },
+    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    take: limit,
+  });
   rows.reverse();
   return rows.map((row) => ({
     sender: String(row.sender ?? ''),
@@ -982,22 +975,24 @@ async function ensureUserSummaryFresh(
     const rows = await fetchCrossSessionMessages(userId, currentSessionId, SUMMARY_MESSAGE_LIMIT);
     const summary = await generateUserSummary(userId, rows);
     const now = new Date();
-    await userProfilesCollection().updateOne(
-      { user_id: userId },
-      {
-        $set: {
-          long_term_summary: summary,
-          long_term_summary_at: now,
-          long_term_summary_msg_count: totalMessages,
-          updated_at: now,
-        },
-        $setOnInsert: {
-          user_id: userId,
-          created_at: now,
-        },
+    await prisma.userProfile.upsert({
+      where: { user_id: userId },
+      create: {
+        user_id: userId,
+        long_term_summary: summary,
+        long_term_summary_at: now,
+        long_term_summary_msg_count: totalMessages,
+        updated_at: now,
+        created_at: now,
+        values_list: [],
       },
-      { upsert: true },
-    );
+      update: {
+        long_term_summary: summary,
+        long_term_summary_at: now,
+        long_term_summary_msg_count: totalMessages,
+        updated_at: now,
+      },
+    });
     console.log('[summary] rebuilt', {
       user_id: userId,
       total_cross_session: totalMessages,
@@ -1015,11 +1010,11 @@ async function extractProfileFromConversation(
   userId: string,
   current: UserProfile | null,
 ): Promise<ProfileExtractionPayload | null> {
-  const recentRows = await chatHistoryCollection()
-    .find({ user_id: userId })
-    .sort({ created_at: -1, _id: -1 })
-    .limit(PROFILE_EXTRACTION_MESSAGE_LIMIT)
-    .toArray();
+  const recentRows = await prisma.chatHistory.findMany({
+    where: { user_id: userId },
+    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    take: PROFILE_EXTRACTION_MESSAGE_LIMIT,
+  });
   if (recentRows.length === 0) {
     return null;
   }
@@ -1165,27 +1160,33 @@ async function persistProfileUpdate(
   }
 
   const now = new Date();
-  await userProfilesCollection().updateOne(
-    { user_id: userId },
-    {
-      $set: {
-        display_name: next.display_name,
-        role_context: next.role_context,
-        aspirations: next.aspirations,
-        strengths: next.strengths,
-        weaknesses: next.weaknesses,
-        values_list: next.values_list ?? [],
-        active_focus: next.active_focus,
-        notes: next.notes,
-        updated_at: now,
-      },
-      $setOnInsert: {
-        user_id: userId,
-        created_at: now,
-      },
+  await prisma.userProfile.upsert({
+    where: { user_id: userId },
+    create: {
+      user_id: userId,
+      display_name: next.display_name,
+      role_context: next.role_context,
+      aspirations: next.aspirations,
+      strengths: next.strengths,
+      weaknesses: next.weaknesses,
+      values_list: next.values_list ?? [],
+      active_focus: next.active_focus,
+      notes: next.notes,
+      updated_at: now,
+      created_at: now,
     },
-    { upsert: true },
-  );
+    update: {
+      display_name: next.display_name,
+      role_context: next.role_context,
+      aspirations: next.aspirations,
+      strengths: next.strengths,
+      weaknesses: next.weaknesses,
+      values_list: next.values_list ?? [],
+      active_focus: next.active_focus,
+      notes: next.notes,
+      updated_at: now,
+    },
+  });
   return fieldsChanged;
 }
 
@@ -1226,22 +1227,24 @@ async function persistTurn(
 ): Promise<void> {
   const userCreatedAt = new Date();
   const agentCreatedAt = new Date();
-  await chatHistoryCollection().insertMany([
-    {
-      user_id: userId,
-      session_id: sessionId,
-      sender: 'user',
-      message: userMessage,
-      created_at: userCreatedAt,
-    },
-    {
-      user_id: userId,
-      session_id: sessionId,
-      sender: 'agent',
-      message: aiResponse,
-      created_at: agentCreatedAt,
-    },
-  ]);
+  await prisma.chatHistory.createMany({
+    data: [
+      {
+        user_id: userId,
+        session_id: sessionId,
+        sender: 'user',
+        message: userMessage,
+        created_at: userCreatedAt,
+      },
+      {
+        user_id: userId,
+        session_id: sessionId,
+        sender: 'agent',
+        message: aiResponse,
+        created_at: agentCreatedAt,
+      },
+    ],
+  });
 }
 
 async function runAgentTurn(
@@ -2158,12 +2161,15 @@ const REFLECTION_SUMMARY_SYSTEM_PROMPT = [
   '{"did_today":["..."],"plan_tomorrow":["..."],"celebration":"..."}',
 ].join('\n');
 
-const REFLECTION_SUMMARY_FALLBACK = {
+const REFLECTION_SUMMARY_FALLBACK: {
+  did_today: string[];
+  plan_tomorrow: string[];
+  celebration: string;
+} = {
   did_today: [],
   plan_tomorrow: [],
   celebration: 'Você fez seu check-in hoje. Continue assim — cada conversa conta.',
 };
-
 function normalizeReflectionMessages(
   raw: unknown,
 ): Array<{ role: 'user' | 'assistant'; text: string }> | null {
@@ -2840,7 +2846,7 @@ voiceWss.on(
   },
 );
 
-void connectMongo()
+void connectPrisma()
   .then(() => {
     server.listen(port, () => {
       console.log(`Server listening on port ${port}`);
@@ -2858,6 +2864,6 @@ void connectMongo()
     });
   })
   .catch((error) => {
-    console.error('[mongo] connection failed', error);
+    console.error('[prisma] connection failed', error);
     process.exit(1);
   });

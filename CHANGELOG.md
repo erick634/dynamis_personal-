@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - feat(backend): migrate persistence layer from PostgreSQL (`pg`) to MongoDB (`mongodb` driver); `MONGODB_URI` / `MONGODB_DB` env vars
+- feat(backend): replace native MongoDB driver with Prisma Client (`ChatHistory`, `UserProfile` models); uses `DATABASE_URL`
 - feat(copy): PRD vocabulary — Journey → Unlock Plan; Daily Reflection (feature labels) → Captain's Log / Diário de Bordo (i18n values only)
 - feat(onboarding): Ready to Begin asks for date of birth instead of age; age is derived on submit and stored with `dateOfBirth`; styled date field with calendar icon and empty-state hint
 - feat(today): proactive nudge driven by plan, Intent Profile, and Council — Mark Energeia action and deep links to plan/discovery

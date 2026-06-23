@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model ChatHistory {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id    String
+  session_id String
+  sender     String
+  message    String
+  created_at DateTime
+
+  @@map("chat_history")
+}
+
+model UserProfile {
+  id                          String    @id @default(auto()) @map("_id") @db.ObjectId
+  user_id                     String    @unique
+  display_name                String?
+  role_context                String?
+  aspirations                 String?
+  strengths                   String?
+  weaknesses                  String?
+  values_list                 String[]
+  active_focus                String?
+  notes                       String?
+  long_term_summary           String?
+  long_term_summary_at        DateTime?
+  long_term_summary_msg_count Int?
+  created_at                  DateTime?
+  updated_at                  DateTime?
+
+  @@map("user_profiles")
+}
