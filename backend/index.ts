@@ -194,6 +194,41 @@ async function isFirstEverInteraction(userId: string): Promise<boolean> {
   return existing === null;
 }
 
+function shouldOpenWithIntroduction(
+  firstEver: boolean,
+  prior: ChatMessage[],
+  extra: { alreadyIntroducedInSession?: boolean; interruptedReply?: string } = {},
+): boolean {
+  if (!firstEver) return false;
+  if (prior.some((m) => m.role === 'assistant')) return false;
+  if (extra.alreadyIntroducedInSession) return false;
+  if (extra.interruptedReply?.trim()) return false;
+  return true;
+}
+
+function buildIntroductionSystemBlock(shouldIntroduce: boolean): string {
+  if (shouldIntroduce) {
+    return [
+      '=== FIRST INTERACTION RULE ===',
+      'This is your VERY FIRST reply to this user (no previous history exists).',
+      'Open with a brief, warm two-sentence introduction — who you are and how you help —',
+      "in this style (adapt to the user's language; keep roughly the same length and tone):",
+      "\"I'm Dynamis, your AI career copilot. I'm here to help you navigate work, growth,",
+      'and opportunities in the AI era." Then ask a short open question like',
+      '"What\'s on your mind today?" Keep the whole opening warm and concise.',
+      'Do NOT introduce yourself again in future replies. Use the same language as the user.',
+      '=== END FIRST INTERACTION RULE ===',
+    ].join('\n');
+  }
+  return [
+    '=== ONGOING CONVERSATION RULE ===',
+    'You have already introduced yourself. NEVER open with your name, role, or any',
+    'self-introduction (e.g. "I\'m Dynamis", "your AI career copilot", or "your career',
+    'copilot for the AI era"). Respond directly to what the user just said.',
+    '=== END ONGOING CONVERSATION RULE ===',
+  ].join('\n');
+}
+
 async function loadUserProfile(userId: string): Promise<UserProfile | null> {
   const row = await prisma.userProfile.findUnique({
     where: { user_id: userId },
@@ -1251,7 +1286,7 @@ async function runAgentTurn(
   userId: string,
   sessionId: string,
   userMessage: string,
-  opts: { voice?: boolean } = {},
+  opts: { voice?: boolean; alreadyIntroducedInSession?: boolean } = {},
 ): Promise<string> {
   const isVoice = opts.voice === true;
   const messageLimit = isVoice ? VOICE_RECENT_MESSAGE_LIMIT : RECENT_MESSAGE_LIMIT;
@@ -1295,19 +1330,13 @@ async function runAgentTurn(
   }
   const stableSystem = stableParts.join('\n');
 
-  const introInstruction = firstEver
-    ? [
-        '=== FIRST INTERACTION RULE ===',
-        'This is your VERY FIRST reply to this user (no previous history exists).',
-        'Open with a brief self-introduction in 1-2 short sentences:',
-        '- Who you are (Dynamis, a personal career copilot for the AI era).',
-        '- How you will help (listen, learn about them, and find ways to thrive WITH AI).',
-        'Right after the introduction, continue naturally with the normal answer to',
-        'their first message (no break, no separator). Do NOT introduce yourself again',
-        'in future replies. Use the same language as the user.',
-        '=== END FIRST INTERACTION RULE ===',
-      ].join('\n')
-    : '';
+  const introInstruction = buildIntroductionSystemBlock(
+    shouldOpenWithIntroduction(firstEver, prior, {
+      ...(opts.alreadyIntroducedInSession
+        ? { alreadyIntroducedInSession: opts.alreadyIntroducedInSession }
+        : {}),
+    }),
+  );
 
   const systemBlocks: { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }[] = [
     {
@@ -1316,9 +1345,7 @@ async function runAgentTurn(
       cache_control: { type: 'ephemeral' },
     },
   ];
-  if (introInstruction) {
-    systemBlocks.push({ type: 'text', text: introInstruction });
-  }
+  systemBlocks.push({ type: 'text', text: introInstruction });
 
   const messages = [...prior, { role: 'user' as const, content: userMessage }];
 
@@ -1347,7 +1374,11 @@ async function runAgentTurn(
   if (!isVoice) {
     await persistPromise;
   } else {
-    persistPromise.catch((e) => console.error('[persist] failed', e));
+    try {
+      await persistPromise;
+    } catch (e) {
+      console.error('[persist] failed', e);
+    }
   }
 
   const usage = msg.usage as
@@ -1550,6 +1581,7 @@ async function runAgentVoiceStream(
   opts: {
     interruptedReply?: string;
     onReplyProgress?: (text: string) => void;
+    alreadyIntroducedInSession?: boolean;
   } = {},
 ): Promise<VoiceStreamResult> {
   const turnStartedAt = Date.now();
@@ -1592,19 +1624,14 @@ async function runAgentVoiceStream(
   }
   const stableSystem = stableParts.join('\n');
 
-  const introInstruction = firstEver
-    ? [
-        '=== FIRST INTERACTION RULE ===',
-        'This is your VERY FIRST reply to this user (no previous history exists).',
-        'Open with a brief self-introduction in 1-2 short sentences:',
-        '- Who you are (Dynamis, a personal career copilot for the AI era).',
-        '- How you will help (listen, learn about them, and find ways to thrive WITH AI).',
-        'Right after the introduction, continue naturally with the normal answer to',
-        'their first message (no break, no separator). Do NOT introduce yourself again',
-        'in future replies. Use the same language as the user.',
-        '=== END FIRST INTERACTION RULE ===',
-      ].join('\n')
-    : '';
+  const introInstruction = buildIntroductionSystemBlock(
+    shouldOpenWithIntroduction(firstEver, prior, {
+      ...(opts.alreadyIntroducedInSession
+        ? { alreadyIntroducedInSession: opts.alreadyIntroducedInSession }
+        : {}),
+      ...(opts.interruptedReply?.trim() ? { interruptedReply: opts.interruptedReply } : {}),
+    }),
+  );
 
   const systemBlocks: { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }[] = [
     {
@@ -1613,9 +1640,7 @@ async function runAgentVoiceStream(
       cache_control: { type: 'ephemeral' },
     },
   ];
-  if (introInstruction) {
-    systemBlocks.push({ type: 'text', text: introInstruction });
-  }
+  systemBlocks.push({ type: 'text', text: introInstruction });
 
   // Build message list. If the user interrupted a previous turn, inject what
   // the agent had already said so Claude has full context to continue naturally.
@@ -1856,9 +1881,11 @@ async function runAgentVoiceStream(
   });
 
   if (finalReply.trim()) {
-    persistTurn(userId, sessionId, userMessage, finalReply).catch((e) =>
-      console.error('[persist] failed', e),
-    );
+    try {
+      await persistTurn(userId, sessionId, userMessage, finalReply);
+    } catch (e) {
+      console.error('[persist] failed', e);
+    }
     if (PROFILE_UPDATE_ON_VOICE) {
       enqueueProfileUpdate(userId);
     }
@@ -2473,6 +2500,8 @@ voiceWss.on(
     // Stores partial text when a turn is interrupted, for next turn.
     let interruptedReplyForNext = '';
 
+    let introducedThisSession = false;
+
     const runStreamingTurn = async (
       transcript: string,
       signal: AbortSignal,
@@ -2499,7 +2528,7 @@ voiceWss.on(
       }, TURN_TIMEOUT_MS);
 
       try {
-        await runAgentVoiceStream(
+        const result = await runAgentVoiceStream(
           context.userId,
           context.sessionId,
           transcript,
@@ -2507,12 +2536,16 @@ voiceWss.on(
           signal,
           {
             interruptedReply,
+            alreadyIntroducedInSession: introducedThisSession,
             onReplyProgress: (text) => {
               activePartialReply = text;
               if (sessionState === 'thinking') transitionState('assistant_speaking');
             },
           },
         );
+        if (result.fullReply.trim()) {
+          introducedThisSession = true;
+        }
         if (!signal.aborted) transitionState('listening');
       } catch (err) {
         if (signal.aborted) {
@@ -2553,7 +2586,11 @@ voiceWss.on(
       try {
         const reply = await runAgentTurn(context.userId, context.sessionId, transcript, {
           voice: true,
+          alreadyIntroducedInSession: introducedThisSession,
         });
+        if (reply.trim()) {
+          introducedThisSession = true;
+        }
         if (signal.aborted) return;
         if (clientSocket.readyState === clientSocket.OPEN) {
           clientSocket.send(
