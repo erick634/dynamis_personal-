@@ -39,7 +39,7 @@
   },
   "welcome": {
     "greeting": "Good to see you here, {{name}}.",
-    "body": "Your Lead Guide is ready for a real conversation — by voice, in real time.\n\nThere are no scripted questions. Speak naturally; your guide listens and responds as you go.",
+    "body": "Your Lead Guide is ready for Discovery — shaping your Intent Profile together, the foundation for your personal Watchtowers.\n\nSpeak naturally; there are no scripted questions. You can pause and return anytime.",
     "startButton": "Talk to my Lead Guide",
     "skipButton": "Maybe later"
   },
@@ -129,7 +129,7 @@
         "constraints": "Constraints"
       }
     },
-    "greeting": "Hello, {{name}}. How are today's objectives going?",
+    "greeting": "Hi, {{name}}. When you're ready — what are you doing, studying, or preparing for right now? We'll shape your Intent Profile together.",
     "greetingFallbackName": "there",
     "insight": {
       "title": "Emerging insight",
@@ -137,7 +137,7 @@
       "quote": "Pattern emerging: you return to \"climate\" twice and \"starting\" three times — there may be a thread between stewardship and new beginnings."
     },
     "mockMessages": {
-      "greeting": "Hello, {{name}}. How are today's objectives going?",
+      "greeting": "Hi, {{name}}. When you're ready — what are you doing, studying, or preparing for right now? We'll shape your Intent Profile together.",
       "userClimate": "I keep thinking about climate work and whether I am too late to start something meaningful.",
       "followUp": "That tension between urgency and timing is worth sitting with. When you say \"starting,\" what would the first small step look like?",
       "agentReply": "Thank you for sharing that. I am noticing how often care for the world and care for your own path appear together in what you said."

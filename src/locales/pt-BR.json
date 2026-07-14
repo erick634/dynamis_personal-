@@ -39,7 +39,7 @@
   },
   "welcome": {
     "greeting": "Que bom te ver aqui, {{name}}.",
-    "body": "Seu Lead Guide está pronto para uma conversa de verdade — por voz, em tempo real.\n\nNão há perguntas scriptadas. Fale naturalmente; seu guia escuta e responde conforme você vai.",
+    "body": "Seu Lead Guide está pronto para a Descoberta — montar seu Perfil de Intenção juntos, a base dos seus Watchtowers pessoais.\n\nFale naturalmente; não há perguntas scriptadas. Você pode pausar e voltar quando quiser.",
     "startButton": "Falar com meu Lead Guide",
     "skipButton": "Talvez depois"
   },
@@ -129,7 +129,7 @@
         "constraints": "Restrições"
       }
     },
-    "greeting": "Olá, {{name}}. Como estão indo os objetivos do dia de hoje?",
+    "greeting": "Olá, {{name}}. Quando quiser — o que você está fazendo, estudando ou se preparando agora? Vamos montar seu Perfil de Intenção juntos.",
     "greetingFallbackName": "você",
     "insight": {
       "title": "Insight emergente",
@@ -137,7 +137,7 @@
       "quote": "Padrão emergente: você retorna a \"climate\" duas vezes e \"starting\" três vezes — pode haver um fio entre cuidado e novos começos."
     },
     "mockMessages": {
-      "greeting": "Olá, {{name}}. Como estão indo os objetivos do dia de hoje?",
+      "greeting": "Olá, {{name}}. Quando quiser — o que você está fazendo, estudando ou se preparando agora? Vamos montar seu Perfil de Intenção juntos.",
       "userClimate": "Fico pensando em trabalho climático e se já é tarde demais para começar algo com significado.",
       "followUp": "Essa tensão entre urgência e timing merece atenção. Quando você diz \"começar,\" como seria o primeiro passo pequeno?",
       "agentReply": "Obrigado por compartilhar. Estou notando com que frequência o cuidado com o mundo e o cuidado com seu próprio caminho aparecem juntos no que você disse."

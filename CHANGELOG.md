@@ -8,13 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(backend): `POST /livekit/token` issues a LiveKit access token (identity = `userId`, `roomJoin`/`canPublish`/`canSubscribe` on the requested room) and returns it with `LIVEKIT_URL` — scaffolding for the planned voice-pipeline migration to LiveKit
+- feat(backend): Discovery-focused agent prompt (Level 1) — Intent Profile gathering, pause/continue check-ins, and verbal Watchtower recommendations via system prompt
+- feat(copy): Discovery and Welcome i18n aligned with Intent Profile and Watchtower framing
 - feat(onboarding): multi-user profile flow with `/onboarding` and `/welcome` routes, persisted `CurrentUser` fields (date of birth, age, email), and Awakening CTA routing
 - feat(live): voice WebSocket uses `userId` from `useCurrentUser` instead of hardcoded demo UUID; `/live` guarded when no profile
 
 
 ### Changed
 
-- feat(backend): migrate persistence layer from PostgreSQL (`pg`) to MongoDB (`mongodb` driver); `MONGODB_URI` / `MONGODB_DB` env vars
+- fix(backend): tighten voice agent prompts for shorter, more natural replies; reduce default `VOICE_MAX_TOKENS` from 700 to 280
 - feat(backend): replace native MongoDB driver with Prisma Client (`ChatHistory`, `UserProfile` models); uses `DATABASE_URL`
 - feat(copy): PRD vocabulary — Journey → Unlock Plan; Daily Reflection (feature labels) → Captain's Log / Diário de Bordo (i18n values only)
 - feat(onboarding): Ready to Begin asks for date of birth instead of age; age is derived on submit and stored with `dateOfBirth`; styled date field with calendar icon and empty-state hint
