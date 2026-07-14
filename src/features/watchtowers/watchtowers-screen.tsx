@@ -133,13 +133,26 @@ export function WatchtowersScreen() {
       ) : null}
 
       {recommendations.length > 0 ? (
-        <ul className="mt-8 flex flex-col gap-4">
-          {recommendations.map((recommendation) => (
-            <li key={recommendation.recommendation_id}>
-              <WatchtowerCard recommendation={recommendation} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="mt-8 flex flex-col gap-4">
+            {recommendations.map((recommendation) => (
+              <li key={recommendation.recommendation_id}>
+                <WatchtowerCard recommendation={recommendation} />
+              </li>
+            ))}
+          </ul>
+          <div className="mt-8 rounded-2xl border border-line-soft bg-white/70 p-5">
+            <p className="font-body text-sm leading-relaxed text-ink-2">
+              {t('watchtowers.continueConversation.body')}
+            </p>
+            <Link
+              to="/live"
+              className="mt-4 inline-flex items-center justify-center rounded-full bg-blue px-5 py-2.5 font-body text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              {t('watchtowers.continueConversation.cta')}
+            </Link>
+          </div>
+        </>
       ) : null}
     </div>
   );

@@ -509,6 +509,10 @@
     "error": {
       "title": "Não foi possível carregar os Watchtowers",
       "fallback": "Algo deu errado. Tente de novo em instantes."
+    },
+    "continueConversation": {
+      "body": "Quer mais? Continue conversando com seu guia para descobrir novas áreas para observar.",
+      "cta": "Continuar a conversa"
     }
   },
   "nav": {

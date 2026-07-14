@@ -509,6 +509,10 @@
     "error": {
       "title": "Couldn't load Watchtowers",
       "fallback": "Something went wrong. Try again in a moment."
+    },
+    "continueConversation": {
+      "body": "Want more? Keep talking with your guide to uncover new areas to watch.",
+      "cta": "Continue the conversation"
     }
   },
   "nav": {
