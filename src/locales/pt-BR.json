@@ -480,6 +480,37 @@
       "transcriptSample": "Ao entrar, as palavras do seu guia aparecerão aqui enquanto vocês conversam."
     }
   },
+  "watchtowers": {
+    "eyebrow": "Watchtowers",
+    "title": "O que vamos observar por você.",
+    "subtitle": "Áreas recorrentes que seu guia pode monitorar — ancoradas no que você já compartilhou.",
+    "generating": "Montando seus Watchtowers a partir do Perfil de Intenção…",
+    "coverage": {
+      "personal": "Pessoal",
+      "professional": "Profissional"
+    },
+    "details": {
+      "toggle": "O que este Watchtower acompanha",
+      "frequency": "Frequência",
+      "signals": "Sinais de interesse"
+    },
+    "noUser": {
+      "body": "Crie seu perfil e converse com seu Lead Guide primeiro — os Watchtowers nascem dessa conversa.",
+      "cta": "Falar com meu Lead Guide"
+    },
+    "insufficientProfile": {
+      "body": "Seu Perfil de Intenção ainda é fino. Converse com seu Lead Guide para termos o suficiente para propor Watchtowers.",
+      "cta": "Continuar a Discovery"
+    },
+    "empty": {
+      "body": "Nenhum Watchtower voltou desta vez. Tente de novo depois de compartilhar um pouco mais com seu Lead Guide.",
+      "cta": "Falar com meu Lead Guide"
+    },
+    "error": {
+      "title": "Não foi possível carregar os Watchtowers",
+      "fallback": "Algo deu errado. Tente de novo em instantes."
+    }
+  },
   "nav": {
     "home": "Início",
     "awakening": "O Despertar",
@@ -491,7 +522,8 @@
     "possibilityMap": "Mapa de Possibilidades",
     "explore": "Explorar",
     "plan": "Plano",
-    "today": "Hoje"
+    "today": "Hoje",
+    "watchtowers": "Watchtowers"
   },
   "routes": {
     "stubMessage": "Em breve — estrutura do demo"

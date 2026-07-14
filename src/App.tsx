@@ -11,6 +11,7 @@ import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-sc
 import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { TodayScreen } from '@/features/today/today-screen';
 import { TransformationPlanScreen } from '@/features/transformation-plan/transformation-plan-screen';
+import { WatchtowersScreen } from '@/features/watchtowers/watchtowers-screen';
 
 export function App() {
   return (
@@ -29,6 +30,7 @@ export function App() {
           <Route path="/possibility-map" element={<Navigate to="/map" replace />} />
           <Route path="/guide" element={<DiscoveryChat />} />
           <Route path="/discovery" element={<Navigate to="/guide" replace />} />
+          <Route path="/watchtowers" element={<WatchtowersScreen />} />
           <Route path="/live" element={<LiveScreen />} />
           <Route path="/you" element={<IntentProfileScreen />} />
           <Route path="/profile" element={<Navigate to="/you" replace />} />

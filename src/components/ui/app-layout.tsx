@@ -1,4 +1,4 @@
-import { CalendarDays, Compass, ListTodo, Radio, UserRound } from 'lucide-react';
+import { CalendarDays, Compass, ListTodo, Radar, Radio, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/today', labelKey: 'nav.today', icon: CalendarDays },
   { to: '/plan', labelKey: 'nav.plan', icon: ListTodo },
   { to: '/map', labelKey: 'nav.explore', icon: Compass },
+  { to: '/watchtowers', labelKey: 'nav.watchtowers', icon: Radar },
   { to: '/live', labelKey: 'nav.live', icon: Radio },
   { to: '/you', labelKey: 'nav.profile', icon: UserRound },
 ];

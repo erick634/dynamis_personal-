@@ -480,6 +480,37 @@
       "transcriptSample": "When you join, your guide's words will appear here as you speak together."
     }
   },
+  "watchtowers": {
+    "eyebrow": "Watchtowers",
+    "title": "What we'll watch for you.",
+    "subtitle": "Recurring areas your guide can monitor — grounded in what you've already shared.",
+    "generating": "Shaping your Watchtowers from your Intent Profile…",
+    "coverage": {
+      "personal": "Personal",
+      "professional": "Professional"
+    },
+    "details": {
+      "toggle": "What this Watchtower tracks",
+      "frequency": "Frequency",
+      "signals": "Signals of interest"
+    },
+    "noUser": {
+      "body": "Create your profile and talk with your Lead Guide first — Watchtowers grow from that conversation.",
+      "cta": "Talk to my Lead Guide"
+    },
+    "insufficientProfile": {
+      "body": "Your Intent Profile is still thin. Have a conversation with your Lead Guide so we know enough to propose Watchtowers.",
+      "cta": "Continue Discovery"
+    },
+    "empty": {
+      "body": "No Watchtowers came back this time. Try again after sharing a bit more with your Lead Guide.",
+      "cta": "Talk to my Lead Guide"
+    },
+    "error": {
+      "title": "Couldn't load Watchtowers",
+      "fallback": "Something went wrong. Try again in a moment."
+    }
+  },
   "nav": {
     "home": "Home",
     "awakening": "The Awakening",
@@ -491,7 +522,8 @@
     "possibilityMap": "Possibility Map",
     "explore": "Explore",
     "plan": "Plan",
-    "today": "Today"
+    "today": "Today",
+    "watchtowers": "Watchtowers"
   },
   "routes": {
     "stubMessage": "Coming soon — demo scaffold"
