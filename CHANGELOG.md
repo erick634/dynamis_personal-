@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(backend): `POST /watchtower-recommendations` generates 2–5 personalized Watchtower recommendations from the Intent Profile (LLM, no persistence yet)
 - feat(backend): `POST /livekit/token` issues a LiveKit access token (identity = `userId`, `roomJoin`/`canPublish`/`canSubscribe` on the requested room) and returns it with `LIVEKIT_URL` — scaffolding for the planned voice-pipeline migration to LiveKit
 - feat(backend): Discovery-focused agent prompt (Level 1) — Intent Profile gathering, pause/continue check-ins, and verbal Watchtower recommendations via system prompt
 - feat(copy): Discovery and Welcome i18n aligned with Intent Profile and Watchtower framing

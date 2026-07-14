@@ -159,6 +159,26 @@ type ProfileExtractionPayload = {
   active_focus?: string | null;
   notes?: string | null;
 };
+type WatchtowerCoverageType = 'personal' | 'professional';
+type WatchtowerIntentSpec = {
+  topic: string;
+  intent_summary: string;
+  signals_of_interest: string[];
+  suggested_sources: string[];
+  suggested_frequency: string;
+  evidence_basis: string;
+  rationale: string;
+};
+type WatchtowerRecommendation = {
+  recommendation_id: string;
+  user_id: string;
+  coverage_type: WatchtowerCoverageType;
+  display_name: string;
+  user_facing_description: string;
+  watchtower_intent_spec: WatchtowerIntentSpec;
+  status: 'proposed';
+  generated_at: string;
+};
 type VoiceSessionMode = 'full' | 'stt_only';
 
 type VoiceSessionContext = {
@@ -942,6 +962,165 @@ function buildTransformationPlanGoals(
   }
 
   return TRANSFORMATION_PLAN_FALLBACK_GOALS.map((goal) => ({ ...goal }));
+}
+
+const WATCHTOWER_MAX_RECOMMENDATIONS = 5;
+const WATCHTOWER_MAX_TOKENS = 1600;
+
+const WATCHTOWER_RECOMMENDATIONS_SYSTEM_PROMPT = [
+  'You generate Watchtower recommendations for Dynamis, a career-transformation product.',
+  "A Watchtower is a recurring area the system will monitor on the user's behalf, surfacing relevant signals (e.g. a weekly digest).",
+  "Given the user's intent profile, produce 2-5 personalized watchtower recommendations.",
+  'Count is driven by profile richness: 2 for a thin profile, up to 5 for a rich one.',
+  'Coverage rules:',
+  '- Prefer minimum 2 recommendations with BOTH a personal-life and a professional-life watchtower when evidence exists.',
+  '- ALWAYS try to include at least one PERSONAL and one PROFESSIONAL watchtower.',
+  '- Anchor the personal watchtower in real profile evidence — especially values_list, weaknesses, active_focus, and notes (these often carry personal-life signals). Also use personal cues in aspirations / role_context when they clearly refer to life outside work.',
+  '- NEVER invent facts, relationships, hobbies, health conditions, or life events the profile does not contain.',
+  '- If there is genuinely no personal-life evidence, emit only professional recommendations (still 2-5 when possible) rather than fabricating a personal one.',
+  'Each recommendation must be explicitly grounded in something specific from the profile.',
+  'user_facing_description should reference that evidence naturally (e.g. "you mentioned you want to move into AI-driven design but feel behind on the vocabulary").',
+  'Tone: warm, plain-language, concrete about what the user will receive.',
+  'display_name must be personalized (e.g. "Your fundraising landscape"), never generic labels like "Career updates".',
+  'suggested_sources may be an empty array. suggested_frequency examples: "weekly", "biweekly".',
+  'evidence_basis must name which profile fields drove the recommendation.',
+  'Output ONLY valid JSON, no markdown, no preamble, exact shape:',
+  '{"recommendations":[',
+  '{"coverage_type":"professional","display_name":"...","user_facing_description":"...","watchtower_intent_spec":{"topic":"...","intent_summary":"...","signals_of_interest":["..."],"suggested_sources":["..."],"suggested_frequency":"weekly","evidence_basis":"...","rationale":"..."}}',
+  ']}',
+  "coverage_type must be exactly 'personal' or 'professional'.",
+  'Do not include recommendation_id, user_id, status, or generated_at — the server adds those.',
+].join('\n');
+
+function formatProfileForWatchtowerPrompt(profile: UserProfile): string {
+  const base = formatProfileForPossibilityMapPrompt(profile);
+  const notes = profile.notes?.trim();
+  if (!notes) {
+    return base;
+  }
+  if (base.startsWith('No profile fields')) {
+    return `notes: ${notes}`;
+  }
+  return `${base}\nnotes: ${notes}`;
+}
+
+function isProfileSufficientForWatchtower(profile: UserProfile | null): boolean {
+  if (!profile) {
+    return false;
+  }
+  const hasRole = Boolean(profile.role_context?.trim());
+  const hasAspirations = Boolean(profile.aspirations?.trim());
+  return hasRole || hasAspirations;
+}
+
+function coerceWatchtowerStringArray(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .map((item) => item.trim());
+}
+
+function parseWatchtowerCoverageType(raw: unknown): WatchtowerCoverageType | null {
+  const value = String(raw ?? '').trim();
+  if (value === 'personal' || value === 'professional') {
+    return value;
+  }
+  return null;
+}
+
+function parseWatchtowerIntentSpec(raw: unknown): WatchtowerIntentSpec | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const record = raw as Record<string, unknown>;
+  const topic = String(record.topic ?? '').trim();
+  const intentSummary = String(record.intent_summary ?? '').trim();
+  const evidenceBasis = String(record.evidence_basis ?? '').trim();
+  const rationale = String(record.rationale ?? '').trim();
+  const suggestedFrequency = String(record.suggested_frequency ?? '').trim();
+  if (!topic || !intentSummary || !evidenceBasis || !rationale || !suggestedFrequency) {
+    return null;
+  }
+  return {
+    topic,
+    intent_summary: intentSummary,
+    signals_of_interest: coerceWatchtowerStringArray(record.signals_of_interest),
+    suggested_sources: coerceWatchtowerStringArray(record.suggested_sources),
+    suggested_frequency: suggestedFrequency,
+    evidence_basis: evidenceBasis,
+    rationale,
+  };
+}
+
+function parseWatchtowerRecommendationItem(
+  item: unknown,
+  userId: string,
+  generatedAt: string,
+): WatchtowerRecommendation | null {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+  const record = item as Record<string, unknown>;
+  const coverageType = parseWatchtowerCoverageType(record.coverage_type);
+  const displayName = String(record.display_name ?? '').trim();
+  const userFacingDescription = String(record.user_facing_description ?? '').trim();
+  const intentSpec = parseWatchtowerIntentSpec(record.watchtower_intent_spec);
+  if (!coverageType || !displayName || !userFacingDescription || !intentSpec) {
+    return null;
+  }
+  return {
+    recommendation_id: randomUUID(),
+    user_id: userId,
+    coverage_type: coverageType,
+    display_name: displayName,
+    user_facing_description: userFacingDescription,
+    watchtower_intent_spec: intentSpec,
+    status: 'proposed',
+    generated_at: generatedAt,
+  };
+}
+
+function buildWatchtowerRecommendations(
+  parsed: unknown | null,
+  userId: string,
+): WatchtowerRecommendation[] {
+  const generatedAt = new Date().toISOString();
+  const recommendations: WatchtowerRecommendation[] = [];
+
+  if (!parsed || typeof parsed !== 'object' || !('recommendations' in parsed)) {
+    return recommendations;
+  }
+
+  const rawList = (parsed as { recommendations?: unknown }).recommendations;
+  if (!Array.isArray(rawList)) {
+    return recommendations;
+  }
+
+  for (const item of rawList) {
+    const recommendation = parseWatchtowerRecommendationItem(item, userId, generatedAt);
+    if (!recommendation) {
+      console.warn('[watchtower] dropped invalid recommendation item', { user_id: userId });
+      continue;
+    }
+    recommendations.push(recommendation);
+    if (recommendations.length >= WATCHTOWER_MAX_RECOMMENDATIONS) {
+      break;
+    }
+  }
+
+  if (
+    recommendations.length > 0 &&
+    !recommendations.some((item) => item.coverage_type === 'personal')
+  ) {
+    console.warn('[watchtower] personal coverage absent', {
+      user_id: userId,
+      count: recommendations.length,
+    });
+  }
+
+  return recommendations;
 }
 
 async function countCrossSessionMessages(
@@ -2302,6 +2481,67 @@ function buildReflectionSummaryResult(parsed: unknown | null): typeof REFLECTION
     celebration,
   };
 }
+
+app.post(
+  '/watchtower-recommendations',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const profile = await loadUserProfile(userId);
+      if (!isProfileSufficientForWatchtower(profile)) {
+        console.log('[watchtower] insufficient_profile', { user_id: userId });
+        return res.status(200).json({
+          recommendations: [],
+          reason: 'insufficient_profile',
+        });
+      }
+
+      const userPrompt = formatProfileForWatchtowerPrompt(profile!);
+      const llmRes = await anthropic.messages.create({
+        model: SUMMARY_MODEL,
+        system: WATCHTOWER_RECOMMENDATIONS_SYSTEM_PROMPT,
+        max_tokens: WATCHTOWER_MAX_TOKENS,
+        messages: [
+          {
+            role: 'user',
+            content: `Intent profile:\n${userPrompt}\n\nReturn the JSON now.`,
+          },
+        ],
+      });
+
+      const block = llmRes.content[0];
+      let parsed: unknown | null = null;
+      if (block && block.type === 'text') {
+        parsed = extractJsonObjectFromText(block.text);
+      }
+
+      if (parsed === null) {
+        console.warn('[watchtower] llm json parse failed', { user_id: userId });
+        return res.status(200).json({ recommendations: [] });
+      }
+
+      const recommendations = buildWatchtowerRecommendations(parsed, userId);
+      console.log('[watchtower] generated', {
+        user_id: userId,
+        count: recommendations.length,
+      });
+      return res.status(200).json({ recommendations });
+    } catch (error) {
+      console.error('POST /watchtower-recommendations error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
 
 app.post(
   '/reflection-summary',
