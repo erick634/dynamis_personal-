@@ -6,6 +6,7 @@ import { CreateProfileScreen } from '@/features/onboarding/create-profile-screen
 import { WelcomeScreen } from '@/features/onboarding/welcome-screen';
 import { DiscoveryChat } from '@/features/discovery/discovery-chat';
 import { LiveScreen } from '@/features/live/live-screen';
+import { LiveKitTestScreen } from '@/features/livekit-test/livekit-test-screen';
 import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
 import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { TodayScreen } from '@/features/today/today-screen';
@@ -19,6 +20,8 @@ export function App() {
         <Route path="/awakening" element={<Navigate to="/" replace />} />
         <Route path="/onboarding" element={<CreateProfileScreen />} />
         <Route path="/welcome" element={<WelcomeScreen />} />
+        {/* Temporary LiveKit proof of concept — remove with src/features/livekit-test/. */}
+        <Route path="/livekit-test" element={<LiveKitTestScreen />} />
         <Route element={<AppLayout />}>
           <Route path="/today" element={<TodayScreen />} />
           <Route path="/plan" element={<TransformationPlanScreen />} />

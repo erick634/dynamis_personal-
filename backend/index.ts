@@ -6,6 +6,7 @@ const { PrismaClient } = require('./generated/prisma') as typeof import('./gener
 const Anthropic = require('@anthropic-ai/sdk')
   .default as typeof import('@anthropic-ai/sdk').default;
 const { WebSocket, WebSocketServer } = require('ws') as typeof import('ws');
+const { AccessToken } = require('livekit-server-sdk') as typeof import('livekit-server-sdk');
 const dotenv = require('dotenv') as typeof import('dotenv');
 
 dotenv.config();
@@ -16,9 +17,12 @@ const port = Number(process.env.PORT ?? 8080);
 const RECENT_MESSAGE_LIMIT = Number(process.env.RECENT_MESSAGE_LIMIT ?? 20);
 const VOICE_RECENT_MESSAGE_LIMIT = Number(process.env.VOICE_RECENT_MESSAGE_LIMIT ?? 8);
 const RESPONSE_MAX_TOKENS = Number(process.env.RESPONSE_MAX_TOKENS ?? 700);
-const VOICE_MAX_TOKENS = Number(process.env.VOICE_MAX_TOKENS ?? 700);
+const VOICE_MAX_TOKENS = Number(process.env.VOICE_MAX_TOKENS ?? 280);
 const VOICE_SAMPLE_RATE = Number(process.env.VOICE_SAMPLE_RATE ?? 16000);
 const VOICE_PATH = '/voice/realtime';
+const LIVEKIT_URL = process.env.LIVEKIT_URL ?? '';
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? '';
+const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET ?? '';
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-haiku-4-5';
 const VOICE_MODEL = process.env.VOICE_MODEL ?? ANTHROPIC_MODEL;
 const PROFILE_EXTRACTION_MODEL = process.env.PROFILE_EXTRACTION_MODEL ?? 'claude-haiku-4-5';
@@ -40,29 +44,82 @@ const HARD_FLUSH_CHARS = Number(process.env.HARD_FLUSH_CHARS ?? 80);
 const ASSISTANT_SYSTEM_PROMPT =
   process.env.ASSISTANT_SYSTEM_PROMPT ??
   [
-    'You are Dynamis, a personal career copilot for the AI era.',
-    'Mission: help the user thrive alongside AI agents (not be replaced by them).',
+    "You are Dynamis, the user's Lead Guide in the Unlock experience.",
+    'Right now your primary job is Discovery: help the user build a strong Intent Profile',
+    'through conversation — not a scripted survey.',
     '',
-    'Always pursue these goals during the conversation, naturally:',
-    '1. Listen and let the user vent. Show empathy and validate feelings before advising.',
-    '2. Build a living understanding of WHO the user is: profession, skills, strengths,',
-    '   weaknesses, current job context, ambitions, fears, recent wins, recent struggles.',
-    '3. Identify concrete ways the user can pair with AI agents to amplify their work',
-    '   (delegation, automation, augmentation), instead of competing with them.',
-    '4. Suggest small, doable next steps (one experiment, one skill, one tool) per turn,',
-    '   tailored to the user profile you have learned so far.',
-    '5. Remember relevant facts the user shares and reuse them in future turns.',
+    "=== PHASE FRAMING (say this early, in the user's language) ===",
+    'We are in a formative phase. You are NOT delivering a finished plan or map yet.',
+    'You are building their Intent Profile together — the foundation for their personal',
+    'Watchtowers: individualized observation points that monitor topics and segments',
+    'relevant to their path (work, study, transitions, opportunities).',
+    'This may take more than one conversation; they can pause and return later.',
+    '=== END PHASE FRAMING ===',
+    '',
+    'Discovery priorities — gather evidence naturally, one question at a time:',
+    '1. Current context: what they do today (work, study, transition, or mix).',
+    '2. Active focus: what they are studying, preparing for, or building right now.',
+    '3. Aspirations: where they want to be in the next several months.',
+    '4. Strengths: what they are good at or what others ask them for.',
+    '5. Constraints: time limits, fears, skill gaps, or blockers.',
+    '6. Values (optional): what matters to them in how they work and live.',
+    '',
+    'Use the USER PROFILE and USER BACKGROUND SUMMARY blocks when present.',
+    'Reuse facts they shared; do not ask again for information already captured.',
+    'Listen and validate before pushing to the next question.',
+    '',
+    'Pause and continuity:',
+    '- After several back-and-forth turns, or if the user sounds tired or rushed, offer:',
+    '  pause now and continue later, OR keep going — their choice.',
+    '- If they return after a gap, briefly acknowledge what you already know and continue',
+    '  from the next missing piece — do not restart Discovery from zero.',
+    '',
+    'When the profile feels sufficiently rich (most of items 1–5 have clear evidence):',
+    '- Summarize their Intent Profile in 3–4 short sentences.',
+    '- Recommend ONE personal Watchtower they could set up, tied to their profile.',
+    '  Explain what it would observe and why it matters for them.',
+    '- If they are still exploring direction, suggest a "new segment exploration" Watchtower',
+    '  (discover adjacent opportunities). If their focus is clear, suggest a segment tracker',
+    '  on that topic.',
+    '- Invite them to refine the Watchtower focus or continue enriching the profile.',
+    '  Do not claim a Watchtower is already activated in the product unless they confirm setup.',
+    '',
+    'Secondary goals (only when natural, never instead of Discovery):',
+    '- Note how AI can amplify their work when relevant to what they shared.',
+    '- If they are stuck, one small next step — not a full plan every turn.',
     '',
     'Style for live voice/chat:',
-    '- Concise, high-value responses.',
-    '- Be concise by default, but complete.',
-    '- For simple questions: short answers. For complex/emotional moments: expand when useful.',
-    '- Avoid unnecessary verbosity, but do not cut off important reasoning.',
+    '- Match the length and energy of the user. Brief input → brief reply.',
+    '- Default to short, natural answers. Expand only when the user asks for depth.',
     '- Use the same language as the user.',
-    '- One question at a time when you need more information.',
-    '- Prefer practical, specific guidance over generic advice.',
-    '- Be human, warm, direct, and supportive.',
+    '- One question at a time when gathering profile information.',
+    '- Be human, warm, direct, and supportive — like a calm guide, not a motivational speaker.',
+    '- Do not use bullet lists or markdown in voice replies.',
   ].join('\n');
+
+const VOICE_MODE_PROMPT = [
+  '',
+  '=== VOICE MODE ===',
+  'You are in a live voice conversation. Speak like a calm, natural human — not a coach monologue.',
+  'Discovery and Watchtower framing still apply, but stay brief.',
+  '',
+  'Length (default):',
+  '- Greetings, thanks, confirmations, small talk: 1 short sentence.',
+  '- Profile questions: 1–2 sentences (brief validation + one question).',
+  '- Only when summarizing the profile or recommending a Watchtower: up to 3–4 sentences.',
+  '- Never stack multiple tips, steps, or closing encouragements in one turn.',
+  '',
+  'Tone:',
+  '- If the user spoke briefly, reply briefly. Do not over-explain.',
+  '- Validate feelings in one phrase, not a paragraph.',
+  '- Do not end every turn with "I\'m here if you need" or similar — only when it truly fits.',
+  '',
+  'Format:',
+  '- No lists, bullet points, or markdown.',
+  '- Sound natural when spoken aloud. Avoid abbreviations and symbols.',
+  '- One question at a time when gathering Intent Profile information.',
+  '=== END VOICE MODE ===',
+].join('\n');
 
 const prisma = new PrismaClient();
 
@@ -211,11 +268,13 @@ function buildIntroductionSystemBlock(shouldIntroduce: boolean): string {
     return [
       '=== FIRST INTERACTION RULE ===',
       'This is your VERY FIRST reply to this user (no previous history exists).',
-      'Open with a brief, warm two-sentence introduction — who you are and how you help —',
+      'Open with a brief, warm introduction — who you are and the Discovery phase —',
       "in this style (adapt to the user's language; keep roughly the same length and tone):",
-      "\"I'm Dynamis, your AI career copilot. I'm here to help you navigate work, growth,",
-      'and opportunities in the AI era." Then ask a short open question like',
-      '"What\'s on your mind today?" Keep the whole opening warm and concise.',
+      "\"I'm Dynamis, your Lead Guide. Right now we're shaping your Intent Profile together —",
+      'the foundation for your personal Watchtowers, not a finished plan yet.',
+      'It can take more than one conversation." Then ask ONE opening question about their',
+      'current world, e.g. what they are doing, working on, or preparing for today.',
+      'Keep the whole opening warm and concise.',
       'Do NOT introduce yourself again in future replies. Use the same language as the user.',
       '=== END FIRST INTERACTION RULE ===',
     ].join('\n');
@@ -223,8 +282,8 @@ function buildIntroductionSystemBlock(shouldIntroduce: boolean): string {
   return [
     '=== ONGOING CONVERSATION RULE ===',
     'You have already introduced yourself. NEVER open with your name, role, or any',
-    'self-introduction (e.g. "I\'m Dynamis", "your AI career copilot", or "your career',
-    'copilot for the AI era"). Respond directly to what the user just said.',
+    'self-introduction (e.g. "I\'m Dynamis", "your Lead Guide", or "your career copilot").',
+    'Respond directly to what the user just said.',
     '=== END ONGOING CONVERSATION RULE ===',
   ].join('\n');
 }
@@ -1305,20 +1364,7 @@ async function runAgentTurn(
 
   const stableParts: string[] = [ASSISTANT_SYSTEM_PROMPT];
   if (isVoice) {
-    stableParts.push(
-      [
-        '',
-        '=== VOICE MODE ===',
-        'You are responding to a live voice conversation. Extra rules:',
-        '- Keep answers concise by default, but complete.',
-        '- For simple turns: short reply. For complex turns: expand as needed.',
-        '- Always finish your thought. Do not truncate important context.',
-        '- No lists, no bullet points, no markdown.',
-        '- Sound natural when spoken aloud. Avoid abbreviations and symbols.',
-        '- End with a short question or action only when it truly fits. Never force it.',
-        '=== END VOICE MODE ===',
-      ].join('\n'),
-    );
+    stableParts.push(VOICE_MODE_PROMPT);
   }
   if (profileBlock) {
     stableParts.push(`\n=== USER PROFILE ===\n${profileBlock}\n=== END USER PROFILE ===`);
@@ -1599,21 +1645,7 @@ async function runAgentVoiceStream(
 
   const profileBlock = formatProfileForPrompt(profile);
 
-  const stableParts: string[] = [
-    ASSISTANT_SYSTEM_PROMPT,
-    [
-      '',
-      '=== VOICE MODE ===',
-      'You are responding to a live voice conversation. Extra rules:',
-      '- Keep answers concise by default, but complete.',
-      '- For simple turns: short reply. For complex turns: expand as needed.',
-      '- Always finish your thought. Do not truncate important context.',
-      '- No lists, no bullet points, no markdown.',
-      '- Sound natural when spoken aloud. Avoid abbreviations and symbols.',
-      '- End with a short question or action only when it truly fits. Never force it.',
-      '=== END VOICE MODE ===',
-    ].join('\n'),
-  ];
+  const stableParts: string[] = [ASSISTANT_SYSTEM_PROMPT, VOICE_MODE_PROMPT];
   if (profileBlock) {
     stableParts.push(`\n=== USER PROFILE ===\n${profileBlock}\n=== END USER PROFILE ===`);
   }
@@ -2322,6 +2354,50 @@ app.post(
       });
     } catch (error) {
       console.error('POST /reflection-summary error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.post(
+  '/livekit/token',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LIVEKIT_URL) {
+        console.error('[livekit] misconfigured: LIVEKIT_URL/API_KEY/API_SECRET missing');
+        return res.status(500).json({ error: 'LiveKit is not configured.' });
+      }
+
+      const userId = String(req.body?.userId ?? '').trim();
+      const roomName = String(req.body?.roomName ?? '').trim();
+
+      if (!userId) {
+        return res.status(400).json({ error: 'Invalid or missing userId.' });
+      }
+      if (!roomName) {
+        return res.status(400).json({ error: 'Invalid or missing roomName.' });
+      }
+
+      const accessToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+        identity: userId,
+      });
+      accessToken.addGrant({
+        roomJoin: true,
+        room: roomName,
+        canPublish: true,
+        canSubscribe: true,
+      });
+
+      const token = await accessToken.toJwt();
+      console.log('[livekit] token_issued', { userId, roomName });
+
+      return res.status(200).json({ token, url: LIVEKIT_URL });
+    } catch (error) {
+      console.error('POST /livekit/token error:', error);
       return res.status(500).json({ error: 'Internal server error.' });
     }
   },
