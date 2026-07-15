@@ -435,6 +435,7 @@
     "controls": {
       "join": "Join live",
       "end": "End session",
+      "endAndWatchtowers": "End & see my Watchtowers",
       "joinAgain": "Join again",
       "micOn": "Turn microphone on",
       "micOff": "Turn microphone off",

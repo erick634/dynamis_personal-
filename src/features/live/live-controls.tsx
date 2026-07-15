@@ -83,7 +83,7 @@ export function LiveControls({
               onClick={onEnd}
               className="rounded-full border border-line px-5 py-2.5 font-body text-sm font-medium text-ink-2 transition-colors hover:border-red/40 hover:text-red"
             >
-              {t('live.controls.end')}
+              {t('live.controls.endAndWatchtowers')}
             </button>
           </>
         ) : null}

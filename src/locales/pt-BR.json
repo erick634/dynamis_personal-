@@ -435,6 +435,7 @@
     "controls": {
       "join": "Entrar ao vivo",
       "end": "Encerrar sessão",
+      "endAndWatchtowers": "Encerrar e ver meus Watchtowers",
       "joinAgain": "Entrar novamente",
       "micOn": "Ligar microfone",
       "micOff": "Desligar microfone",

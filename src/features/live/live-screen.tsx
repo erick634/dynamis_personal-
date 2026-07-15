@@ -46,7 +46,10 @@ export function LiveScreen() {
               void session.joinLive();
             }}
             onEnd={() => {
-              void session.endLive();
+              void (async () => {
+                await session.endLive();
+                navigate('/watchtowers');
+              })();
             }}
             onToggleMic={session.toggleMic}
             onReset={session.resetSession}

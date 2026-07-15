@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(live): End button on `/live` awaits session teardown then navigates to `/watchtowers` (new `live.controls.endAndWatchtowers` i18n; Welcome keeps `live.controls.end`)
+
 - feat(backend): first-interaction intro reframed as personal copilot (goals/growth); no Watchtowers or Intent Profile in the opening
 - fix(backend): tighten voice agent prompts for shorter, more natural replies; reduce default `VOICE_MAX_TOKENS` from 700 to 280
 - feat(backend): replace native MongoDB driver with Prisma Client (`ChatHistory`, `UserProfile` models); uses `DATABASE_URL`
