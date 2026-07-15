@@ -41,7 +41,8 @@
     "greeting": "Que bom te ver aqui, {{name}}.",
     "body": "Seu Lead Guide está pronto para a Descoberta — montar seu Perfil de Intenção juntos, a base dos seus Watchtowers pessoais.\n\nFale naturalmente; não há perguntas scriptadas. Você pode pausar e voltar quando quiser.",
     "startButton": "Falar com meu Lead Guide",
-    "skipButton": "Talvez depois"
+    "skipButton": "Talvez depois",
+    "finishAndWatchtowers": "Concluir e ver meus Watchtowers"
   },
   "possibilityMap": {
     "eyebrow": "Fase 04 · Mapa de Possibilidades",
@@ -486,6 +487,8 @@
     "title": "O que vamos observar por você.",
     "subtitle": "Áreas recorrentes que seu guia pode monitorar — ancoradas no que você já compartilhou.",
     "generating": "Montando seus Watchtowers a partir do Perfil de Intenção…",
+    "refresh": "Atualizar recomendações",
+    "refreshing": "Atualizando…",
     "coverage": {
       "personal": "Pessoal",
       "professional": "Profissional"

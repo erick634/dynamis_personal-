@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(backend): `GET /profile/:userId` returns Intent Profile from Prisma/Mongo (`{ profile }` or `{ profile: null }` when not ready)
+- feat(you): `/you` Intent Profile hook reads from `GET /profile/:userId` instead of abandoned Supabase
 - feat(backend): `POST /profile/email` upserts optional `email` on `UserProfile` (schema field + route; no frontend yet)
 - feat(watchtowers): success-state CTA invites continuing the Live conversation for more Watchtowers
 - feat(watchtowers): read-only `/watchtowers` screen fetches and displays LLM Watchtower recommendations (React Query, nav entry, i18n)
@@ -21,7 +23,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(watchtowers): success-state "Refresh recommendations" button forces a manual refetch (keeps `staleTime: Infinity` on mount)
 - feat(live): End button on `/live` awaits session teardown then navigates to `/watchtowers` (new `live.controls.endAndWatchtowers` i18n; Welcome keeps `live.controls.end`)
+- feat(welcome): End button awaits session teardown then navigates to `/watchtowers` (new `welcome.finishAndWatchtowers` i18n)
 
 - feat(backend): first-interaction intro reframed as personal copilot (goals/growth); no Watchtowers or Intent Profile in the opening
 - fix(backend): tighten voice agent prompts for shorter, more natural replies; reduce default `VOICE_MAX_TOKENS` from 700 to 280

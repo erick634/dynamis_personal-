@@ -41,7 +41,8 @@
     "greeting": "Good to see you here, {{name}}.",
     "body": "Your Lead Guide is ready for Discovery — shaping your Intent Profile together, the foundation for your personal Watchtowers.\n\nSpeak naturally; there are no scripted questions. You can pause and return anytime.",
     "startButton": "Talk to my Lead Guide",
-    "skipButton": "Maybe later"
+    "skipButton": "Maybe later",
+    "finishAndWatchtowers": "Finish and see my Watchtowers"
   },
   "possibilityMap": {
     "eyebrow": "Phase 04 · Possibility Map",
@@ -486,6 +487,8 @@
     "title": "What we'll watch for you.",
     "subtitle": "Recurring areas your guide can monitor — grounded in what you've already shared.",
     "generating": "Shaping your Watchtowers from your Intent Profile…",
+    "refresh": "Refresh recommendations",
+    "refreshing": "Refreshing…",
     "coverage": {
       "personal": "Personal",
       "professional": "Professional"

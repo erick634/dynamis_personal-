@@ -148,6 +148,8 @@ type UserProfile = {
   long_term_summary: string | null;
   long_term_summary_at: Date | null;
   long_term_summary_msg_count: number;
+  created_at: Date | null;
+  updated_at: Date | null;
 };
 type ProfileExtractionPayload = {
   display_name?: string | null;
@@ -337,6 +339,8 @@ async function loadUserProfile(userId: string): Promise<UserProfile | null> {
     long_term_summary: (row.long_term_summary as string | null) ?? null,
     long_term_summary_at: (row.long_term_summary_at as Date | null) ?? null,
     long_term_summary_msg_count: Number(row.long_term_summary_msg_count ?? 0),
+    created_at: (row.created_at as Date | null) ?? null,
+    updated_at: (row.updated_at as Date | null) ?? null,
   };
 }
 
@@ -2220,6 +2224,55 @@ app.use(express.json({ limit: '1mb' }));
 app.get('/health', (_req: import('express').Request, res: import('express').Response) => {
   res.status(200).json({ ok: true });
 });
+
+app.get(
+  '/profile/:userId',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.params.userId ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing userId. Expected UUID.',
+        });
+      }
+
+      const profile = await loadUserProfile(userId);
+      if (!profile) {
+        console.log('[profile] get', { user_id: userId, found: false });
+        return res.status(200).json({ profile: null });
+      }
+
+      console.log('[profile] get', { user_id: userId, found: true });
+      return res.status(200).json({
+        profile: {
+          user_id: profile.user_id,
+          display_name: profile.display_name,
+          role_context: profile.role_context,
+          aspirations: profile.aspirations,
+          strengths: profile.strengths,
+          weaknesses: profile.weaknesses,
+          values_list: profile.values_list,
+          active_focus: profile.active_focus,
+          notes: profile.notes,
+          long_term_summary: profile.long_term_summary,
+          long_term_summary_at: profile.long_term_summary_at
+            ? profile.long_term_summary_at.toISOString()
+            : null,
+          long_term_summary_msg_count: profile.long_term_summary_msg_count,
+          created_at: profile.created_at ? profile.created_at.toISOString() : null,
+          updated_at: profile.updated_at ? profile.updated_at.toISOString() : null,
+        },
+      });
+    } catch (error) {
+      console.error('GET /profile/:userId error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
 
 app.post(
   '/profile/email',

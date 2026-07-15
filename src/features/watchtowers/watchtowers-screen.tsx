@@ -71,7 +71,7 @@ export function WatchtowersScreen() {
   const { t } = useTranslation();
   const userId = useCurrentUser((state) => state.user?.userId);
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['watchtower-recommendations', userId],
     queryFn: () => {
       if (!userId) {
@@ -87,6 +87,7 @@ export function WatchtowersScreen() {
   const recommendations = data?.recommendations ?? [];
   const isInsufficient = data?.reason === 'insufficient_profile';
   const isEmpty = Boolean(userId) && !isLoading && !isError && recommendations.length === 0;
+  const isRefreshing = isFetching && !isLoading;
 
   return (
     <div className="mx-auto max-w-lg px-4 py-6 md:max-w-2xl md:px-8 md:py-8">
@@ -134,7 +135,19 @@ export function WatchtowersScreen() {
 
       {recommendations.length > 0 ? (
         <>
-          <ul className="mt-8 flex flex-col gap-4">
+          <div className="mt-8 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                void refetch();
+              }}
+              disabled={isRefreshing}
+              className="rounded-full border border-line px-4 py-2 font-body text-sm font-medium text-ink-2 transition-colors hover:border-blue/40 hover:text-blue disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isRefreshing ? t('watchtowers.refreshing') : t('watchtowers.refresh')}
+            </button>
+          </div>
+          <ul className="mt-4 flex flex-col gap-4">
             {recommendations.map((recommendation) => (
               <li key={recommendation.recommendation_id}>
                 <WatchtowerCard recommendation={recommendation} />

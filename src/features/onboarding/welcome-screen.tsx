@@ -220,11 +220,14 @@ export function WelcomeScreen() {
                 <button
                   type="button"
                   onClick={() => {
-                    void session.endLive();
+                    void (async () => {
+                      await session.endLive();
+                      navigate('/watchtowers');
+                    })();
                   }}
                   className="rounded-full border border-white/20 px-5 py-2.5 font-body text-sm font-medium text-white/80 transition-colors hover:border-red-warm/60 hover:text-red-warm"
                 >
-                  {t('live.controls.end')}
+                  {t('welcome.finishAndWatchtowers')}
                 </button>
               </div>
             </div>

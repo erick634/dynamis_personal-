@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { supabase } from '@/lib/supabase';
+import { fetchIntentProfile } from '@/features/you/intent-profile-api';
+import type { IntentProfile } from '@/features/you/intent-profile-types';
 import { useCurrentUser } from '@/stores/current-user';
-
-import type { IntentProfile, IntentProfileRow } from '@/features/you/intent-profile-types';
-import { mapRowToProfile } from '@/features/you/intent-profile-types';
 
 type UseIntentProfileResult = {
   profile: IntentProfile | null;
@@ -30,50 +28,16 @@ export function useIntentProfile(): UseIntentProfileResult {
     setIsLoading(true);
     setError(null);
 
-    let data: IntentProfileRow | null = null;
-    let queryError: { code?: string; message: string } | null = null;
-
     try {
-      ({ data, error: queryError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.userId)
-        .maybeSingle<IntentProfileRow>());
-
-      // eslint-disable-next-line no-console
-      console.warn('[pdbg] user:', user.userId, 'data:', data, 'err:', queryError);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('[pdbg] EXCEPTION:', err);
-      setProfile(null);
-      setIsLoading(false);
-      setError(err instanceof Error ? err.message : String(err));
-      return;
-    }
-
-    if (queryError) {
-      // Treat "no rows" as a processing state, not as an error.
-      if (queryError.code === 'PGRST116') {
-        setProfile(null);
-        setIsLoading(false);
-        setError(null);
-        return;
-      }
-      setProfile(null);
-      setIsLoading(false);
-      setError(queryError.message);
-      return;
-    }
-
-    if (!data) {
-      setProfile(null);
-      setIsLoading(false);
+      const next = await fetchIntentProfile(user.userId);
+      setProfile(next);
       setError(null);
-      return;
+    } catch (err) {
+      setProfile(null);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsLoading(false);
     }
-
-    setProfile(mapRowToProfile(data));
-    setIsLoading(false);
   }, [user?.userId]);
 
   useEffect(() => {
