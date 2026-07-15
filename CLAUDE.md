@@ -24,6 +24,27 @@ docker start dynamis-mongo    # if it isn't
 
 This is not optional and the failure is silent. If the container is stopped, the backend still connects and serves HTTP, but **voice turns cancel with no error and the agent never replies**. Check `docker ps` first before debugging a "broken" voice pipeline.
 
+**MongoDB must run as a replica set.** Prisma uses transactions for its upserts, and a standalone MongoDB throws `P2031` ("Prisma needs to perform transactions, which requires your MongoDB server to be run as a replica set"). The container is created **with** the `--replSet` flag:
+
+```bash
+docker run -d --name dynamis-mongo -p 27017:27017 -v dynamis-mongo-data:/data/db mongo:7 --replSet rs0
+```
+
+First-time initialization — only needed once, or if the `dynamis-mongo-data` volume is wiped:
+
+```bash
+docker exec dynamis-mongo mongosh --eval "rs.initiate()"
+# Reconfigure to advertise as localhost, otherwise the backend on Windows can't resolve the
+# container's internal hostname and gets "host not known" / ReplicaSetNoPrimary:
+docker exec dynamis-mongo mongosh --eval "rs.reconfig({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}, {force: true})"
+```
+
+The replica set config **survives container/PC restarts** — it comes back as `PRIMARY` automatically, so there's no need to re-run `initiate`/`reconfig` after a normal restart. Verify with:
+
+```bash
+docker exec dynamis-mongo mongosh --eval "rs.status().members[0].stateStr"   # should print PRIMARY
+```
+
 Frontend (repo root):
 
 ```bash
@@ -97,6 +118,8 @@ The actual watchtower **scanning and monitoring is another team's responsibility
 **A "brand-new user" is almost always localStorage, not a bug.** The user identity exists *only* in localStorage under the `dynamis-current-user` key (Zustand `persist`), and `userId` is a client-generated UUID. Clear it — devtools, a fresh profile, incognito — and the app silently mints a **new** `userId`. The backend then sees an unknown user: the agent re-introduces itself every turn and `/you` shows no profile.
 
 The old data is not lost; it's still in Mongo under the **previous** `userId`. Check localStorage before chasing this as a code defect in the agent or the profile endpoints.
+
+**Upserts failing with `P2031` or `P2010`/`ReplicaSetNoPrimary`** means the MongoDB replica set is misconfigured, not a Prisma bug. `P2031` = the container was started **without** `--replSet` (it's a standalone). `P2010`/`ReplicaSetNoPrimary` = the set exists but the backend can't reach a primary — usually because it advertises the container's internal hostname instead of `localhost`. Confirm `rs.status().members[0].stateStr` prints `PRIMARY` advertising `localhost:27017`; see the replica set setup under [Commands](#commands) to fix.
 
 ## Conventions
 
