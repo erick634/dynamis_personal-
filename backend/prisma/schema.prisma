@@ -27,6 +27,7 @@ model ChatHistory {
 model UserProfile {
   id                          String    @id @default(auto()) @map("_id") @db.ObjectId
   user_id                     String    @unique
+  email                       String?
   display_name                String?
   role_context                String?
   aspirations                 String?

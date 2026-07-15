@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(backend): `POST /profile/email` upserts optional `email` on `UserProfile` (schema field + route; no frontend yet)
 - feat(watchtowers): success-state CTA invites continuing the Live conversation for more Watchtowers
 - feat(watchtowers): read-only `/watchtowers` screen fetches and displays LLM Watchtower recommendations (React Query, nav entry, i18n)
 - feat(backend): `POST /watchtower-recommendations` generates 2–5 personalized Watchtower recommendations from the Intent Profile (LLM, no persistence yet)

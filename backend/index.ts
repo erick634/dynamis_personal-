@@ -199,6 +199,10 @@ function isValidUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function getHeaderValue(value: string | string[] | undefined): string {
   if (typeof value === 'string') {
     return value;
@@ -2216,6 +2220,53 @@ app.use(express.json({ limit: '1mb' }));
 app.get('/health', (_req: import('express').Request, res: import('express').Response) => {
   res.status(200).json({ ok: true });
 });
+
+app.post(
+  '/profile/email',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      const email = String(req.body?.email ?? '').trim();
+
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+      if (!email || !isValidEmail(email)) {
+        return res.status(400).json({
+          error: 'Invalid or missing email.',
+        });
+      }
+
+      const now = new Date();
+      await prisma.userProfile.upsert({
+        where: { user_id: userId },
+        create: {
+          user_id: userId,
+          email,
+          values_list: [],
+          created_at: now,
+          updated_at: now,
+        },
+        update: {
+          email,
+          updated_at: now,
+        },
+      });
+
+      console.log('[profile] email_saved', { user_id: userId });
+      return res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error('POST /profile/email error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
 
 app.post('/chat', async (req: import('express').Request, res: import('express').Response) => {
   try {
