@@ -11,6 +11,7 @@ import {
   parseIsoDateLocal,
   toIsoDateLocal,
 } from '@/features/onboarding/calculate-age-from-birth-date';
+import { saveProfileEmail } from '@/features/onboarding/profile-email-api';
 import { useCurrentUser } from '@/stores/current-user';
 
 import '@/features/onboarding/onboarding.css';
@@ -18,7 +19,11 @@ import '@/features/onboarding/onboarding.css';
 type FieldErrors = {
   displayName?: string;
   birthDate?: string;
+  email?: string;
+  form?: string;
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function CreateProfileScreen() {
   const { t } = useTranslation();
@@ -34,6 +39,7 @@ export function CreateProfileScreen() {
   const [isBirthDateFocused, setIsBirthDateFocused] = useState(false);
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { maxBirthDate, minBirthDate } = useMemo(() => {
     const today = new Date();
@@ -67,10 +73,17 @@ export function CreateProfileScreen() {
       }
     }
 
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      next.email = t('onboarding.errors.emailRequired');
+    } else if (!EMAIL_RE.test(trimmedEmail)) {
+      next.email = t('onboarding.errors.emailInvalid');
+    }
+
     return next;
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -81,21 +94,36 @@ export function CreateProfileScreen() {
 
     const trimmedName = displayName.trim();
     const age = calculateAgeFromBirthDate(birthDateInput);
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
 
     if (age == null) {
       return;
     }
 
-    setUser({
-      userId: crypto.randomUUID(),
-      displayName: trimmedName,
-      dateOfBirth: birthDateInput,
-      age,
-      ...(trimmedEmail ? { email: trimmedEmail } : {}),
-    });
+    const userId = crypto.randomUUID();
+    setIsSubmitting(true);
 
-    navigate('/welcome');
+    try {
+      await saveProfileEmail({
+        userId,
+        email: trimmedEmail,
+        displayName: trimmedName,
+      });
+
+      setUser({
+        userId,
+        displayName: trimmedName,
+        dateOfBirth: birthDateInput,
+        age,
+        email: trimmedEmail,
+      });
+
+      navigate('/welcome');
+    } catch {
+      setErrors({ form: t('onboarding.errors.saveFailed') });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClassName =
@@ -115,7 +143,13 @@ export function CreateProfileScreen() {
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-8" noValidate>
+        <form
+          onSubmit={(event) => {
+            void handleSubmit(event);
+          }}
+          className="flex flex-1 flex-col gap-8"
+          noValidate
+        >
           <div className="space-y-2">
             <label htmlFor={nameId} className="block font-body text-sm font-medium text-ink">
               {t('onboarding.nameLabel')}
@@ -199,7 +233,6 @@ export function CreateProfileScreen() {
           <div className="space-y-2">
             <label htmlFor={emailId} className="block font-body text-sm font-medium text-ink">
               {t('onboarding.emailLabel')}
-              <span className="ml-1.5 font-normal text-ink-3">({t('onboarding.emailHint')})</span>
             </label>
             <input
               id={emailId}
@@ -207,19 +240,36 @@ export function CreateProfileScreen() {
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value);
+                if (errors.email) {
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }
               }}
               placeholder={t('onboarding.emailPlaceholder')}
               autoComplete="email"
+              required
               className={inputClassName}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? `${emailId}-error` : undefined}
             />
+            {errors.email ? (
+              <p id={`${emailId}-error`} className="text-sm text-destructive" role="alert">
+                {errors.email}
+              </p>
+            ) : null}
           </div>
 
           <button
             type="submit"
-            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-8 py-4 font-body text-base font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent active:scale-[0.98]"
+            disabled={isSubmitting}
+            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-8 py-4 font-body text-base font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
           >
             {t('onboarding.submitButton')}
           </button>
+          {errors.form ? (
+            <p className="text-center text-sm text-destructive" role="alert">
+              {errors.form}
+            </p>
+          ) : null}
         </form>
       </div>
     </div>

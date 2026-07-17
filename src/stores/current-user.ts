@@ -7,7 +7,7 @@ export type CurrentUser = {
   /** ISO date (YYYY-MM-DD) captured during onboarding. */
   dateOfBirth?: string;
   age?: number;
-  email?: string;
+  email: string;
 };
 
 type CurrentUserState = {

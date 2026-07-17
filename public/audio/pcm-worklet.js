@@ -2,7 +2,8 @@
  * pcm-worklet.js
  *
  * AudioWorkletProcessor that converts Float32 microphone samples to little-
- * endian Int16 PCM and posts them back to the main thread in ~50 ms chunks.
+ * endian Int16 PCM and posts them back to the main thread in ~50 ms chunks,
+ * along with an RMS energy reading used for local barge-in VAD.
  *
  * Loaded by the VoiceService via `audioContext.audioWorklet.addModule(
  * '/audio/pcm-worklet.js')`. The AudioContext is constructed at 16 kHz, so
@@ -18,6 +19,7 @@ class PcmWorkletProcessor extends AudioWorkletProcessor {
     super();
     this._buffer = new Int16Array(TARGET_CHUNK_SAMPLES);
     this._offset = 0;
+    this._sumSq = 0;
   }
 
   process(inputs) {
@@ -30,13 +32,17 @@ class PcmWorkletProcessor extends AudioWorkletProcessor {
       let sample = channel[i];
       if (sample > 1) sample = 1;
       else if (sample < -1) sample = -1;
+
+      this._sumSq += sample * sample;
       this._buffer[this._offset++] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
 
       if (this._offset === TARGET_CHUNK_SAMPLES) {
+        const rms = Math.sqrt(this._sumSq / TARGET_CHUNK_SAMPLES);
         const chunk = new Int16Array(TARGET_CHUNK_SAMPLES);
         chunk.set(this._buffer);
-        this.port.postMessage(chunk.buffer, [chunk.buffer]);
+        this.port.postMessage({ type: 'chunk', pcm: chunk.buffer, rms }, [chunk.buffer]);
         this._offset = 0;
+        this._sumSq = 0;
       }
     }
     return true;

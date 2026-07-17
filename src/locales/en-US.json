@@ -10,12 +10,36 @@
     "ok": "bootstrap OK"
   },
   "awakening": {
+    "eyebrow": "Intelligence that empowers",
     "headline": {
       "line1": "AI is <em>transforming</em> your world.",
       "line2": "Are you?"
     },
+    "description": "Dynamis is your transformation guide — it learns who you are, maps what becomes possible with AI, and turns insight into a living plan.",
     "cta": {
       "primary": "Begin your Unlock Plan"
+    },
+    "nav": {
+      "ariaLabel": "Primary",
+      "about": "About",
+      "pricing": "Pricing",
+      "contact": "Contact",
+      "signIn": "Sign In"
+    },
+    "benefits": {
+      "sectionLabel": "Why Dynamis",
+      "secure": {
+        "title": "Secure & Private",
+        "body": "Your data stays protected."
+      },
+      "personalized": {
+        "title": "Personalized",
+        "body": "AI adapts to you."
+      },
+      "impact": {
+        "title": "Real Impact",
+        "body": "Transform insights into action."
+      }
     }
   },
   "onboarding": {
@@ -27,14 +51,33 @@
     "birthDatePlaceholder": "Select your date of birth",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
-    "emailHint": "optional",
     "submitButton": "Begin my Unlock Plan",
     "errors": {
       "nameRequired": "Please enter your name.",
       "birthDateRequired": "Please enter your date of birth.",
       "birthDateInvalid": "Please enter a valid date of birth.",
       "birthDateFuture": "Date of birth cannot be in the future.",
-      "birthDateMinAge": "You must be at least {{min}} years old."
+      "birthDateMinAge": "You must be at least {{min}} years old.",
+      "emailRequired": "Please enter your email.",
+      "emailInvalid": "Please enter a valid email.",
+      "saveFailed": "Could not save your profile. Check that the backend is running and try again."
+    }
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Enter the email you used when you created your profile.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "submit": "Continue",
+    "submitting": "Signing in…",
+    "createPrompt": "New here?",
+    "createProfile": "Create profile",
+    "fallbackName": "there",
+    "errors": {
+      "emailRequired": "Please enter your email.",
+      "emailInvalid": "Please enter a valid email.",
+      "notFound": "We couldn't find a profile with that email. Create a profile to get started.",
+      "generic": "Something went wrong. Try again in a moment."
     }
   },
   "welcome": {
@@ -42,7 +85,15 @@
     "body": "Your Lead Guide is ready for Discovery — shaping your Intent Profile together, the foundation for your personal Watchtowers.\n\nSpeak naturally; there are no scripted questions. You can pause and return anytime.",
     "startButton": "Talk to my Lead Guide",
     "skipButton": "Maybe later",
-    "finishAndWatchtowers": "Finish and see my Watchtowers"
+    "finishAndWatchtowers": "Finish and see my Watchtowers",
+    "returning": {
+      "greeting": "Good to see you again, {{name}}.",
+      "bodyWithTopic": "Last time we talked about {{topic}}.\n\nWould you like to continue that conversation?",
+      "bodyFallback": "Good to have you back. Your Lead Guide is ready whenever you are.\n\nWould you like to continue your conversation?",
+      "continueButton": "Continue the conversation",
+      "continuingHint": "Picking up on {{topic}}.",
+      "loading": "Remembering where we left off…"
+    }
   },
   "possibilityMap": {
     "eyebrow": "Phase 04 · Possibility Map",
@@ -302,7 +353,8 @@
     }
   },
   "appLayout": {
-    "navLabel": "Main navigation"
+    "navLabel": "Main navigation",
+    "logout": "Log out"
   },
   "today": {
     "eyebrow": "Phase 06 · Today",

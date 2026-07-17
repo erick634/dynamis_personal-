@@ -23,6 +23,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(voice): barge-in via local mic VAD while the agent speaks (stop TTS + listen); endpointing silence raised to 2800 ms
+- feat(awakening): remove the decorative orange door graphic from The Awakening screen
+- feat(awakening): premium landing redesign — nav, cinematic hero (~45% width), glass benefit strip; starfield/background preserved
+- feat(onboarding): email is required on profile creation (validation + `CurrentUser.email`)
+- feat(auth): `/login` screen (email-only) + Sign In entry; Create profile CTA; `GET /profile/by-email` and email persisted on signup
+- feat(welcome): returning-user copy — last conversation topic + continue CTA (`GET /profile/:userId/return-context`)
+- feat(voice): agent speaks first on session open (`VOICE_AGENT_OPENS`, default true); kickoff not saved as a user message
+- feat(welcome): returning conversations stay on `/welcome` (Live nav and continue CTAs redirect there)
+- fix(backend): register `GET /profile/by-email` before `/profile/:userId` so login lookup is not treated as a UUID
+- fix(auth): login lookup uses `POST /auth/lookup-by-email` (avoids conflict with `/profile/:userId`)
+- feat(app): Log out control in app nav clears session and returns to `/login`
+- feat(live): Screen Wake Lock during voice sessions to reduce mobile lock-screen interruptions
 - feat(watchtowers): success-state "Refresh recommendations" button forces a manual refetch (keeps `staleTime: Infinity` on mount)
 - feat(live): End button on `/live` awaits session teardown then navigates to `/watchtowers` (new `live.controls.endAndWatchtowers` i18n; Welcome keeps `live.controls.end`)
 - feat(welcome): End button awaits session teardown then navigates to `/watchtowers` (new `welcome.finishAndWatchtowers` i18n)

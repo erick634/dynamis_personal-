@@ -16,4 +16,15 @@ export const ALLOW_EMPTY_TOKEN =
 
 export const VOICE_PATH = '/voice/realtime';
 export const VOICE_SAMPLE_RATE = 16000;
-export const ENDPOINTING_MS = 1800;
+/** Silence before AssemblyAI ends the user turn. Higher = more thinking room. */
+export const ENDPOINTING_MS = 2800;
+
+/**
+ * Local barge-in VAD while the agent is speaking.
+ * RMS is measured on Float32 mic samples (~50 ms chunks in the worklet).
+ */
+export const BARGE_IN_RMS_THRESHOLD = 0.035;
+/** Consecutive hot chunks (~50 ms each) required before interrupting TTS. */
+export const BARGE_IN_MIN_CHUNKS = 3;
+/** Ignore mic energy briefly after TTS starts (avoids speaker bleed). */
+export const BARGE_IN_GRACE_MS = 400;

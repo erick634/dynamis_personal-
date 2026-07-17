@@ -1,3 +1,4 @@
+/* Background layers — keep starfield / gradient / spark behavior unchanged */
 .awakening {
   --awakening-gradient: radial-gradient(
     120% 90% at 70% 20%,
@@ -5,6 +6,9 @@
     var(--bg-deep) 45%,
     var(--bg-deep-end) 100%
   );
+  --awakening-coral: #f35f4b;
+  --awakening-accent: #5468ff;
+  --awakening-text-muted: rgb(255 255 255 / 75%);
   background: var(--awakening-gradient);
 }
 
@@ -80,16 +84,211 @@
   }
 }
 
+/* Soft cinematic light — additive, does not replace starfield */
+.awakening__ambient {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 50% 40% at 78% 42%, rgb(84 104 255 / 10%), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 18% 70%, rgb(243 95 75 / 6%), transparent 65%);
+}
+
+.awakening__nav {
+  animation: awakening-fade-in 700ms ease-out both;
+}
+
+.awakening__hero {
+  position: relative;
+  z-index: 2;
+}
+
+.awakening__eyebrow {
+  margin: 0 0 1.25rem;
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--awakening-text-muted);
+}
+
+.awakening__headline {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4.6vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
 .awakening__headline-em {
   font-style: italic;
   font-variation-settings: 'opsz' 72;
-  background: linear-gradient(105deg, var(--red) 0%, var(--red-warm) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--awakening-coral);
+}
+
+.awakening__description {
+  margin: 1.5rem 0 0;
+  max-width: 34ch;
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.65;
+  color: var(--awakening-text-muted);
+}
+
+.awakening__line2-wrap {
+  margin: 1.75rem 0 0;
 }
 
 .awakening__line2 {
-  border-bottom: 3px solid var(--blue-2);
-  padding-bottom: 0.15em;
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+  font-weight: 500;
+  color: #fff;
+  border-bottom: 2px solid var(--awakening-accent);
+  padding-bottom: 0.12em;
+}
+
+.awakening__benefits {
+  position: relative;
+  z-index: 2;
+  scroll-margin-top: 6rem;
+}
+
+.awakening__benefits-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 4%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 6%) inset,
+    0 16px 48px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.awakening__benefit {
+  padding: 1.75rem 1.5rem;
+  transition: background-color 250ms ease;
+}
+
+.awakening__benefit:not(:last-child) {
+  border-right: 1px solid rgb(255 255 255 / 8%);
+}
+
+.awakening__benefit:hover {
+  background: rgb(255 255 255 / 4%);
+}
+
+.awakening__benefit-icon {
+  margin: 0 0 0.85rem;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.awakening__benefit-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.awakening__benefit-body {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--awakening-text-muted);
+}
+
+.awakening__fade-up {
+  animation: awakening-fade-up 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.awakening__fade-up--1 {
+  animation-delay: 80ms;
+}
+
+.awakening__fade-up--2 {
+  animation-delay: 160ms;
+}
+
+.awakening__fade-up--3 {
+  animation-delay: 240ms;
+}
+
+.awakening__fade-up--4 {
+  animation-delay: 320ms;
+}
+
+.awakening__fade-up--5 {
+  animation-delay: 420ms;
+}
+
+@keyframes awakening-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes awakening-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1023px) {
+  .awakening__hero {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .awakening__benefits-card {
+    grid-template-columns: 1fr;
+    border-radius: 20px;
+  }
+
+  .awakening__benefit:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .awakening__benefit {
+    padding: 1.35rem 1.25rem;
+  }
+
+  .awakening__headline {
+    max-width: none;
+  }
+
+  .awakening__description {
+    max-width: 40ch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .awakening__stars-layer,
+  .awakening__spark,
+  .awakening__nav,
+  .awakening__fade-up {
+    animation: none !important;
+  }
 }

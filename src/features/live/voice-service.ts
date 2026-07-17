@@ -2,28 +2,22 @@
  * Web equivalent of `app-live-kit`'s `voice_service.dart`.
  *
  * Owns the microphone (`getUserMedia` + AudioWorklet) and the WebSocket to
- * the backend `/voice/realtime`. Parses server frames into
- * `VoiceServerMessage` and exposes them through `onMessage`. Implements the
- * same half-duplex contract as the Flutter client: when the agent starts
- * speaking, the controller calls `pauseRecorder()`; when the TTS player
- * drains, it calls `resumeRecorder()`.
+ * the backend `/voice/realtime`. Half-duplex with barge-in: while the agent
+ * speaks, PCM is not forwarded to STT, but local RMS VAD can fire `onBargeIn`.
  */
 
 import { ENDPOINTING_MS, VOICE_PATH, VOICE_SAMPLE_RATE, WS_BASE_URL } from '@/lib/config';
-import {
-  parseVoiceServerMessage,
-  type VoiceClientMessage,
-  type VoiceServerMessage,
-} from '@/features/live/voice-protocol';
+import { BargeInVad } from '@/features/live/barge-in-vad';
+import type { VoiceClientMessage, VoiceServerMessage } from '@/features/live/voice-protocol';
+import { VoiceSocket } from '@/features/live/voice-socket';
 
-const SERVER_SILENCE_TIMEOUT_MS = 25_000;
-const MAX_RECONNECT_DELAY_MS = 30_000;
 const WORKLET_URL = '/audio/pcm-worklet.js';
 
 export type VoiceServiceEvents = {
   onMessage: (message: VoiceServerMessage) => void;
   onClose: (clean: boolean) => void;
   onError: (error: string) => void;
+  onBargeIn?: () => void;
 };
 
 export type VoiceServiceMode = 'full' | 'stt_only';
@@ -32,25 +26,24 @@ export type VoiceServiceStartOptions = {
   sessionId: string;
   token: string;
   userId: string;
-  /** `stt_only` — transcription only (Discovery text input). Default runs full voice agent. */
   mode?: VoiceServiceMode;
 };
 
+type RecorderGate = 'streaming' | 'barge_in_listen' | 'paused';
+
 export class VoiceService {
   private readonly events: VoiceServiceEvents;
+  private readonly bargeInVad = new BargeInVad();
+  private socket: VoiceSocket | null = null;
 
-  private socket: WebSocket | null = null;
   private audioContext: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private micStream: MediaStream | null = null;
   private micSource: MediaStreamAudioSourceNode | null = null;
 
-  private connected = false;
   private stopped = false;
-  private paused = false;
-  private reconnectAttempt = 0;
+  private gate: RecorderGate = 'streaming';
   private chunksSent = 0;
-  private silenceTimer: ReturnType<typeof setTimeout> | null = null;
 
   private sessionId = '';
   private token = '';
@@ -67,21 +60,30 @@ export class VoiceService {
     userId,
     mode = 'full',
   }: VoiceServiceStartOptions): Promise<void> {
-    // Token may be empty when the backend is running with DEV_AUTH_BYPASS=true.
-    // The WebSocket URL only adds `?token=` when one is provided.
     this.sessionId = sessionId;
     this.token = token;
     this.userId = userId;
     this.mode = mode;
     this.stopped = false;
     this.chunksSent = 0;
+    this.gate = 'streaming';
+    this.bargeInVad.reset();
 
     await this.startRecorder();
-    await this.connect();
+    this.socket = new VoiceSocket({
+      buildUrl: () => this.buildWsUrl(),
+      shouldReconnect: () => !this.stopped,
+      events: {
+        onMessage: this.events.onMessage,
+        onClose: this.events.onClose,
+        onError: this.events.onError,
+      },
+    });
+    await this.socket.connect();
   }
 
   sendMessage(payload: VoiceClientMessage): void {
-    if (!this.connected || !this.socket || this.stopped) return;
+    if (this.stopped || !this.socket?.isConnected) return;
     try {
       this.socket.send(JSON.stringify(payload));
     } catch (err) {
@@ -90,8 +92,9 @@ export class VoiceService {
   }
 
   pauseRecorder(): void {
-    if (!this.micStream || this.paused) return;
-    this.paused = true;
+    if (!this.micStream) return;
+    this.gate = 'paused';
+    this.bargeInVad.reset();
     for (const track of this.micStream.getAudioTracks()) {
       track.enabled = false;
     }
@@ -99,7 +102,18 @@ export class VoiceService {
 
   resumeRecorder(): void {
     if (!this.micStream || this.stopped) return;
-    this.paused = false;
+    this.gate = 'streaming';
+    this.bargeInVad.reset();
+    for (const track of this.micStream.getAudioTracks()) {
+      track.enabled = true;
+    }
+  }
+
+  /** Mic open for local VAD only — no PCM to AssemblyAI while agent TTS plays. */
+  enableBargeInListen(): void {
+    if (!this.micStream || this.stopped) return;
+    this.gate = 'barge_in_listen';
+    this.bargeInVad.arm();
     for (const track of this.micStream.getAudioTracks()) {
       track.enabled = true;
     }
@@ -108,20 +122,15 @@ export class VoiceService {
   async stop(): Promise<void> {
     if (this.stopped) return;
     this.stopped = true;
-    this.connected = false;
-    this.clearSilenceTimer();
+    this.gate = 'paused';
+    this.bargeInVad.reset();
 
     try {
       this.socket?.send(JSON.stringify({ type: 'terminate' } satisfies VoiceClientMessage));
     } catch {
       // Socket may already be closing — ignore.
     }
-
-    try {
-      this.socket?.close(1000, 'client-stop');
-    } catch {
-      // Closing a CLOSED socket is fine.
-    }
+    this.socket?.close(1000, 'client-stop');
     this.socket = null;
 
     this.workletNode?.port.close();
@@ -163,8 +172,7 @@ export class VoiceService {
     }
     const node = new AudioWorkletNode(ctx, 'pcm-worklet');
     node.port.onmessage = (event) => {
-      if (!(event.data instanceof ArrayBuffer)) return;
-      this.onAudioChunk(new Uint8Array(event.data));
+      this.onWorkletMessage(event.data);
     };
     const source = ctx.createMediaStreamSource(stream);
     source.connect(node);
@@ -174,15 +182,35 @@ export class VoiceService {
     this.micSource = source;
   }
 
-  private onAudioChunk(bytes: Uint8Array): void {
-    if (!this.connected || this.paused || this.stopped || !this.socket) return;
+  private onWorkletMessage(data: unknown): void {
+    if (data instanceof ArrayBuffer) {
+      this.onAudioChunk(new Uint8Array(data), 0);
+      return;
+    }
+    if (!data || typeof data !== 'object') return;
+    const msg = data as { type?: string; pcm?: ArrayBuffer; rms?: number };
+    if (msg.type !== 'chunk' || !(msg.pcm instanceof ArrayBuffer)) return;
+    this.onAudioChunk(new Uint8Array(msg.pcm), typeof msg.rms === 'number' ? msg.rms : 0);
+  }
+
+  private onAudioChunk(bytes: Uint8Array, rms: number): void {
+    if (this.stopped) return;
+
+    if (this.gate === 'barge_in_listen') {
+      if (this.bargeInVad.evaluate(rms)) {
+        this.events.onBargeIn?.();
+      }
+      return;
+    }
+
+    if (this.gate !== 'streaming' || !this.socket?.isConnected) return;
+
     this.chunksSent += 1;
     try {
-      const audioBase64 = bytesToBase64(bytes);
       this.socket.send(
         JSON.stringify({
           type: 'audio_chunk',
-          audio_base64: audioBase64,
+          audio_base64: bytesToBase64(bytes),
         } satisfies VoiceClientMessage),
       );
     } catch {
@@ -203,90 +231,6 @@ export class VoiceService {
       params.set('token', this.token);
     }
     return `${base}${VOICE_PATH}?${params.toString()}`;
-  }
-
-  private async connect(): Promise<void> {
-    if (this.stopped) return;
-    try {
-      const socket = new WebSocket(this.buildWsUrl());
-      this.socket = socket;
-
-      socket.addEventListener('open', () => {
-        this.connected = true;
-        this.reconnectAttempt = 0;
-        this.resetSilenceTimer();
-      });
-      socket.addEventListener('message', (event) => {
-        this.onWsData(event.data);
-      });
-      socket.addEventListener('error', () => {
-        this.connected = false;
-      });
-      socket.addEventListener('close', (event) => {
-        this.onWsClose(event);
-      });
-    } catch (err) {
-      this.connected = false;
-      this.events.onError(`connect failed: ${String(err)}`);
-      await this.scheduleReconnect();
-    }
-  }
-
-  private onWsData(data: unknown): void {
-    if (typeof data !== 'string') return;
-    this.resetSilenceTimer();
-    const message = parseVoiceServerMessage(data);
-    if (!message) return;
-    this.events.onMessage(message);
-  }
-
-  private onWsClose(event: CloseEvent): void {
-    this.connected = false;
-    this.clearSilenceTimer();
-    const clean = event.code === 1000;
-    this.events.onClose(clean);
-    if (this.stopped || clean) return;
-    void this.scheduleReconnect();
-  }
-
-  private resetSilenceTimer(): void {
-    this.clearSilenceTimer();
-    if (this.stopped) return;
-    this.silenceTimer = setTimeout(() => {
-      this.onServerSilent();
-    }, SERVER_SILENCE_TIMEOUT_MS);
-  }
-
-  private clearSilenceTimer(): void {
-    if (this.silenceTimer !== null) {
-      clearTimeout(this.silenceTimer);
-      this.silenceTimer = null;
-    }
-  }
-
-  private onServerSilent(): void {
-    if (this.stopped || !this.connected) return;
-    this.connected = false;
-    try {
-      this.socket?.close(4000, 'silence-timeout');
-    } catch {
-      // Closing a CLOSED socket is fine.
-    }
-  }
-
-  private async scheduleReconnect(): Promise<void> {
-    if (this.stopped) return;
-    const delay =
-      this.reconnectAttempt === 0
-        ? 1000
-        : Math.min(MAX_RECONNECT_DELAY_MS, 2 ** this.reconnectAttempt * 1000);
-    this.reconnectAttempt += 1;
-    await new Promise<void>((resolve) => setTimeout(resolve, delay));
-    // `this.stopped` may have flipped to true while we were sleeping above,
-    // even though ESLint cannot infer that across the `await` boundary.
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (this.stopped) return;
-    await this.connect();
   }
 }
 

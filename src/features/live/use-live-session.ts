@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ALLOW_EMPTY_TOKEN, DYNAMIS_JWT } from '@/lib/config';
+import { acquireScreenWakeLock, type ScreenWakeLockHandle } from '@/features/live/screen-wake-lock';
 import { StreamingTtsPlayer, type TtsPlaybackState } from '@/features/live/streaming-tts-player';
 import { VoiceService } from '@/features/live/voice-service';
 import type { VoiceServerMessage } from '@/features/live/voice-protocol';
@@ -56,6 +57,7 @@ export function useLiveSession() {
 
   const serviceRef = useRef<VoiceService | null>(null);
   const playerRef = useRef<StreamingTtsPlayer | null>(null);
+  const wakeLockRef = useRef<ScreenWakeLockHandle | null>(null);
   const streamingActiveRef = useRef(false);
   const interruptPendingRef = useRef(false);
 
@@ -67,6 +69,7 @@ export function useLiveSession() {
     interruptPendingRef.current = true;
     streamingActiveRef.current = false;
     playerRef.current?.cancel();
+    // Resume STT immediately so the interrupting utterance is captured.
     serviceRef.current?.resumeRecorder();
     serviceRef.current?.sendMessage({ type: 'interrupt' });
   }, []);
@@ -74,6 +77,9 @@ export function useLiveSession() {
   const handleTtsPlayerState = useCallback((playback: TtsPlaybackState) => {
     if (playback !== 'drained') return;
     if (streamingActiveRef.current) return;
+    // Interrupt already resumed the mic and is waiting on interrupt_ack.
+    if (interruptPendingRef.current) return;
+    if (stateRef.current.status === 'listening') return;
     serviceRef.current?.resumeRecorder();
     setState((prev) => {
       if (
@@ -141,7 +147,8 @@ export function useLiveSession() {
         case 'tts_audio_start':
           streamingActiveRef.current = true;
           setState((prev) => ({ ...prev, status: 'speaking' }));
-          serviceRef.current?.pauseRecorder();
+          // Keep mic open for local VAD; do not forward PCM to STT until barge-in.
+          serviceRef.current?.enableBargeInListen();
           playerRef.current?.beginStream();
           break;
 
@@ -157,7 +164,7 @@ export function useLiveSession() {
         case 'tts_audio':
           streamingActiveRef.current = true;
           setState((prev) => ({ ...prev, status: 'speaking' }));
-          serviceRef.current?.pauseRecorder();
+          serviceRef.current?.enableBargeInListen();
           playerRef.current?.beginStream();
           void playerRef.current?.addChunk(0, message.audioBase64);
           streamingActiveRef.current = false;
@@ -225,6 +232,11 @@ export function useLiveSession() {
   const teardown = useCallback(async () => {
     streamingActiveRef.current = false;
     interruptPendingRef.current = false;
+    const wakeLock = wakeLockRef.current;
+    wakeLockRef.current = null;
+    if (wakeLock) {
+      await wakeLock.release();
+    }
     playerRef.current?.dispose();
     playerRef.current = null;
     await serviceRef.current?.stop();
@@ -261,6 +273,9 @@ export function useLiveSession() {
     const player = new StreamingTtsPlayer({ onStateChange: handleTtsPlayerState });
     const service = new VoiceService({
       onMessage: handleMessage,
+      onBargeIn: () => {
+        interruptAgent();
+      },
       onClose: () => {
         setState((prev) =>
           prev.status === 'idle' || prev.status === 'ended'
@@ -281,6 +296,7 @@ export function useLiveSession() {
 
     try {
       await service.start({ sessionId, token: DYNAMIS_JWT, userId: user.userId });
+      wakeLockRef.current = await acquireScreenWakeLock();
     } catch (err) {
       await teardown();
       const message = err instanceof Error ? err.message : String(err);
@@ -291,7 +307,7 @@ export function useLiveSession() {
         inlineError: code,
       });
     }
-  }, [user, handleMessage, handleTtsPlayerState, teardown]);
+  }, [user, handleMessage, handleTtsPlayerState, interruptAgent, teardown]);
 
   const endLive = useCallback(async () => {
     await teardown();

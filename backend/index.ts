@@ -35,6 +35,9 @@ const SUMMARY_MODEL = process.env.SUMMARY_MODEL ?? 'claude-haiku-4-5';
 const PROFILE_UPDATE_ON_VOICE =
   String(process.env.PROFILE_UPDATE_ON_VOICE ?? 'false').toLowerCase() === 'true';
 const VOICE_TTS_MODE = (process.env.VOICE_TTS_MODE ?? 'streaming').toLowerCase();
+const VOICE_AGENT_OPENS = String(process.env.VOICE_AGENT_OPENS ?? 'true').toLowerCase() !== 'false';
+const VOICE_SESSION_OPEN_USER_MESSAGE =
+  '[Voice session started. The user is listening and has not spoken yet.]';
 const TURN_TIMEOUT_MS = Number(process.env.TURN_TIMEOUT_MS ?? 25000);
 const STRONG_END_RE = /[.!?]+["')\]]?(?=\s|$)/g;
 const SOFT_END_RE = /[,;:](?=\s)/g;
@@ -313,6 +316,38 @@ function buildIntroductionSystemBlock(shouldIntroduce: boolean): string {
     'Respond directly to what the user just said.',
     '=== END ONGOING CONVERSATION RULE ===',
   ].join('\n');
+}
+
+function buildSessionOpenSystemBlock(isFirstEver: boolean): string {
+  if (isFirstEver) {
+    return buildIntroductionSystemBlock(true);
+  }
+  return [
+    '=== SESSION OPEN RULE ===',
+    'The user just joined the voice session and has NOT spoken yet. YOU speak first.',
+    'Greet them briefly as a returning conversation — warm, direct, no self-introduction.',
+    'If you know prior context from profile/summary/history, acknowledge it in one short clause',
+    'and invite them to continue. Do not dump a long recap.',
+    'Keep it to 1–2 short spoken sentences, then wait for them.',
+    'Do NOT mention Watchtowers, Intent Profiles, Discovery, or internal product jargon.',
+    '=== END SESSION OPEN RULE ===',
+  ].join('\n');
+}
+
+async function persistAgentMessage(
+  userId: string,
+  sessionId: string,
+  aiResponse: string,
+): Promise<void> {
+  await prisma.chatHistory.create({
+    data: {
+      user_id: userId,
+      session_id: sessionId,
+      sender: 'agent',
+      message: aiResponse,
+      created_at: new Date(),
+    },
+  });
 }
 
 async function loadUserProfile(userId: string): Promise<UserProfile | null> {
@@ -1214,6 +1249,63 @@ async function generateUserSummary(
   return text || null;
 }
 
+async function buildReturnConversationTopic(userId: string): Promise<string | null> {
+  const rows = await prisma.chatHistory.findMany({
+    where: { user_id: userId },
+    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    take: 16,
+  });
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const chronological = [...rows].reverse();
+  const transcript = chronological
+    .map((row) => {
+      const role = String(row.sender) === 'user' ? 'User' : 'Guide';
+      const clean = String(row.message ?? '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 280);
+      return `${role}: ${clean}`;
+    })
+    .filter((line) => line.length > 8)
+    .join('\n');
+
+  if (!transcript) {
+    return null;
+  }
+
+  try {
+    const res = await anthropic.messages.create({
+      model: SUMMARY_MODEL,
+      system: [
+        'Summarize what the user and guide last talked about.',
+        'Return ONE short phrase in the same language as the transcript (3–12 words).',
+        'No quotes, no trailing punctuation, no full sentences if a phrase works.',
+        'Ground the phrase only in the transcript.',
+      ].join(' '),
+      max_tokens: 60,
+      messages: [
+        {
+          role: 'user',
+          content: `Recent transcript:\n${transcript}\n\nPhrase only:`,
+        },
+      ],
+    });
+    const block = res.content[0];
+    if (!block || block.type !== 'text') {
+      return null;
+    }
+    const topic = block.text.replace(/^["'\s]+|["'\s.!?]+$/g, '').trim();
+    return topic.length > 0 ? topic.slice(0, 120) : null;
+  } catch (error) {
+    console.error('[profile] return_topic_failed', { user_id: userId, error });
+    return null;
+  }
+}
+
 async function ensureUserSummaryFresh(
   userId: string,
   currentSessionId: string,
@@ -1816,11 +1908,13 @@ async function runAgentVoiceStream(
     interruptedReply?: string;
     onReplyProgress?: (text: string) => void;
     alreadyIntroducedInSession?: boolean;
+    sessionKickoff?: boolean;
   } = {},
 ): Promise<VoiceStreamResult> {
   const turnStartedAt = Date.now();
   const messageLimit = VOICE_RECENT_MESSAGE_LIMIT;
   const maxTokens = VOICE_MAX_TOKENS;
+  const isSessionKickoff = opts.sessionKickoff === true;
 
   const [prior, profile, firstEver] = await Promise.all([
     loadRecentHistory(userId, sessionId, messageLimit),
@@ -1844,14 +1938,16 @@ async function runAgentVoiceStream(
   }
   const stableSystem = stableParts.join('\n');
 
-  const introInstruction = buildIntroductionSystemBlock(
-    shouldOpenWithIntroduction(firstEver, prior, {
-      ...(opts.alreadyIntroducedInSession
-        ? { alreadyIntroducedInSession: opts.alreadyIntroducedInSession }
-        : {}),
-      ...(opts.interruptedReply?.trim() ? { interruptedReply: opts.interruptedReply } : {}),
-    }),
-  );
+  const turnInstruction = isSessionKickoff
+    ? buildSessionOpenSystemBlock(firstEver)
+    : buildIntroductionSystemBlock(
+        shouldOpenWithIntroduction(firstEver, prior, {
+          ...(opts.alreadyIntroducedInSession
+            ? { alreadyIntroducedInSession: opts.alreadyIntroducedInSession }
+            : {}),
+          ...(opts.interruptedReply?.trim() ? { interruptedReply: opts.interruptedReply } : {}),
+        }),
+      );
 
   const systemBlocks: { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }[] = [
     {
@@ -1860,7 +1956,7 @@ async function runAgentVoiceStream(
       cache_control: { type: 'ephemeral' },
     },
   ];
-  systemBlocks.push({ type: 'text', text: introInstruction });
+  systemBlocks.push({ type: 'text', text: turnInstruction });
 
   // Build message list. If the user interrupted a previous turn, inject what
   // the agent had already said so Claude has full context to continue naturally.
@@ -1873,7 +1969,10 @@ async function runAgentVoiceStream(
       preview: opts.interruptedReply.slice(0, 80),
     });
   }
-  messages.push({ role: 'user', content: userMessage });
+  messages.push({
+    role: 'user',
+    content: isSessionKickoff ? VOICE_SESSION_OPEN_USER_MESSAGE : userMessage,
+  });
 
   safeSend(clientSocket, {
     type: 'tts_audio_start',
@@ -2102,11 +2201,15 @@ async function runAgentVoiceStream(
 
   if (finalReply.trim()) {
     try {
-      await persistTurn(userId, sessionId, userMessage, finalReply);
+      if (isSessionKickoff) {
+        await persistAgentMessage(userId, sessionId, finalReply);
+      } else {
+        await persistTurn(userId, sessionId, userMessage, finalReply);
+      }
     } catch (e) {
       console.error('[persist] failed', e);
     }
-    if (PROFILE_UPDATE_ON_VOICE) {
+    if (PROFILE_UPDATE_ON_VOICE && !isSessionKickoff) {
       enqueueProfileUpdate(userId);
     }
   }
@@ -2225,6 +2328,158 @@ app.get('/health', (_req: import('express').Request, res: import('express').Resp
   res.status(200).json({ ok: true });
 });
 
+async function handleLookupProfileByEmail(
+  req: import('express').Request,
+  res: import('express').Response,
+): Promise<import('express').Response> {
+  try {
+    if (!isRequestAuthorized(req)) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
+    const rawEmail = req.method === 'POST' ? req.body?.email : req.query.email;
+    const email = String(Array.isArray(rawEmail) ? (rawEmail[0] ?? '') : (rawEmail ?? ''))
+      .trim()
+      .toLowerCase();
+
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({
+        error: 'Invalid or missing email.',
+      });
+    }
+
+    const row = await prisma.userProfile.findFirst({
+      where: { email },
+    });
+
+    if (!row) {
+      console.log('[profile] by_email', { email, found: false });
+      return res.status(200).json({ profile: null });
+    }
+
+    console.log('[profile] by_email', { email, user_id: row.user_id, found: true });
+    return res.status(200).json({
+      profile: {
+        user_id: String(row.user_id),
+        email: (row.email as string | null) ?? email,
+        display_name: (row.display_name as string | null) ?? null,
+      },
+    });
+  } catch (error) {
+    console.error('[profile] by_email error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+}
+
+// Prefer this path — never conflicts with GET /profile/:userId.
+app.post('/auth/lookup-by-email', handleLookupProfileByEmail);
+app.get('/auth/lookup-by-email', handleLookupProfileByEmail);
+// Legacy alias (must stay above /profile/:userId).
+app.get('/profile/by-email', handleLookupProfileByEmail);
+
+app.post(
+  '/profile/email',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      const email = String(req.body?.email ?? '')
+        .trim()
+        .toLowerCase();
+      const displayNameRaw = String(req.body?.display_name ?? '').trim();
+      const displayName = displayNameRaw.length > 0 ? displayNameRaw : null;
+
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+      if (!email || !isValidEmail(email)) {
+        return res.status(400).json({
+          error: 'Invalid or missing email.',
+        });
+      }
+
+      const now = new Date();
+      await prisma.userProfile.upsert({
+        where: { user_id: userId },
+        create: {
+          user_id: userId,
+          email,
+          display_name: displayName,
+          values_list: [],
+          created_at: now,
+          updated_at: now,
+        },
+        update: {
+          email,
+          ...(displayName ? { display_name: displayName } : {}),
+          updated_at: now,
+        },
+      });
+
+      console.log('[profile] email_saved', { user_id: userId });
+      return res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error('POST /profile/email error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.get(
+  '/profile/:userId/return-context',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.params.userId ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing userId. Expected UUID.',
+        });
+      }
+
+      const messageCount = await prisma.chatHistory.count({
+        where: { user_id: userId },
+      });
+
+      if (messageCount === 0) {
+        console.log('[profile] return_context', { user_id: userId, returning: false });
+        return res.status(200).json({
+          returning: false,
+          last_topic: null,
+        });
+      }
+
+      const profile = await loadUserProfile(userId);
+      const topicFromProfile =
+        pickProfileString(profile?.active_focus) ?? pickProfileString(profile?.aspirations);
+      const lastTopic = (await buildReturnConversationTopic(userId)) ?? topicFromProfile;
+
+      console.log('[profile] return_context', {
+        user_id: userId,
+        returning: true,
+        has_topic: Boolean(lastTopic),
+        message_count: messageCount,
+      });
+
+      return res.status(200).json({
+        returning: true,
+        last_topic: lastTopic,
+      });
+    } catch (error) {
+      console.error('GET /profile/:userId/return-context error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
 app.get(
   '/profile/:userId',
   async (req: import('express').Request, res: import('express').Response) => {
@@ -2269,53 +2524,6 @@ app.get(
       });
     } catch (error) {
       console.error('GET /profile/:userId error:', error);
-      return res.status(500).json({ error: 'Internal server error.' });
-    }
-  },
-);
-
-app.post(
-  '/profile/email',
-  async (req: import('express').Request, res: import('express').Response) => {
-    try {
-      if (!isRequestAuthorized(req)) {
-        return res.status(401).json({ error: 'Acesso não autorizado' });
-      }
-
-      const userId = String(req.body?.user_id ?? '').trim();
-      const email = String(req.body?.email ?? '').trim();
-
-      if (!userId || !isValidUuid(userId)) {
-        return res.status(400).json({
-          error: 'Invalid or missing user_id. Expected UUID.',
-        });
-      }
-      if (!email || !isValidEmail(email)) {
-        return res.status(400).json({
-          error: 'Invalid or missing email.',
-        });
-      }
-
-      const now = new Date();
-      await prisma.userProfile.upsert({
-        where: { user_id: userId },
-        create: {
-          user_id: userId,
-          email,
-          values_list: [],
-          created_at: now,
-          updated_at: now,
-        },
-        update: {
-          email,
-          updated_at: now,
-        },
-      });
-
-      console.log('[profile] email_saved', { user_id: userId });
-      return res.status(200).json({ ok: true });
-    } catch (error) {
-      console.error('POST /profile/email error:', error);
       return res.status(500).json({ error: 'Internal server error.' });
     }
   },
@@ -2846,7 +3054,7 @@ voiceWss.on(
       process.env.ASSEMBLYAI_SPEECH_MODEL ?? 'u3-rt-pro',
     );
 
-    const envFloorRaw = process.env.ASSEMBLYAI_MAX_TURN_SILENCE_MS ?? '1500';
+    const envFloorRaw = process.env.ASSEMBLYAI_MAX_TURN_SILENCE_MS ?? '2800';
     const envFloor = envFloorRaw ? Number(envFloorRaw) : undefined;
     const queryValue = context.endpointingMs;
     let maxTurnSilenceMs: number | undefined;
@@ -2927,6 +3135,7 @@ voiceWss.on(
       transcript: string,
       signal: AbortSignal,
       interruptedReply = '',
+      turnOpts: { sessionKickoff?: boolean } = {},
     ) => {
       activePartialReply = '';
 
@@ -2958,6 +3167,7 @@ voiceWss.on(
           {
             interruptedReply,
             alreadyIntroducedInSession: introducedThisSession,
+            sessionKickoff: turnOpts.sessionKickoff === true,
             onReplyProgress: (text) => {
               activePartialReply = text;
               if (sessionState === 'thinking') transitionState('assistant_speaking');
@@ -3085,7 +3295,7 @@ voiceWss.on(
       }
     };
 
-    const enqueueResponse = (transcript: string) => {
+    const enqueueResponse = (transcript: string, turnOpts: { sessionKickoff?: boolean } = {}) => {
       // If a turn is already running, capture what was said so far (barge-in
       // context) and abort. The new turn will inject it into Claude's history.
       if (activeController && !activeController.signal.aborted) {
@@ -3121,7 +3331,7 @@ voiceWss.on(
           if (VOICE_TTS_MODE === 'legacy') {
             await runLegacyTurn(transcript, controller.signal);
           } else {
-            await runStreamingTurn(transcript, controller.signal, capturedInterrupted);
+            await runStreamingTurn(transcript, controller.signal, capturedInterrupted, turnOpts);
           }
         })
         .catch((err) => {
@@ -3133,6 +3343,14 @@ voiceWss.on(
           }
         });
     };
+
+    if (VOICE_AGENT_OPENS && context.mode === 'full') {
+      console.log('[voice] session_open_kickoff', {
+        session_id: context.sessionId,
+        user_id: context.userId,
+      });
+      enqueueResponse(VOICE_SESSION_OPEN_USER_MESSAGE, { sessionKickoff: true });
+    }
 
     assemblySocket.on('open', () => {
       assemblyOpened = true;

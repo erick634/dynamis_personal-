@@ -88,7 +88,7 @@ export function IntentProfileScreen() {
           <button
             type="button"
             onClick={() => {
-              navigate(user ? '/live' : '/onboarding');
+              navigate(user ? '/welcome' : '/onboarding');
             }}
             className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-5 py-2.5 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
           >

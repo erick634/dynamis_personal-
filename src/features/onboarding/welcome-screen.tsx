@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { BrandMark } from '@/components/ui/brand-mark';
 import type { LiveChatMessage, LiveSessionStatus } from '@/features/live/use-live-session';
 import { useLiveSession } from '@/features/live/use-live-session';
+import { useReturnContext } from '@/features/onboarding/use-return-context';
 import { useCurrentUser } from '@/stores/current-user';
 
 import '@/features/awakening/awakening.css';
@@ -121,6 +122,7 @@ export function WelcomeScreen() {
   const navigate = useNavigate();
   const user = useCurrentUser((state) => state.user);
   const session = useLiveSession();
+  const { context, isLoading: isReturnLoading } = useReturnContext(user?.userId);
 
   useEffect(() => {
     if (!user) {
@@ -132,7 +134,19 @@ export function WelcomeScreen() {
     return null;
   }
 
-  const bodyParagraphs = t('welcome.body').split('\n\n');
+  const isReturning = context?.returning === true;
+  const lastTopic = context?.lastTopic;
+  const greeting = isReturning
+    ? t('welcome.returning.greeting', { name: user.displayName })
+    : t('welcome.greeting', { name: user.displayName });
+  const bodyParagraphs = (
+    isReturning
+      ? lastTopic
+        ? t('welcome.returning.bodyWithTopic', { topic: lastTopic })
+        : t('welcome.returning.bodyFallback')
+      : t('welcome.body')
+  ).split('\n\n');
+  const startLabel = isReturning ? t('welcome.returning.continueButton') : t('welcome.startButton');
   const isSessionActive = ACTIVE_SESSION_STATUSES.has(session.status);
   const errorLabel = session.inlineError ? translateInlineError(t, session.inlineError) : null;
 
@@ -148,16 +162,22 @@ export function WelcomeScreen() {
       <div className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-6 py-24">
         <div className="w-full max-w-lg text-center">
           <h1 className="font-display text-[clamp(2rem,5vw,3rem)] font-medium leading-tight tracking-tight text-white">
-            {t('welcome.greeting', { name: user.displayName })}
+            {greeting}
           </h1>
 
           {!isSessionActive ? (
             <>
-              <div className="mt-8 space-y-4 font-body text-base leading-relaxed text-white/85 md:text-lg">
-                {bodyParagraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
+              {isReturnLoading ? (
+                <p className="mt-8 font-body text-base text-white/60" aria-live="polite">
+                  {t('welcome.returning.loading')}
+                </p>
+              ) : (
+                <div className="mt-8 space-y-4 font-body text-base leading-relaxed text-white/85 md:text-lg">
+                  {bodyParagraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              )}
 
               {errorLabel ? (
                 <p
@@ -174,14 +194,15 @@ export function WelcomeScreen() {
                   onClick={() => {
                     void session.joinLive();
                   }}
-                  className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-8 py-4 font-body text-base font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent active:scale-[0.98]"
+                  disabled={isReturnLoading}
+                  className="inline-flex w-full max-w-sm items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-8 py-4 font-body text-base font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('welcome.startButton')}
+                  {startLabel}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    navigate('/');
+                    navigate(isReturning ? '/today' : '/');
                   }}
                   className="font-body text-sm text-white/70 underline-offset-4 transition-colors hover:text-white hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
                 >
@@ -190,47 +211,54 @@ export function WelcomeScreen() {
               </div>
             </>
           ) : (
-            <div className="mt-8 w-full rounded-[20px] border border-white/15 bg-white/5 p-4 text-left shadow-[0_8px_32px_rgb(0_0_0_/_25%)] backdrop-blur-md">
-              <p className="text-center font-body text-sm text-white/70" role="status">
-                {sessionStatusLabel(t, session.status)}
-              </p>
-
-              <WelcomeInlineTranscript
-                messages={session.messages}
-                partial={session.partialTranscript}
-              />
-
-              {errorLabel ? (
-                <p
-                  role="alert"
-                  className="mb-3 rounded-full bg-red/20 px-4 py-2 text-center font-body text-xs text-white"
-                >
-                  {errorLabel}
+            <>
+              {isReturning && lastTopic ? (
+                <p className="mt-6 font-body text-base leading-relaxed text-white/70 md:text-lg">
+                  {t('welcome.returning.continuingHint', { topic: lastTopic })}
                 </p>
               ) : null}
+              <div className="mt-8 w-full rounded-[20px] border border-white/15 bg-white/5 p-4 text-left shadow-[0_8px_32px_rgb(0_0_0_/_25%)] backdrop-blur-md">
+                <p className="text-center font-body text-sm text-white/70" role="status">
+                  {sessionStatusLabel(t, session.status)}
+                </p>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 border-t border-white/10 pt-4">
-                <button
-                  type="button"
-                  onClick={session.toggleMic}
-                  className="rounded-full border border-white/20 px-5 py-2.5 font-body text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white"
-                >
-                  {session.isMicOn ? t('live.controls.mute') : t('live.controls.unmute')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void (async () => {
-                      await session.endLive();
-                      navigate('/watchtowers');
-                    })();
-                  }}
-                  className="rounded-full border border-white/20 px-5 py-2.5 font-body text-sm font-medium text-white/80 transition-colors hover:border-red-warm/60 hover:text-red-warm"
-                >
-                  {t('welcome.finishAndWatchtowers')}
-                </button>
+                <WelcomeInlineTranscript
+                  messages={session.messages}
+                  partial={session.partialTranscript}
+                />
+
+                {errorLabel ? (
+                  <p
+                    role="alert"
+                    className="mb-3 rounded-full bg-red/20 px-4 py-2 text-center font-body text-xs text-white"
+                  >
+                    {errorLabel}
+                  </p>
+                ) : null}
+
+                <div className="flex flex-wrap items-center justify-center gap-3 border-t border-white/10 pt-4">
+                  <button
+                    type="button"
+                    onClick={session.toggleMic}
+                    className="rounded-full border border-white/20 px-5 py-2.5 font-body text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white"
+                  >
+                    {session.isMicOn ? t('live.controls.mute') : t('live.controls.unmute')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void (async () => {
+                        await session.endLive();
+                        navigate('/watchtowers');
+                      })();
+                    }}
+                    className="rounded-full border border-white/20 px-5 py-2.5 font-body text-sm font-medium text-white/80 transition-colors hover:border-red-warm/60 hover:text-red-warm"
+                  >
+                    {t('welcome.finishAndWatchtowers')}
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

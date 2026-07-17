@@ -10,12 +10,36 @@
     "ok": "bootstrap OK"
   },
   "awakening": {
+    "eyebrow": "Inteligência que potencializa",
     "headline": {
       "line1": "A IA está <em>transformando</em> o seu mundo.",
       "line2": "E você?"
     },
+    "description": "Dynamis é o seu guia de transformação — aprende quem você é, mapeia o que se torna possível com IA e transforma insight em um plano vivo.",
     "cta": {
       "primary": "Comece seu Unlock Plan"
+    },
+    "nav": {
+      "ariaLabel": "Principal",
+      "about": "Sobre",
+      "pricing": "Preços",
+      "contact": "Contato",
+      "signIn": "Entrar"
+    },
+    "benefits": {
+      "sectionLabel": "Por que Dynamis",
+      "secure": {
+        "title": "Seguro e privado",
+        "body": "Seus dados permanecem protegidos."
+      },
+      "personalized": {
+        "title": "Personalizado",
+        "body": "A IA se adapta a você."
+      },
+      "impact": {
+        "title": "Impacto real",
+        "body": "Transforme insights em ação."
+      }
     }
   },
   "onboarding": {
@@ -27,14 +51,33 @@
     "birthDatePlaceholder": "Selecione sua data de nascimento",
     "emailLabel": "E-mail",
     "emailPlaceholder": "voce@exemplo.com",
-    "emailHint": "opcional",
     "submitButton": "Começar meu Unlock Plan",
     "errors": {
       "nameRequired": "Informe seu nome.",
       "birthDateRequired": "Informe sua data de nascimento.",
       "birthDateInvalid": "Informe uma data de nascimento válida.",
       "birthDateFuture": "A data de nascimento não pode ser no futuro.",
-      "birthDateMinAge": "Você precisa ter pelo menos {{min}} anos."
+      "birthDateMinAge": "Você precisa ter pelo menos {{min}} anos.",
+      "emailRequired": "Informe seu e-mail.",
+      "emailInvalid": "Informe um e-mail válido.",
+      "saveFailed": "Não foi possível salvar seu perfil. Confira se o backend está rodando e tente de novo."
+    }
+  },
+  "login": {
+    "title": "Bem-vindo de volta",
+    "subtitle": "Digite o e-mail que você usou ao criar seu perfil.",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "voce@exemplo.com",
+    "submit": "Continuar",
+    "submitting": "Entrando…",
+    "createPrompt": "Novo por aqui?",
+    "createProfile": "Criar perfil",
+    "fallbackName": "você",
+    "errors": {
+      "emailRequired": "Informe seu e-mail.",
+      "emailInvalid": "Informe um e-mail válido.",
+      "notFound": "Não encontramos um perfil com esse e-mail. Crie um perfil para começar.",
+      "generic": "Algo deu errado. Tente de novo em instantes."
     }
   },
   "welcome": {
@@ -42,7 +85,15 @@
     "body": "Seu Lead Guide está pronto para a Descoberta — montar seu Perfil de Intenção juntos, a base dos seus Watchtowers pessoais.\n\nFale naturalmente; não há perguntas scriptadas. Você pode pausar e voltar quando quiser.",
     "startButton": "Falar com meu Lead Guide",
     "skipButton": "Talvez depois",
-    "finishAndWatchtowers": "Concluir e ver meus Watchtowers"
+    "finishAndWatchtowers": "Concluir e ver meus Watchtowers",
+    "returning": {
+      "greeting": "Que bom te ver de novo, {{name}}.",
+      "bodyWithTopic": "Na última vez conversamos sobre {{topic}}.\n\nGostaria de continuar essa conversa?",
+      "bodyFallback": "Que bom ter você de volta. Seu Lead Guide está pronto quando você quiser.\n\nGostaria de continuar sua conversa?",
+      "continueButton": "Continuar a conversa",
+      "continuingHint": "Retomando sobre {{topic}}.",
+      "loading": "Lembrando de onde paramos…"
+    }
   },
   "possibilityMap": {
     "eyebrow": "Fase 04 · Mapa de Possibilidades",
@@ -302,7 +353,8 @@
     }
   },
   "appLayout": {
-    "navLabel": "Navegação principal"
+    "navLabel": "Navegação principal",
+    "logout": "Sair"
   },
   "today": {
     "eyebrow": "Fase 06 · Hoje",
