@@ -49,6 +49,8 @@
     "namePlaceholder": "Your first name",
     "birthDateLabel": "Date of birth",
     "birthDatePlaceholder": "Select your date of birth",
+    "birthYearLabel": "Year of birth",
+    "birthYearPlaceholder": "e.g. 1990",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "submitButton": "Begin my Unlock Plan",
@@ -58,6 +60,8 @@
       "birthDateInvalid": "Please enter a valid date of birth.",
       "birthDateFuture": "Date of birth cannot be in the future.",
       "birthDateMinAge": "You must be at least {{min}} years old.",
+      "birthYearInvalid": "Enter a valid year of birth.",
+      "birthYearMinAge": "You must be at least {{min}} years old.",
       "emailRequired": "Please enter your email.",
       "emailInvalid": "Please enter a valid email.",
       "saveFailed": "Could not save your profile. Check that the backend is running and try again."

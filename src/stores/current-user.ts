@@ -4,8 +4,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 export type CurrentUser = {
   userId: string;
   displayName: string;
-  /** ISO date (YYYY-MM-DD) captured during onboarding. */
-  dateOfBirth?: string;
+  /** Year of birth captured during onboarding (privacy: no full DOB). */
+  birthYear?: number;
   age?: number;
   email: string;
 };

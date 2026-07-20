@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(onboarding): capture year of birth only (privacy) — approximate age via `birthYear`
 - feat(backend): Discovery stop rule is turn-based (close by 3rd reply; never a 4th question) + top-of-prompt IMPORTANT
 - feat(backend): Discovery closing stop rule — close after ≥3/5 areas or ~6 questions; no further questions
 - feat(backend): Discovery closing prompt — save Watchtower recommendation to gallery, gentle finish-below nudge (voice + text)

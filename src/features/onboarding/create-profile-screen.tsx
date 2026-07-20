@@ -5,11 +5,9 @@ import { useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import {
-  calculateAgeFromBirthDate,
-  isBirthDateInFuture,
+  calculateAgeFromBirthYear,
+  isValidBirthYear,
   MIN_ONBOARDING_AGE,
-  parseIsoDateLocal,
-  toIsoDateLocal,
 } from '@/features/onboarding/calculate-age-from-birth-date';
 import { saveProfileEmail } from '@/features/onboarding/profile-email-api';
 import { useCurrentUser } from '@/stores/current-user';
@@ -18,7 +16,7 @@ import '@/features/onboarding/onboarding.css';
 
 type FieldErrors = {
   displayName?: string;
-  birthDate?: string;
+  birthYear?: string;
   email?: string;
   form?: string;
 };
@@ -31,24 +29,21 @@ export function CreateProfileScreen() {
   const setUser = useCurrentUser((state) => state.setUser);
 
   const nameId = useId();
-  const birthDateId = useId();
+  const birthYearId = useId();
   const emailId = useId();
 
   const [displayName, setDisplayName] = useState('');
-  const [birthDateInput, setBirthDateInput] = useState('');
-  const [isBirthDateFocused, setIsBirthDateFocused] = useState(false);
+  const [birthYearInput, setBirthYearInput] = useState('');
+  const [isBirthYearFocused, setIsBirthYearFocused] = useState(false);
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { maxBirthDate, minBirthDate } = useMemo(() => {
-    const today = new Date();
-    const oldest = new Date(today);
-    oldest.setFullYear(today.getFullYear() - 120);
-
+  const { maxBirthYear, minBirthYear } = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     return {
-      maxBirthDate: toIsoDateLocal(today),
-      minBirthDate: toIsoDateLocal(oldest),
+      maxBirthYear: currentYear,
+      minBirthYear: currentYear - 120,
     };
   }, []);
 
@@ -60,16 +55,17 @@ export function CreateProfileScreen() {
       next.displayName = t('onboarding.errors.nameRequired');
     }
 
-    if (!birthDateInput.trim()) {
-      next.birthDate = t('onboarding.errors.birthDateRequired');
-    } else if (!parseIsoDateLocal(birthDateInput)) {
-      next.birthDate = t('onboarding.errors.birthDateInvalid');
-    } else if (isBirthDateInFuture(birthDateInput)) {
-      next.birthDate = t('onboarding.errors.birthDateFuture');
+    if (!birthYearInput.trim()) {
+      next.birthYear = t('onboarding.errors.birthYearInvalid');
     } else {
-      const age = calculateAgeFromBirthDate(birthDateInput);
-      if (age == null || age < MIN_ONBOARDING_AGE) {
-        next.birthDate = t('onboarding.errors.birthDateMinAge', { min: MIN_ONBOARDING_AGE });
+      const year = Number.parseInt(birthYearInput.trim(), 10);
+      if (!/^\d{4}$/.test(birthYearInput.trim()) || !isValidBirthYear(year)) {
+        next.birthYear = t('onboarding.errors.birthYearInvalid');
+      } else {
+        const age = calculateAgeFromBirthYear(year);
+        if (age < MIN_ONBOARDING_AGE) {
+          next.birthYear = t('onboarding.errors.birthYearMinAge', { min: MIN_ONBOARDING_AGE });
+        }
       }
     }
 
@@ -93,12 +89,9 @@ export function CreateProfileScreen() {
     }
 
     const trimmedName = displayName.trim();
-    const age = calculateAgeFromBirthDate(birthDateInput);
+    const year = Number.parseInt(birthYearInput.trim(), 10);
+    const age = calculateAgeFromBirthYear(year);
     const trimmedEmail = email.trim().toLowerCase();
-
-    if (age == null) {
-      return;
-    }
 
     const userId = crypto.randomUUID();
     setIsSubmitting(true);
@@ -113,7 +106,7 @@ export function CreateProfileScreen() {
       setUser({
         userId,
         displayName: trimmedName,
-        dateOfBirth: birthDateInput,
+        birthYear: year,
         age,
         email: trimmedEmail,
       });
@@ -178,54 +171,51 @@ export function CreateProfileScreen() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor={birthDateId} className="block font-body text-sm font-medium text-ink">
-              {t('onboarding.birthDateLabel')}
+            <label htmlFor={birthYearId} className="block font-body text-sm font-medium text-ink">
+              {t('onboarding.birthYearLabel')}
             </label>
             <div
               className={[
                 'onboarding-date-field',
-                birthDateInput
+                birthYearInput
                   ? 'onboarding-date-field--filled'
-                  : isBirthDateFocused
+                  : isBirthYearFocused
                     ? 'onboarding-date-field--focused'
                     : 'onboarding-date-field--empty',
-                errors.birthDate ? 'onboarding-date-field--invalid' : '',
+                errors.birthYear ? 'onboarding-date-field--invalid' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
             >
               <input
-                id={birthDateId}
-                type="date"
-                value={birthDateInput}
-                min={minBirthDate}
-                max={maxBirthDate}
+                id={birthYearId}
+                type="number"
+                inputMode="numeric"
+                value={birthYearInput}
+                min={minBirthYear}
+                max={maxBirthYear}
+                placeholder={t('onboarding.birthYearPlaceholder')}
                 onFocus={() => {
-                  setIsBirthDateFocused(true);
+                  setIsBirthYearFocused(true);
                 }}
                 onBlur={() => {
-                  setIsBirthDateFocused(false);
+                  setIsBirthYearFocused(false);
                 }}
                 onChange={(event) => {
-                  setBirthDateInput(event.target.value);
-                  if (errors.birthDate) {
-                    setErrors((prev) => ({ ...prev, birthDate: undefined }));
+                  setBirthYearInput(event.target.value);
+                  if (errors.birthYear) {
+                    setErrors((prev) => ({ ...prev, birthYear: undefined }));
                   }
                 }}
                 className="onboarding-date-field__input"
-                aria-invalid={Boolean(errors.birthDate)}
-                aria-describedby={errors.birthDate ? `${birthDateId}-error` : undefined}
+                aria-invalid={Boolean(errors.birthYear)}
+                aria-describedby={errors.birthYear ? `${birthYearId}-error` : undefined}
               />
-              {!birthDateInput && !isBirthDateFocused ? (
-                <span className="onboarding-date-field__hint" aria-hidden>
-                  {t('onboarding.birthDatePlaceholder')}
-                </span>
-              ) : null}
               <CalendarDays className="onboarding-date-field__icon" aria-hidden />
             </div>
-            {errors.birthDate ? (
-              <p id={`${birthDateId}-error`} className="text-sm text-destructive" role="alert">
-                {errors.birthDate}
+            {errors.birthYear ? (
+              <p id={`${birthYearId}-error`} className="text-sm text-destructive" role="alert">
+                {errors.birthYear}
               </p>
             ) : null}
           </div>

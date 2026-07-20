@@ -49,6 +49,8 @@
     "namePlaceholder": "Seu primeiro nome",
     "birthDateLabel": "Data de nascimento",
     "birthDatePlaceholder": "Selecione sua data de nascimento",
+    "birthYearLabel": "Ano de nascimento",
+    "birthYearPlaceholder": "ex: 1990",
     "emailLabel": "E-mail",
     "emailPlaceholder": "voce@exemplo.com",
     "submitButton": "Começar meu Unlock Plan",
@@ -58,6 +60,8 @@
       "birthDateInvalid": "Informe uma data de nascimento válida.",
       "birthDateFuture": "A data de nascimento não pode ser no futuro.",
       "birthDateMinAge": "Você precisa ter pelo menos {{min}} anos.",
+      "birthYearInvalid": "Informe um ano de nascimento válido.",
+      "birthYearMinAge": "Você precisa ter pelo menos {{min}} anos.",
       "emailRequired": "Informe seu e-mail.",
       "emailInvalid": "Informe um e-mail válido.",
       "saveFailed": "Não foi possível salvar seu perfil. Confira se o backend está rodando e tente de novo."

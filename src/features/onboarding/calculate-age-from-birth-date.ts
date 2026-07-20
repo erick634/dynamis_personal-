@@ -76,3 +76,15 @@ export function calculateAgeFromBirthDate(
 
   return age;
 }
+
+export function isValidBirthYear(year: number, referenceDate = new Date()): boolean {
+  if (!Number.isInteger(year)) {
+    return false;
+  }
+  const currentYear = referenceDate.getFullYear();
+  return year >= currentYear - 120 && year <= currentYear;
+}
+
+export function calculateAgeFromBirthYear(year: number, referenceDate = new Date()): number {
+  return referenceDate.getFullYear() - year;
+}
