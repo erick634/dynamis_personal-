@@ -86,6 +86,17 @@
     "startButton": "Falar com meu Lead Guide",
     "skipButton": "Talvez depois",
     "finishAndWatchtowers": "Concluir e ver meus Watchtowers",
+    "modeChoice": {
+      "prompt": "Como você prefere conversar comigo hoje?",
+      "hint": "Você pode mudar de modo em outra sessão — escolha o que fizer sentido agora.",
+      "voice": "Por voz",
+      "writing": "Por escrita",
+      "back": "Voltar"
+    },
+    "session": {
+      "writingReady": "Escreva quando quiser — a voz só entra se você escolher.",
+      "switchToVoice": "Mudar para voz"
+    },
     "returning": {
       "greeting": "Que bom te ver de novo, {{name}}.",
       "bodyWithTopic": "Na última vez conversamos sobre {{topic}}.\n\nGostaria de continuar essa conversa?",
@@ -503,6 +514,11 @@
       "listening": "Ouvindo…",
       "you": "Você",
       "guide": "Guia"
+    },
+    "textInput": {
+      "placeholder": "Digite sua mensagem…",
+      "send": "Enviar",
+      "sendFailed": "Não foi possível enviar sua mensagem. Tente novamente."
     },
     "inlineError": {
       "noUser": "Crie seu perfil primeiro pra iniciar uma sessão live."

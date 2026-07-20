@@ -86,6 +86,17 @@
     "startButton": "Talk to my Lead Guide",
     "skipButton": "Maybe later",
     "finishAndWatchtowers": "Finish and see my Watchtowers",
+    "modeChoice": {
+      "prompt": "How would you like to talk with me today?",
+      "hint": "You can switch modes in a future session — pick what feels right for now.",
+      "voice": "By voice",
+      "writing": "By writing",
+      "back": "Go back"
+    },
+    "session": {
+      "writingReady": "Write when you're ready — voice stays off until you choose it.",
+      "switchToVoice": "Switch to voice"
+    },
     "returning": {
       "greeting": "Good to see you again, {{name}}.",
       "bodyWithTopic": "Last time we talked about {{topic}}.\n\nWould you like to continue that conversation?",
@@ -503,6 +514,11 @@
       "listening": "Listening…",
       "you": "You",
       "guide": "Guide"
+    },
+    "textInput": {
+      "placeholder": "Type your message…",
+      "send": "Send",
+      "sendFailed": "Couldn't send your message. Try again."
     },
     "inlineError": {
       "noUser": "Please create your profile first to start a live session."

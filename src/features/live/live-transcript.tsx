@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { LiveChatMessage } from '@/features/live/use-live-session';
+import { formatMessageTime, messageTimeDateTime } from '@/features/live/format-message-time';
 
 type LiveTranscriptProps = {
   messages: LiveChatMessage[];
@@ -9,7 +10,7 @@ type LiveTranscriptProps = {
 };
 
 export function LiveTranscript({ messages, partial }: LiveTranscriptProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -44,14 +45,30 @@ export function LiveTranscript({ messages, partial }: LiveTranscriptProps) {
 
         {messages.map((message) => {
           const isUser = message.role === 'user';
+          const sentAt = formatMessageTime(message.createdAt, i18n.language);
           return (
             <div
               key={message.id}
               className={['flex flex-col', isUser ? 'items-end' : 'items-start'].join(' ')}
             >
-              <span className="font-body text-[11px] tracking-wide text-ink-3 uppercase">
-                {isUser ? t('live.transcript.you') : t('live.transcript.guide')}
-              </span>
+              <div
+                className={[
+                  'flex max-w-[80%] items-center gap-2',
+                  isUser ? 'flex-row-reverse' : 'flex-row',
+                ].join(' ')}
+              >
+                <span className="font-body text-[11px] tracking-wide text-ink-3 uppercase">
+                  {isUser ? t('live.transcript.you') : t('live.transcript.guide')}
+                </span>
+                {sentAt ? (
+                  <time
+                    dateTime={messageTimeDateTime(message.createdAt)}
+                    className="font-body text-[10px] text-ink-3 normal-case"
+                  >
+                    {sentAt}
+                  </time>
+                ) : null}
+              </div>
               <p
                 className={[
                   'mt-1 max-w-[80%] rounded-2xl px-3 py-2 font-body text-sm leading-relaxed',

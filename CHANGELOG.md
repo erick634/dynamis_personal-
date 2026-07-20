@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- fix(live): text-only sessions ignore voice WebSocket events; voice activates only via explicit switch
+- feat(welcome): mode choice before live session — voice or writing, with text-only path via `startTextSession`
+- feat(welcome): text input during active live session on `/welcome` (primary live route)
+- feat(live): text input during active voice session — sends via `POST /chat` reusing the same `sessionId`
 - feat(backend): `GET /profile/:userId` returns Intent Profile from Prisma/Mongo (`{ profile }` or `{ profile: null }` when not ready)
 - feat(you): `/you` Intent Profile hook reads from `GET /profile/:userId` instead of abandoned Supabase
 - feat(backend): `POST /profile/email` upserts optional `email` on `UserProfile` (schema field + route; no frontend yet)
@@ -23,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(live): message timestamps in welcome and live transcripts (`Intl` time format, locale-aware)
+- feat(live): mobile-friendly text input — touch targets, `text-base` (no iOS zoom), send icon button aligned with Discovery
 - feat(voice): barge-in via local mic VAD while the agent speaks (stop TTS + listen); endpointing silence raised to 2800 ms
 - feat(awakening): remove the decorative orange door graphic from The Awakening screen
 - feat(awakening): premium landing redesign — nav, cinematic hero (~45% width), glass benefit strip; starfield/background preserved
