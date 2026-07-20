@@ -27,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(backend): Discovery stop rule is turn-based (close by 3rd reply; never a 4th question) + top-of-prompt IMPORTANT
+- feat(backend): Discovery closing stop rule — close after ≥3/5 areas or ~6 questions; no further questions
+- feat(backend): Discovery closing prompt — save Watchtower recommendation to gallery, gentle finish-below nudge (voice + text)
 - feat(live): message timestamps in welcome and live transcripts (`Intl` time format, locale-aware)
 - feat(live): mobile-friendly text input — touch targets, `text-base` (no iOS zoom), send icon button aligned with Discovery
 - feat(voice): barge-in via local mic VAD while the agent speaks (stop TTS + listen); endpointing silence raised to 2800 ms
