@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(backend): turn-based closing pressure (`buildClosingPressureSystemBlock`) for first-pass profile — soft at 5th user turn, hard at 6th (text `runAgentTurn` path)
 - fix(live): text-only sessions ignore voice WebSocket events; voice activates only via explicit switch
 - feat(welcome): mode choice before live session — voice or writing, with text-only path via `startTextSession`
 - feat(welcome): text input during active live session on `/welcome` (primary live route)
@@ -27,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(you): profile completeness rings/bars + empty fields CTA to continue conversation
+- feat(backend): profile-first close pressure soft@5 / hard@6 — MUST essentials + specificity, stay-on-topic, strengths/focus as SHOULD only
+- feat(backend): Unlock chat is profile-only first pass (~5 exchanges) — unlock-plan transition, no in-conversation Watchtower; voice prompt aligned
 - feat(onboarding): capture year of birth only (privacy) — approximate age via `birthYear`
 - feat(backend): Discovery stop rule is turn-based (close by 3rd reply; never a 4th question) + top-of-prompt IMPORTANT
 - feat(backend): Discovery closing stop rule — close after ≥3/5 areas or ~6 questions; no further questions
@@ -79,6 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- fix(ui): responsive layout across app screens — bottom nav overflow, profile/other pages with min-w-0, break-words, and fluid padding
 - fix(lint): resolve 18 ESLint strict-type errors across discovery, possibility-map, today, and transformation-plan features (non-null assertions, unnecessary conditionals, async handlers)
 - fix(transformation-plan): restructure Dynamis tree visual hierarchy — trunk widens at base, branches rise from the crown, leaves form dense clusters at branch tips, fruits sit inside clusters
 

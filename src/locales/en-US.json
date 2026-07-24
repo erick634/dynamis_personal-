@@ -315,6 +315,21 @@
       "body": "Please try again in a moment.",
       "retryButton": "Try again"
     },
+    "completeness": {
+      "title": "What we know so far",
+      "subtitle": "How filled each profile area is from your conversations — not a score of you.",
+      "overall": "Overall clarity",
+      "dimensions": {
+        "values": "Values",
+        "mission": "Direction",
+        "strengths": "Strengths",
+        "constraints": "Growth edges"
+      }
+    },
+    "stillWorking": {
+      "message": "Still working on this.",
+      "cta": "Click to continue the conversation"
+    },
     "sections": {
       "whoYouAre": "Who you are",
       "aspirations": "Aspirations",

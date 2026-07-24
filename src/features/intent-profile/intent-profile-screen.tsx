@@ -2,7 +2,10 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { BrandMark } from '@/components/ui/brand-mark';
+import { deriveProfileSignalsFromIntentProfile } from '@/features/discovery/derive-profile-signals';
+import { hasProfileFieldContent } from '@/features/intent-profile/has-profile-field-content';
+import { ProfileCompletenessCard } from '@/features/intent-profile/profile-completeness-card';
+import { ProfileFieldValue } from '@/features/intent-profile/profile-field-value';
 import { useIntentProfile } from '@/features/you/use-intent-profile';
 import { useCurrentUser } from '@/stores/current-user';
 
@@ -24,6 +27,31 @@ function parseSummaryBullets(summary: string | null): string[] {
     .filter((line) => line.length > 0);
 }
 
+function ProfilePage({ children }: { children: ReactNode }) {
+  return (
+    <div className="w-full min-w-0 bg-bg font-body text-ink">
+      <div className="mx-auto w-full max-w-6xl min-w-0 px-4 py-6 sm:px-6 md:px-8 md:py-8 lg:px-10">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ProfileCard({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <section
+      className={[
+        'w-full min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6 md:p-8',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {children}
+    </section>
+  );
+}
+
 export function IntentProfileScreen() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -31,71 +59,74 @@ export function IntentProfileScreen() {
   const user = useCurrentUser((state) => state.user);
   const { profile, isLoading, error, refetch } = useIntentProfile();
 
-  const renderStateCard = (content: ReactNode) => (
-    <div className="min-h-dvh bg-bg font-body text-ink">
-      <header className="border-b border-line-soft bg-white px-6 py-5 md:px-10">
-        <BrandMark />
-      </header>
-      <div className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
-        <section className="rounded-2xl border border-line-soft bg-white p-8 shadow-card">
-          {content}
-        </section>
-      </div>
-    </div>
-  );
+  const signals = deriveProfileSignalsFromIntentProfile(profile);
+
+  const continueConversation = () => {
+    navigate(user ? '/welcome' : '/onboarding');
+  };
 
   if (isLoading) {
-    return renderStateCard(<p className="font-body text-sm text-ink-2">{t('you.loading')}</p>);
-  }
-
-  if (error) {
-    return renderStateCard(
-      <>
-        <h1 className="font-display text-2xl font-semibold text-ink">{t('you.error.title')}</h1>
-        <p className="mt-3 max-w-2xl text-sm text-ink-2">{t('you.error.body')}</p>
-        <button
-          type="button"
-          onClick={() => {
-            void refetch();
-          }}
-          className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-6 py-3 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
-        >
-          {t('you.error.retryButton')}
-        </button>
-      </>,
+    return (
+      <ProfilePage>
+        <ProfileCard>
+          <p className="font-body text-sm text-ink-2">{t('you.loading')}</p>
+        </ProfileCard>
+      </ProfilePage>
     );
   }
 
-  if (!profile) {
-    return renderStateCard(
-      <>
-        <h1 className="font-display text-2xl font-semibold text-ink">
-          {t('you.processing.title')}
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-2">
-          {t('you.processing.body')}
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
+  if (error) {
+    return (
+      <ProfilePage>
+        <ProfileCard>
+          <h1 className="font-display text-2xl font-semibold break-words text-ink">
+            {t('you.error.title')}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm break-words text-ink-2">{t('you.error.body')}</p>
           <button
             type="button"
             onClick={() => {
               void refetch();
             }}
-            className="inline-flex items-center justify-center rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bg-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-6 py-3 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
           >
-            {t('you.processing.refreshButton')}
+            {t('you.error.retryButton')}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              navigate(user ? '/welcome' : '/onboarding');
-            }}
-            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-5 py-2.5 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
-          >
-            {t('you.processing.startConversation')}
-          </button>
-        </div>
-      </>,
+        </ProfileCard>
+      </ProfilePage>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <ProfilePage>
+        <ProfileCard>
+          <h1 className="font-display text-2xl font-semibold break-words text-ink">
+            {t('you.processing.title')}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed break-words text-ink-2">
+            {t('you.processing.body')}
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                void refetch();
+              }}
+              className="inline-flex items-center justify-center rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bg-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+            >
+              {t('you.processing.refreshButton')}
+            </button>
+            <button
+              type="button"
+              onClick={continueConversation}
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-5 py-2.5 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+            >
+              {t('you.processing.startConversation')}
+            </button>
+          </div>
+        </ProfileCard>
+      </ProfilePage>
     );
   }
 
@@ -104,130 +135,132 @@ export function IntentProfileScreen() {
   const hasValues = (profile.valuesList?.length ?? 0) > 0;
 
   return (
-    <div className="min-h-dvh bg-bg font-body text-ink">
-      <header className="border-b border-line-soft bg-white px-6 py-5 md:px-10">
-        <BrandMark />
-      </header>
+    <ProfilePage>
+      <div className="space-y-4 sm:space-y-6">
+        <ProfileCard>
+          <h1 className="font-display text-[clamp(1.5rem,4vw,2.5rem)] font-semibold leading-tight break-words text-ink">
+            {profile.displayName || t('you.fallbackTitle')}
+          </h1>
+          <div className="mt-3 flex flex-col gap-1 text-sm text-ink-2 sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1">
+            <p className="break-words">{t('you.meta.updatedAt', { date: updatedAtLabel })}</p>
+            <p className="break-words">
+              {t('you.meta.messagesAnalyzed', {
+                count: profile.longTermSummaryMsgCount ?? 0,
+              })}
+            </p>
+          </div>
+        </ProfileCard>
 
-      <div className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-line-soft bg-white p-6 shadow-card md:p-8">
-            <h1 className="font-display text-[clamp(1.75rem,3vw,2.5rem)] font-semibold leading-tight text-ink">
-              {profile.displayName || t('you.fallbackTitle')}
-            </h1>
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-2">
-              <p>{t('you.meta.updatedAt', { date: updatedAtLabel })}</p>
-              <p>
-                {t('you.meta.messagesAnalyzed', {
-                  count: profile.longTermSummaryMsgCount ?? 0,
-                })}
-              </p>
+        <ProfileCompletenessCard signals={signals} />
+
+        <ProfileCard>
+          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+            {t('you.sections.whoYouAre')}
+          </h2>
+          <ProfileFieldValue value={profile.roleContext} onContinue={continueConversation} />
+        </ProfileCard>
+
+        <ProfileCard>
+          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+            {t('you.sections.aspirations')}
+          </h2>
+          <ProfileFieldValue value={profile.aspirations} onContinue={continueConversation} />
+        </ProfileCard>
+
+        <section className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+          <article className="min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6">
+            <h2 className="font-display text-lg font-semibold text-ink sm:text-xl">
+              {t('you.sections.strengths')}
+            </h2>
+            <ProfileFieldValue value={profile.strengths} onContinue={continueConversation} />
+          </article>
+          <article className="min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6">
+            <h2 className="font-display text-lg font-semibold text-ink sm:text-xl">
+              {t('you.sections.growthAreas')}
+            </h2>
+            <ProfileFieldValue value={profile.weaknesses} onContinue={continueConversation} />
+          </article>
+        </section>
+
+        {hasValues ? (
+          <ProfileCard>
+            <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+              {t('you.sections.values')}
+            </h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {profile.valuesList?.map((value) => (
+                <span
+                  key={value}
+                  className="max-w-full rounded-full bg-blue-soft px-3 py-1.5 text-xs font-semibold tracking-wide break-words text-blue"
+                >
+                  {value}
+                </span>
+              ))}
             </div>
-          </section>
-
-          <section className="rounded-2xl border border-line-soft bg-white p-6 shadow-card md:p-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">
-              {t('you.sections.whoYouAre')}
+          </ProfileCard>
+        ) : (
+          <ProfileCard>
+            <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+              {t('you.sections.values')}
             </h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
-              {profile.roleContext || '—'}
-            </p>
-          </section>
+            <ProfileFieldValue value={null} onContinue={continueConversation} />
+          </ProfileCard>
+        )}
 
-          <section className="rounded-2xl border border-line-soft bg-white p-6 shadow-card md:p-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">
-              {t('you.sections.aspirations')}
-            </h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
-              {profile.aspirations || '—'}
-            </p>
-          </section>
+        <ProfileCard className="border-red/20 bg-red/5">
+          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+            {t('you.sections.activeFocus')}
+          </h2>
+          <ProfileFieldValue value={profile.activeFocus} onContinue={continueConversation} />
+        </ProfileCard>
 
-          <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <article className="rounded-2xl border border-line-soft bg-white p-6 shadow-card">
-              <h2 className="font-display text-xl font-semibold text-ink">
-                {t('you.sections.strengths')}
-              </h2>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
-                {profile.strengths || '—'}
-              </p>
-            </article>
-            <article className="rounded-2xl border border-line-soft bg-white p-6 shadow-card">
-              <h2 className="font-display text-xl font-semibold text-ink">
-                {t('you.sections.growthAreas')}
-              </h2>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
-                {profile.weaknesses || '—'}
-              </p>
-            </article>
-          </section>
+        <ProfileCard>
+          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
+            {t('you.sections.synthesis')}
+          </h2>
+          {summaryBullets.length > 0 ? (
+            <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed break-words text-ink-2 sm:pl-6">
+              {summaryBullets.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <ProfileFieldValue value={null} onContinue={continueConversation} />
+          )}
+        </ProfileCard>
 
-          {hasValues ? (
-            <section className="rounded-2xl border border-line-soft bg-white p-6 shadow-card md:p-8">
-              <h2 className="font-display text-2xl font-semibold text-ink">
-                {t('you.sections.values')}
-              </h2>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {profile.valuesList?.map((value) => (
-                  <span
-                    key={value}
-                    className="rounded-full bg-blue-soft px-3 py-1.5 text-xs font-semibold tracking-wide text-blue"
-                  >
-                    {value}
-                  </span>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          <section className="rounded-2xl border border-red/20 bg-red/5 p-6 shadow-card md:p-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">
-              {t('you.sections.activeFocus')}
-            </h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
-              {profile.activeFocus || '—'}
-            </p>
-          </section>
-
-          <section className="rounded-2xl border border-line-soft bg-white p-6 shadow-card md:p-8">
-            <h2 className="font-display text-2xl font-semibold text-ink">
-              {t('you.sections.synthesis')}
-            </h2>
-            {summaryBullets.length > 0 ? (
-              <ul className="mt-4 list-disc space-y-2 pl-6 text-sm leading-relaxed text-ink-2">
-                {summaryBullets.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-ink-2">—</p>
-            )}
-          </section>
-
-          <footer className="rounded-2xl border border-line-soft bg-white p-6 shadow-card md:p-8">
+        <footer className="w-full min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6 md:p-8">
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => {
                 void refetch();
               }}
-              className="inline-flex items-center justify-center rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bg-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+              className="inline-flex max-w-full items-center justify-center rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bg-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
             >
               {t('you.refreshButton')}
             </button>
+            <button
+              type="button"
+              onClick={continueConversation}
+              className="inline-flex max-w-full items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-5 py-2.5 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+            >
+              {t('you.stillWorking.cta')}
+            </button>
+          </div>
 
-            {profile.notes ? (
-              <div className="mt-5 rounded-xl border border-line-soft bg-bg-soft p-4">
-                <p className="text-xs font-semibold tracking-[0.14em] text-ink-3 uppercase">
-                  {t('you.sections.guideNotes')}
-                </p>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-2">
-                  {profile.notes}
-                </p>
-              </div>
-            ) : null}
-          </footer>
-        </div>
+          {hasProfileFieldContent(profile.notes) ? (
+            <div className="mt-5 min-w-0 rounded-xl border border-line-soft bg-bg-soft p-4">
+              <p className="text-xs font-semibold tracking-[0.14em] text-ink-3 uppercase">
+                {t('you.sections.guideNotes')}
+              </p>
+              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-2">
+                {profile.notes}
+              </p>
+            </div>
+          ) : null}
+        </footer>
       </div>
-    </div>
+    </ProfilePage>
   );
 }

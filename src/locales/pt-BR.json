@@ -315,6 +315,21 @@
       "body": "Tente novamente em instantes.",
       "retryButton": "Tentar de novo"
     },
+    "completeness": {
+      "title": "O que já sabemos",
+      "subtitle": "Quanto cada área do perfil está preenchida a partir das suas conversas — não é uma nota sobre você.",
+      "overall": "Clareza geral",
+      "dimensions": {
+        "values": "Valores",
+        "mission": "Direção",
+        "strengths": "Forças",
+        "constraints": "Bordas de crescimento"
+      }
+    },
+    "stillWorking": {
+      "message": "Ainda estamos trabalhando nisso.",
+      "cta": "Clique para continuar conversando"
+    },
     "sections": {
       "whoYouAre": "Quem você é",
       "aspirations": "Aspirações",
