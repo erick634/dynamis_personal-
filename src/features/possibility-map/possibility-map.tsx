@@ -25,16 +25,16 @@ export function PossibilityMap() {
   const showGeneratingBanner = isGenerating;
 
   return (
-    <div className="possibility-map relative min-h-dvh overflow-hidden text-white">
-      <div className="relative z-10 mx-auto max-w-[1100px] px-6 pt-20 pb-12 md:px-10 md:pb-16">
-        <header className="possibility-map__reveal-header max-w-[720px]">
+    <div className="possibility-map relative min-h-dvh w-full min-w-0 overflow-x-hidden text-white">
+      <div className="relative z-10 mx-auto w-full min-w-0 max-w-[1100px] px-4 pt-16 pb-24 sm:px-6 md:px-10 md:pt-20 md:pb-16">
+        <header className="possibility-map__reveal-header w-full min-w-0 max-w-[720px]">
           <p className="font-body text-[11px] font-semibold tracking-[0.2em] text-red uppercase">
             {t('possibilityMap.eyebrow')}
           </p>
-          <h1 className="mt-4 max-w-[720px] font-display text-4xl leading-tight font-semibold text-white md:text-[56px]">
+          <h1 className="mt-4 max-w-[720px] font-display text-[clamp(1.75rem,6vw,3.5rem)] leading-tight font-semibold break-words text-white">
             {t('possibilityMap.title')}
           </h1>
-          <p className="mt-4 max-w-[560px] font-body text-lg text-white/70">
+          <p className="mt-4 max-w-[560px] font-body text-base text-white/70 sm:text-lg">
             {t('possibilityMap.subtitle')}
           </p>
 

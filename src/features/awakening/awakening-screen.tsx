@@ -10,7 +10,7 @@ export function AwakeningScreen() {
   const { t } = useTranslation();
 
   return (
-    <div className="awakening relative min-h-dvh overflow-hidden text-white">
+    <div className="awakening relative min-h-dvh w-full min-w-0 overflow-x-hidden text-white">
       <div className="awakening__stars" aria-hidden>
         <div className="awakening__stars-layer awakening__stars-layer--far" />
         <div className="awakening__stars-layer awakening__stars-layer--near" />

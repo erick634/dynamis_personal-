@@ -288,16 +288,16 @@ export function TransformationPlanScreen() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg font-body text-ink">
-      <header className="border-b border-line-soft bg-white px-6 py-5 md:px-10">
+    <div className="w-full min-w-0 bg-bg font-body text-ink">
+      <header className="border-b border-line-soft bg-white px-4 py-4 sm:px-6 md:px-10 md:py-5">
         <BrandMark />
       </header>
 
-      <div className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-10">
+      <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-6 sm:px-6 md:px-8 md:py-10 lg:px-10">
         <p className="font-body text-xs font-semibold tracking-[0.18em] text-blue uppercase">
           {t('transformationPlan.eyebrow')}
         </p>
-        <h1 className="mt-2 font-display text-[clamp(1.75rem,3vw,2.5rem)] font-semibold text-ink">
+        <h1 className="mt-2 font-display text-[clamp(1.5rem,4vw,2.5rem)] font-semibold break-words text-ink">
           {t('transformationPlan.title')}
         </h1>
 

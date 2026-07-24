@@ -16,7 +16,7 @@ export function TodayScreen() {
   const mock = MOCK_TODAY_GAMIFICATION;
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6 md:max-w-2xl md:px-8 md:py-8">
+    <div className="mx-auto w-full min-w-0 max-w-lg px-4 py-6 sm:px-6 md:max-w-2xl md:px-8 md:py-8">
       <TodayGreeting
         initial={mock.userInitial}
         title={t('today.greeting.title')}

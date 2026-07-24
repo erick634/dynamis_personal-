@@ -58,15 +58,15 @@ export function LoginScreen() {
     'w-full rounded-xl border border-line bg-white px-4 py-3 font-body text-base text-ink outline-none transition-colors placeholder:text-ink-3 focus-visible:border-blue-accent focus-visible:ring-2 focus-visible:ring-blue-soft';
 
   return (
-    <div className="min-h-dvh bg-bg font-body text-ink">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-6 py-10">
-        <BrandMark className="mb-12" />
+    <div className="min-h-dvh w-full min-w-0 overflow-x-hidden bg-bg font-body text-ink">
+      <div className="mx-auto flex min-h-dvh w-full min-w-0 max-w-[480px] flex-col px-4 py-8 sm:px-6 sm:py-10">
+        <BrandMark className="mb-10 sm:mb-12" />
 
-        <header className="mb-10">
-          <h1 className="font-display text-[clamp(2rem,5vw,2.75rem)] font-semibold leading-tight tracking-tight text-ink">
+        <header className="mb-8 sm:mb-10">
+          <h1 className="font-display text-[clamp(1.75rem,6vw,2.75rem)] font-semibold leading-tight tracking-tight break-words text-ink">
             {t('login.title')}
           </h1>
-          <p className="mt-4 font-body text-base leading-relaxed text-ink-2">
+          <p className="mt-4 font-body text-base leading-relaxed break-words text-ink-2">
             {t('login.subtitle')}
           </p>
         </header>

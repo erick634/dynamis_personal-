@@ -62,12 +62,14 @@ export function DiscoverySidePanel({
   const { t } = useTranslation();
 
   return (
-    <aside className="flex flex-col gap-6 rounded-[20px] border border-line-soft bg-bg p-6 shadow-soft">
-      <div>
-        <h2 className="font-display text-lg font-semibold text-ink">
+    <aside className="flex min-w-0 flex-col gap-6 rounded-[20px] border border-line-soft bg-bg p-4 shadow-soft sm:p-6">
+      <div className="min-w-0">
+        <h2 className="font-display text-lg font-semibold break-words text-ink">
           {t('discovery.sidePanel.profileTitle')}
         </h2>
-        <p className="mt-1 font-body text-sm text-ink-2">{t('discovery.sidePanel.profileHint')}</p>
+        <p className="mt-1 font-body text-sm break-words text-ink-2">
+          {t('discovery.sidePanel.profileHint')}
+        </p>
       </div>
 
       <div

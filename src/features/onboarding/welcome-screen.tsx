@@ -226,17 +226,17 @@ export function WelcomeScreen() {
   const errorLabel = controlsInlineError ? translateInlineError(t, controlsInlineError) : null;
 
   return (
-    <div className="awakening relative min-h-dvh overflow-hidden text-white">
+    <div className="awakening relative min-h-dvh w-full min-w-0 overflow-x-hidden text-white">
       <div className="awakening__stars" aria-hidden>
         <div className="awakening__stars-layer awakening__stars-layer--far" />
         <div className="awakening__stars-layer awakening__stars-layer--near" />
       </div>
 
-      <BrandMark variant="on-dark" className="absolute top-8 left-6 z-20 md:left-10" />
+      <BrandMark variant="on-dark" className="absolute top-8 left-4 z-20 sm:left-6 md:left-10" />
 
-      <div className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-6 py-24">
-        <div className="w-full max-w-lg text-center">
-          <h1 className="font-display text-[clamp(2rem,5vw,3rem)] font-medium leading-tight tracking-tight text-white">
+      <div className="relative z-10 flex min-h-dvh w-full min-w-0 flex-col items-center justify-center px-4 py-24 sm:px-6">
+        <div className="w-full min-w-0 max-w-lg text-center">
+          <h1 className="font-display text-[clamp(1.75rem,6vw,3rem)] font-medium leading-tight tracking-tight break-words text-white">
             {greeting}
           </h1>
 
