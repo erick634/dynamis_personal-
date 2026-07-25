@@ -3,10 +3,10 @@
     "cancel": "Cancelar"
   },
   "brand": {
-    "name": "Dynamis"
+    "name": "Unlock"
   },
   "bootstrap": {
-    "title": "Dynamis",
+    "title": "Unlock",
     "ok": "bootstrap OK"
   },
   "awakening": {
@@ -15,7 +15,7 @@
       "line1": "A IA está <em>transformando</em> o seu mundo.",
       "line2": "E você?"
     },
-    "description": "Dynamis é o seu guia de transformação — aprende quem você é, mapeia o que se torna possível com IA e transforma insight em um plano vivo.",
+    "description": "Unlock é o seu guia de transformação — aprende quem você é, mapeia o que se torna possível com IA e transforma insight em um plano vivo.",
     "cta": {
       "primary": "Comece seu Unlock Plan"
     },
@@ -27,7 +27,7 @@
       "signIn": "Entrar"
     },
     "benefits": {
-      "sectionLabel": "Por que Dynamis",
+      "sectionLabel": "Por que Unlock",
       "secure": {
         "title": "Seguro e privado",
         "body": "Seus dados permanecem protegidos."
