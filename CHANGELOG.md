@@ -35,6 +35,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(ui): brand mark uses open padlock (`BrandIcon` / Lucide `Unlock`) instead of letter D — BrandMark, LiveOrb, Discovery empty state
+- feat(ui): favicon + document title use Unlock (open padlock replaces letter R; `<title>` Dynamis → Unlock)
+- feat(ui): brand blue softened to night navy (`#1c4a7e`) so sidebar Unlock/active nav pair with the starfield chat
+- feat(nav): desktop sidebar collapses to icon rail by default — open padlock brand mark; expand/collapse toggle
+- feat(ui): hyperspace transition accelerates the starfield and opens the Unlock mark before primary navigation and immersive Speak
+- fix(ui): hyperspace shackle now rotates counter-clockwise so the padlock visibly opens (was closing)
+- feat(ui): Intent Profile restyled to match editorial mock — narrower column, softer cards, value pills without chrome, Current focus without red tint, Guide Notes nest
+- feat(you): Profile hero card — open padlock with glow, completeness/updated/conversations metrics, Refresh Analysis (part 1 of profile redesign)
+- feat(you): Profile clarity card — large overall ring + dimension bars with descriptions (replaces “What we know so far”)
+- feat(you): Profile insight grid — Who you are / Aspirations / Strengths / Growth areas with themed icons and colors
+- feat(you): Values card — heart mark + soft pink pills with contextual icons
+- feat(you): Current focus card — flame mark on a soft amber tint
+- feat(you): Synthesis card — sparkles mark, check list, and unlock orb with orbital rings
+- feat(you): Profile footer — Refresh Analysis + Continue Unlocking actions beside Guide note tip
+- feat(i18n): product brand name in Awakening UI copy is Unlock (`brand.name`, `bootstrap.title`, `awakening.description`, `awakening.benefits.sectionLabel`) — Dynamis kept for agent/concept/tree terms
 - feat(discovery): agent chat auto-scrolls to latest message; dark thin scrollbar (`scrollbar-on-dark`) on the message list
 - feat(discovery): agent chat is full-width over starfield — centered empty state + floating input; Intent Profile signals panel out of the chat shell (component kept; profile on `/you`)
 - feat(you): profile completeness rings/bars + empty fields CTA to continue conversation

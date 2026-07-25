@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import { StarField } from '@/components/ui/star-field';
+import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import type { LiveChatMessage, LiveSessionStatus } from '@/features/live/use-live-session';
 import { formatMessageTime, messageTimeDateTime } from '@/features/live/format-message-time';
 import { useLiveSession } from '@/features/live/use-live-session';
@@ -241,9 +242,11 @@ export function WelcomeScreen() {
           {!isSessionActive && sessionPhase !== 'choosing-mode' ? (
             <>
               {isReturnLoading ? (
-                <p className="mt-8 font-body text-base text-white/60" aria-live="polite">
-                  {t('welcome.returning.loading')}
-                </p>
+                <UnlockLoadingIndicator
+                  variant="on-dark"
+                  label={t('welcome.returning.loading')}
+                  className="mt-8 justify-center text-base"
+                />
               ) : (
                 <div className="mt-8 space-y-4 font-body text-base leading-relaxed text-white/85 md:text-lg">
                   {bodyParagraphs.map((paragraph) => (

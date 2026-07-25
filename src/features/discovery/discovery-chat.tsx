@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { BrandIcon } from '@/components/ui/brand-icon';
 import { StarField } from '@/components/ui/star-field';
+import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import { EndTheDayButton } from '@/features/daily-reflection/end-the-day-button';
 import { ReflectionPrompt } from '@/features/daily-reflection/reflection-prompt';
 import { DiscoveryIdentityCard } from '@/features/discovery/discovery-identity-card';
@@ -13,6 +15,7 @@ import { DiscoveryMessageBubble } from '@/features/discovery/discovery-message';
 import type { DiscoverySessionMode } from '@/features/discovery/discovery-types';
 import { ReflectionSummaryView } from '@/features/discovery/reflection-summary-view';
 import { useDiscoverySession } from '@/features/discovery/use-discovery-session';
+import { useHyperspaceNavigate } from '@/hooks/use-hyperspace-navigate';
 import { useCurrentUser, type CurrentUser } from '@/stores/current-user';
 
 function resolveSessionMode(searchParams: URLSearchParams): DiscoverySessionMode {
@@ -27,6 +30,7 @@ export function DiscoveryChat() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const hyperspaceNavigate = useHyperspaceNavigate();
   const user = useCurrentUser((state) => state.user);
   const mode = resolveSessionMode(searchParams);
   const isReflection = mode === 'reflection';
@@ -102,8 +106,10 @@ export function DiscoveryChat() {
       setIsIdentityGateOpen(true);
       return;
     }
-    setIsLiveStageOpen(true);
-    void startVoice('full');
+    hyperspaceNavigate(null, () => {
+      setIsLiveStageOpen(true);
+      void startVoice('full');
+    });
   };
 
   const handleCloseLive = () => {
@@ -153,10 +159,10 @@ export function DiscoveryChat() {
                 {isFreshStart && !isReflection ? (
                   <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
                     <span
-                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 font-display text-2xl font-semibold text-white ring-1 ring-white/20"
+                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/20"
                       aria-hidden
                     >
-                      D
+                      <BrandIcon className="h-7 w-7" />
                     </span>
                     <p className="max-w-md font-display text-[clamp(1.5rem,5vw,2.25rem)] font-medium leading-tight tracking-tight text-white">
                       {t('discovery.empty.headline', { name: greetingName })}
@@ -168,18 +174,20 @@ export function DiscoveryChat() {
                 ) : (
                   <div className="flex w-full flex-col gap-5 pb-4">
                     {isGeneratingSummary ? (
-                      <p className="font-body text-sm text-white/70 italic" role="status">
-                        {t('dailyReflection.summary.generating')}
-                      </p>
+                      <UnlockLoadingIndicator
+                        variant="on-dark"
+                        label={t('dailyReflection.summary.generating')}
+                      />
                     ) : (
                       <>
                         {messages.map((message) => (
                           <DiscoveryMessageBubble key={message.id} message={message} />
                         ))}
                         {isAgentThinking ? (
-                          <p className="font-body text-sm text-white/70 italic" role="status">
-                            {t('discovery.thinking')}
-                          </p>
+                          <UnlockLoadingIndicator
+                            variant="on-dark"
+                            label={t('discovery.thinking')}
+                          />
                         ) : null}
                       </>
                     )}

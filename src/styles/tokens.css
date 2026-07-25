@@ -19,11 +19,11 @@
   --line: #d7cfbc;
   --line-soft: #e5dfcc;
 
-  /* Blue — memory / brand */
-  --blue: #1f44e0;
-  --blue-2: #122c99;
-  --blue-soft: #dde5ff;
-  --blue-mist: #eef2ff;
+  /* Blue — memory / brand (night navy — pairs with starfield + warm paper) */
+  --blue: #1c4a7e;
+  --blue-2: #123358;
+  --blue-soft: #d9e4ef;
+  --blue-mist: #eef3f8;
 
   /* Red — achievement / Energeia (kept for compatibility) */
   --red: #d94a38;

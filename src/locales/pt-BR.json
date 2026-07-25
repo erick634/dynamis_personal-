@@ -9,6 +9,9 @@
     "title": "Unlock",
     "ok": "bootstrap OK"
   },
+  "hyperspace": {
+    "ariaLabel": "Indo para a próxima tela"
+  },
   "awakening": {
     "eyebrow": "Inteligência que potencializa",
     "headline": {
@@ -326,6 +329,15 @@
   "you": {
     "loading": "Carregando seu perfil...",
     "fallbackTitle": "Seu perfil",
+    "hero": {
+      "title": "Seu Perfil",
+      "subtitle": "Entender quem você é, o que te move e para onde você vai.",
+      "completeness": "{{percent}} completo",
+      "updatedRelative": "Atualizado {{relative}}",
+      "updatedUnknown": "Ainda sem atualização",
+      "messagesAnalyzed": "{{count}} conversas analisadas",
+      "refreshAnalysis": "Atualizar análise"
+    },
     "processing": {
       "title": "Seu Intent Profile está sendo preparado",
       "body": "Depois da sua conversa com o Lead Guide, levamos alguns instantes para destilar o que importa. Volte em um minuto.",
@@ -338,19 +350,38 @@
       "retryButton": "Tentar de novo"
     },
     "completeness": {
-      "title": "O que já sabemos",
-      "subtitle": "Quanto cada área do perfil está preenchida a partir das suas conversas — não é uma nota sobre você.",
+      "title": "Clareza do perfil",
+      "subtitle": "Análise com base nas suas conversas",
       "overall": "Clareza geral",
       "dimensions": {
-        "values": "Valores",
-        "mission": "Direção",
-        "strengths": "Forças",
-        "constraints": "Bordas de crescimento"
+        "values": {
+          "label": "Valores",
+          "description": "O que mais importa para você"
+        },
+        "mission": {
+          "label": "Direção",
+          "description": "Seu senso de propósito e objetivos"
+        },
+        "strengths": {
+          "label": "Forças",
+          "description": "Suas habilidades e qualidades naturais"
+        },
+        "constraints": {
+          "label": "Áreas de crescimento",
+          "description": "Oportunidades de desenvolvimento"
+        }
       }
     },
     "stillWorking": {
       "message": "Ainda estamos trabalhando nisso.",
       "cta": "Clique para continuar conversando"
+    },
+    "insights": {
+      "sectionLabel": "Insights do perfil",
+      "empty": {
+        "title": "Ainda não há dados suficientes",
+        "growthBody": "Continue conversando para o Unlock identificar suas oportunidades de crescimento."
+      }
     },
     "sections": {
       "whoYouAre": "Quem você é",
@@ -366,7 +397,12 @@
       "updatedAt": "Atualizado em {{date}}",
       "messagesAnalyzed": "{{count}} mensagens analisadas"
     },
-    "refreshButton": "Atualizar perfil"
+    "refreshButton": "Atualizar perfil",
+    "footer": {
+      "continueUnlocking": "Continuar o Unlock",
+      "guideNoteLabel": "Nota do guia",
+      "guideNoteBody": "O Unlock aprende continuamente com suas conversas. Quanto mais interações, mais profundos e precisos ficam os insights."
+    }
   },
   "dailyReflection": {
     "greeting": "Bem-vindo de volta. Vamos refletir sobre seu dia — o que aconteceu hoje, e o que está chamando sua atenção pra amanhã?",
@@ -406,7 +442,9 @@
   },
   "appLayout": {
     "navLabel": "Navegação principal",
-    "logout": "Sair"
+    "logout": "Sair",
+    "expandSidebar": "Expandir menu",
+    "collapseSidebar": "Recolher menu"
   },
   "today": {
     "eyebrow": "Fase 06 · Hoje",

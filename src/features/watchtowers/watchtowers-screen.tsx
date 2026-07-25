@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import { fetchWatchtowerRecommendations } from '@/features/watchtowers/watchtower-api';
 import type { WatchtowerRecommendation } from '@/features/watchtowers/watchtower-types';
 import { useCurrentUser } from '@/stores/current-user';
@@ -108,9 +109,7 @@ export function WatchtowersScreen() {
       ) : null}
 
       {userId && isLoading ? (
-        <p className="mt-8 font-body text-sm text-ink-3" aria-live="polite">
-          {t('watchtowers.generating')}
-        </p>
+        <UnlockLoadingIndicator label={t('watchtowers.generating')} className="mt-8" />
       ) : null}
 
       {userId && isError ? (

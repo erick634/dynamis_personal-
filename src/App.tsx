@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from '@/components/ui/app-layout';
+import { HyperspaceTransition } from '@/components/ui/hyperspace-transition';
 import { AwakeningScreen } from '@/features/awakening/awakening-screen';
 import { DiscoveryChat } from '@/features/discovery/discovery-chat';
 import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
@@ -16,6 +17,7 @@ import { WatchtowersScreen } from '@/features/watchtowers/watchtowers-screen';
 export function App() {
   return (
     <BrowserRouter>
+      <HyperspaceTransition />
       <Routes>
         <Route path="/awakening" element={<AwakeningScreen />} />
         <Route path="/onboarding" element={<CreateProfileScreen />} />

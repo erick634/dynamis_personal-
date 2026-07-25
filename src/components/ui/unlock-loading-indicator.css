@@ -1,0 +1,41 @@
+.unlock-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unlock-loading__icon {
+  width: 1.125rem;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.unlock-loading__shackle {
+  transform-box: fill-box;
+  transform-origin: left bottom;
+  animation: unlock-loading-open 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+@keyframes unlock-loading-open {
+  0%,
+  18% {
+    transform: rotate(0);
+  }
+  52%,
+  74% {
+    /* Counter-clockwise = shackle lifting open. */
+    transform: rotate(-28deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unlock-loading__shackle {
+    animation: none;
+  }
+}

@@ -1,0 +1,71 @@
+.profile-insight-card {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--line-soft) 85%, transparent);
+  border-radius: 1.35rem;
+  background: white;
+  padding: 1.25rem 1.35rem;
+  box-shadow: var(--shadow-soft);
+}
+
+@media (min-width: 640px) {
+  .profile-insight-card {
+    padding: 1.5rem 1.6rem;
+  }
+}
+
+.profile-insight-card--accent {
+  border-left-width: 3px;
+}
+
+.profile-insight-card--identity {
+  --insight-icon-bg: var(--blue-soft);
+  --insight-icon-fg: var(--blue);
+}
+
+.profile-insight-card--aspirations {
+  --insight-icon-bg: #efe8fb;
+  --insight-icon-fg: #5b3d9a;
+  border-left-color: #7c5cbf;
+}
+
+.profile-insight-card--strengths {
+  --insight-icon-bg: var(--moss-soft);
+  --insight-icon-fg: var(--moss);
+}
+
+.profile-insight-card--growth {
+  --insight-icon-bg: var(--ember-soft);
+  --insight-icon-fg: #9a4f24;
+}
+
+.profile-insight-card__icon {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: var(--insight-icon-bg);
+  color: var(--insight-icon-fg);
+}
+
+.profile-insight-card__tag {
+  max-width: 100%;
+  border-radius: 9999px;
+  background: var(--moss-soft);
+  padding: 0.35rem 0.8rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--moss);
+  word-break: break-word;
+}
+
+.profile-insight-card__empty {
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg-deep-cream) 70%, white);
+  padding: 1.35rem 1rem;
+  text-align: center;
+}

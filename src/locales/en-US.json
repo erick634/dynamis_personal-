@@ -9,6 +9,9 @@
     "title": "Unlock",
     "ok": "bootstrap OK"
   },
+  "hyperspace": {
+    "ariaLabel": "Traveling to the next screen"
+  },
   "awakening": {
     "eyebrow": "Intelligence that empowers",
     "headline": {
@@ -326,6 +329,15 @@
   "you": {
     "loading": "Loading your profile...",
     "fallbackTitle": "Your profile",
+    "hero": {
+      "title": "Your Profile",
+      "subtitle": "Understanding who you are, what drives you, and where you're going.",
+      "completeness": "{{percent}} Complete",
+      "updatedRelative": "Updated {{relative}}",
+      "updatedUnknown": "Not updated yet",
+      "messagesAnalyzed": "{{count}} conversations analyzed",
+      "refreshAnalysis": "Refresh Analysis"
+    },
     "processing": {
       "title": "Your Intent Profile is being prepared",
       "body": "After your conversation with the Lead Guide, we take a few moments to distill what matters. Check back in a minute.",
@@ -338,19 +350,38 @@
       "retryButton": "Try again"
     },
     "completeness": {
-      "title": "What we know so far",
-      "subtitle": "How filled each profile area is from your conversations — not a score of you.",
+      "title": "Profile clarity",
+      "subtitle": "AI analysis based on your conversations",
       "overall": "Overall clarity",
       "dimensions": {
-        "values": "Values",
-        "mission": "Direction",
-        "strengths": "Strengths",
-        "constraints": "Growth edges"
+        "values": {
+          "label": "Values",
+          "description": "What matters most to you"
+        },
+        "mission": {
+          "label": "Direction",
+          "description": "Your sense of purpose and goals"
+        },
+        "strengths": {
+          "label": "Strengths",
+          "description": "Your natural abilities and qualities"
+        },
+        "constraints": {
+          "label": "Growth areas",
+          "description": "Opportunities for development"
+        }
       }
     },
     "stillWorking": {
       "message": "Still working on this.",
       "cta": "Click to continue the conversation"
+    },
+    "insights": {
+      "sectionLabel": "Profile insights",
+      "empty": {
+        "title": "Not enough data yet",
+        "growthBody": "Keep chatting so Unlock can identify your growth opportunities."
+      }
     },
     "sections": {
       "whoYouAre": "Who you are",
@@ -366,7 +397,12 @@
       "updatedAt": "Updated {{date}}",
       "messagesAnalyzed": "{{count}} messages analyzed"
     },
-    "refreshButton": "Refresh profile"
+    "refreshButton": "Refresh profile",
+    "footer": {
+      "continueUnlocking": "Continue Unlocking",
+      "guideNoteLabel": "Guide note",
+      "guideNoteBody": "Unlock is continuously learning from your conversations. More interactions lead to deeper and more accurate insights."
+    }
   },
   "dailyReflection": {
     "greeting": "Welcome back. Let's reflect on your day — what happened today, and what's calling your attention for tomorrow?",
@@ -406,7 +442,9 @@
   },
   "appLayout": {
     "navLabel": "Main navigation",
-    "logout": "Log out"
+    "logout": "Log out",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
   },
   "today": {
     "eyebrow": "Phase 06 · Today",

@@ -1,16 +1,17 @@
 import { useId, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import { lookupProfileByEmail } from '@/features/onboarding/profile-email-api';
+import { useHyperspaceNavigate } from '@/hooks/use-hyperspace-navigate';
 import { useCurrentUser } from '@/stores/current-user';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginScreen() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const hyperspaceNavigate = useHyperspaceNavigate();
   const setUser = useCurrentUser((state) => state.setUser);
 
   const emailId = useId();
@@ -46,7 +47,7 @@ export function LoginScreen() {
         displayName: profile.displayName ?? trimmed.split('@')[0] ?? t('login.fallbackName'),
         email: profile.email,
       });
-      navigate('/guide');
+      hyperspaceNavigate('/guide');
     } catch {
       setError(t('login.errors.generic'));
     } finally {

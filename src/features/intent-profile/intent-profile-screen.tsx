@@ -1,23 +1,18 @@
+import { ArrowRight, Flame, RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
+import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import { deriveProfileSignalsFromIntentProfile } from '@/features/discovery/derive-profile-signals';
-import { hasProfileFieldContent } from '@/features/intent-profile/has-profile-field-content';
 import { ProfileCompletenessCard } from '@/features/intent-profile/profile-completeness-card';
 import { ProfileFieldValue } from '@/features/intent-profile/profile-field-value';
+import { ProfileHeroCard } from '@/features/intent-profile/profile-hero-card';
+import { ProfileInsightGrid } from '@/features/intent-profile/profile-insight-grid';
+import { ProfileSynthesisCard } from '@/features/intent-profile/profile-synthesis-card';
+import { ProfileValuesCard } from '@/features/intent-profile/profile-values-card';
 import { useIntentProfile } from '@/features/you/use-intent-profile';
+import { useHyperspaceNavigate } from '@/hooks/use-hyperspace-navigate';
 import { useCurrentUser } from '@/stores/current-user';
-
-function formatDateLabel(isoDate: string | null, locale: string): string {
-  if (!isoDate) return '—';
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return '—';
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
-}
 
 function parseSummaryBullets(summary: string | null): string[] {
   if (!summary) return [];
@@ -30,7 +25,7 @@ function parseSummaryBullets(summary: string | null): string[] {
 function ProfilePage({ children }: { children: ReactNode }) {
   return (
     <div className="w-full min-w-0 bg-bg font-body text-ink">
-      <div className="mx-auto w-full max-w-6xl min-w-0 px-4 py-6 sm:px-6 md:px-8 md:py-8 lg:px-10">
+      <div className="mx-auto w-full max-w-4xl min-w-0 px-4 py-8 sm:px-6 md:px-8 md:py-10">
         {children}
       </div>
     </div>
@@ -41,7 +36,7 @@ function ProfileCard({ children, className = '' }: { children: ReactNode; classN
   return (
     <section
       className={[
-        'w-full min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6 md:p-8',
+        'w-full min-w-0 rounded-3xl border border-line-soft/80 bg-white p-5 shadow-soft sm:p-7 md:p-8',
         className,
       ]
         .filter(Boolean)
@@ -52,24 +47,37 @@ function ProfileCard({ children, className = '' }: { children: ReactNode; classN
   );
 }
 
+function SectionHeading({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="font-display text-[1.35rem] font-semibold tracking-tight text-ink sm:text-2xl">
+      {children}
+    </h2>
+  );
+}
+
+const primaryButtonClass =
+  'inline-flex max-w-full items-center justify-center gap-2 rounded-xl bg-blue px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-blue-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent';
+
+const secondaryButtonClass =
+  'inline-flex max-w-full items-center justify-center gap-2 rounded-xl border border-line bg-white px-5 py-2.5 text-sm font-semibold text-blue transition-colors hover:bg-blue-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent';
+
 export function IntentProfileScreen() {
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-  const locale = i18n.language || 'en-US';
+  const { t } = useTranslation();
+  const hyperspaceNavigate = useHyperspaceNavigate();
   const user = useCurrentUser((state) => state.user);
-  const { profile, isLoading, error, refetch } = useIntentProfile();
+  const { profile, isLoading, error, refetch, isRefreshing } = useIntentProfile();
 
   const signals = deriveProfileSignalsFromIntentProfile(profile);
 
   const continueConversation = () => {
-    navigate(user ? '/guide' : '/onboarding');
+    hyperspaceNavigate(user ? '/guide' : '/onboarding');
   };
 
   if (isLoading) {
     return (
       <ProfilePage>
         <ProfileCard>
-          <p className="font-body text-sm text-ink-2">{t('you.loading')}</p>
+          <UnlockLoadingIndicator label={t('you.loading')} />
         </ProfileCard>
       </ProfilePage>
     );
@@ -88,7 +96,7 @@ export function IntentProfileScreen() {
             onClick={() => {
               void refetch();
             }}
-            className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-6 py-3 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+            className={`mt-6 ${primaryButtonClass}`}
           >
             {t('you.error.retryButton')}
           </button>
@@ -113,15 +121,11 @@ export function IntentProfileScreen() {
               onClick={() => {
                 void refetch();
               }}
-              className="inline-flex items-center justify-center rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bg-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+              className={secondaryButtonClass}
             >
               {t('you.processing.refreshButton')}
             </button>
-            <button
-              type="button"
-              onClick={continueConversation}
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-5 py-2.5 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
-            >
+            <button type="button" onClick={continueConversation} className={primaryButtonClass}>
               {t('you.processing.startConversation')}
             </button>
           </div>
@@ -130,135 +134,83 @@ export function IntentProfileScreen() {
     );
   }
 
-  const updatedAtLabel = formatDateLabel(profile.updatedAt, locale);
   const summaryBullets = parseSummaryBullets(profile.longTermSummary);
-  const hasValues = (profile.valuesList?.length ?? 0) > 0;
+  const completenessPercent = Math.round(
+    (signals.values + signals.mission + signals.strengths + signals.constraints) / 4,
+  );
 
   return (
     <ProfilePage>
-      <div className="space-y-4 sm:space-y-6">
-        <ProfileCard>
-          <h1 className="font-display text-[clamp(1.5rem,4vw,2.5rem)] font-semibold leading-tight break-words text-ink">
-            {profile.displayName || t('you.fallbackTitle')}
-          </h1>
-          <div className="mt-3 flex flex-col gap-1 text-sm text-ink-2 sm:flex-row sm:flex-wrap sm:gap-x-4 sm:gap-y-1">
-            <p className="break-words">{t('you.meta.updatedAt', { date: updatedAtLabel })}</p>
-            <p className="break-words">
-              {t('you.meta.messagesAnalyzed', {
-                count: profile.longTermSummaryMsgCount ?? 0,
-              })}
-            </p>
-          </div>
-        </ProfileCard>
+      <div className="space-y-5 sm:space-y-6">
+        <ProfileHeroCard
+          completenessPercent={completenessPercent}
+          updatedAtIso={profile.updatedAt}
+          messagesAnalyzed={profile.longTermSummaryMsgCount ?? 0}
+          isRefreshing={isRefreshing}
+          onRefresh={() => {
+            void refetch();
+          }}
+        />
 
         <ProfileCompletenessCard signals={signals} />
 
-        <ProfileCard>
-          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-            {t('you.sections.whoYouAre')}
-          </h2>
-          <ProfileFieldValue value={profile.roleContext} onContinue={continueConversation} />
-        </ProfileCard>
+        <ProfileInsightGrid
+          roleContext={profile.roleContext}
+          aspirations={profile.aspirations}
+          strengths={profile.strengths}
+          weaknesses={profile.weaknesses}
+          onContinue={continueConversation}
+        />
 
-        <ProfileCard>
-          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-            {t('you.sections.aspirations')}
-          </h2>
-          <ProfileFieldValue value={profile.aspirations} onContinue={continueConversation} />
-        </ProfileCard>
+        <ProfileValuesCard values={profile.valuesList ?? []} onContinue={continueConversation} />
 
-        <section className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
-          <article className="min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6">
-            <h2 className="font-display text-lg font-semibold text-ink sm:text-xl">
-              {t('you.sections.strengths')}
-            </h2>
-            <ProfileFieldValue value={profile.strengths} onContinue={continueConversation} />
-          </article>
-          <article className="min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6">
-            <h2 className="font-display text-lg font-semibold text-ink sm:text-xl">
-              {t('you.sections.growthAreas')}
-            </h2>
-            <ProfileFieldValue value={profile.weaknesses} onContinue={continueConversation} />
-          </article>
+        <section className="min-w-0 rounded-3xl border border-ember/25 bg-ember-soft/40 p-5 shadow-soft sm:p-7 md:p-8">
+          <div className="flex items-center gap-3">
+            <span
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ember-soft text-ember"
+              aria-hidden
+            >
+              <Flame className="h-4 w-4" strokeWidth={2.25} />
+            </span>
+            <SectionHeading>{t('you.sections.activeFocus')}</SectionHeading>
+          </div>
+          <ProfileFieldValue value={profile.activeFocus} onContinue={continueConversation} />
         </section>
 
-        {hasValues ? (
-          <ProfileCard>
-            <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-              {t('you.sections.values')}
-            </h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {profile.valuesList?.map((value) => (
-                <span
-                  key={value}
-                  className="max-w-full rounded-full bg-blue-soft px-3 py-1.5 text-xs font-semibold tracking-wide break-words text-blue"
-                >
-                  {value}
-                </span>
-              ))}
-            </div>
-          </ProfileCard>
-        ) : (
-          <ProfileCard>
-            <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-              {t('you.sections.values')}
-            </h2>
-            <ProfileFieldValue value={null} onContinue={continueConversation} />
-          </ProfileCard>
-        )}
+        <ProfileSynthesisCard bullets={summaryBullets} onContinue={continueConversation} />
 
-        <ProfileCard className="border-red/20 bg-red/5">
-          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-            {t('you.sections.activeFocus')}
-          </h2>
-          <ProfileFieldValue value={profile.activeFocus} onContinue={continueConversation} />
-        </ProfileCard>
-
-        <ProfileCard>
-          <h2 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-            {t('you.sections.synthesis')}
-          </h2>
-          {summaryBullets.length > 0 ? (
-            <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed break-words text-ink-2 sm:pl-6">
-              {summaryBullets.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <ProfileFieldValue value={null} onContinue={continueConversation} />
-          )}
-        </ProfileCard>
-
-        <footer className="w-full min-w-0 rounded-2xl border border-line-soft bg-white p-4 shadow-card sm:p-6 md:p-8">
-          <div className="flex flex-wrap gap-3">
+        <footer className="flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-5">
+          <div className="flex min-w-0 flex-wrap items-center gap-3 rounded-2xl border border-line-soft/80 bg-white p-3 shadow-soft sm:p-4">
             <button
               type="button"
               onClick={() => {
                 void refetch();
               }}
-              className="inline-flex max-w-full items-center justify-center rounded-full border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-bg-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
+              disabled={isRefreshing}
+              className={secondaryButtonClass}
             >
-              {t('you.refreshButton')}
+              <RefreshCw
+                className={['h-4 w-4', isRefreshing ? 'animate-spin' : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                aria-hidden
+              />
+              {t('you.hero.refreshAnalysis')}
             </button>
-            <button
-              type="button"
-              onClick={continueConversation}
-              className="inline-flex max-w-full items-center justify-center rounded-full bg-gradient-to-r from-red-deep via-red to-red-warm px-5 py-2.5 text-sm font-semibold text-white shadow-glow-red transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-accent"
-            >
-              {t('you.stillWorking.cta')}
+            <button type="button" onClick={continueConversation} className={primaryButtonClass}>
+              {t('you.footer.continueUnlocking')}
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </button>
           </div>
 
-          {hasProfileFieldContent(profile.notes) ? (
-            <div className="mt-5 min-w-0 rounded-xl border border-line-soft bg-bg-soft p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-ink-3 uppercase">
-                {t('you.sections.guideNotes')}
-              </p>
-              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-2">
-                {profile.notes}
-              </p>
-            </div>
-          ) : null}
+          <aside className="min-w-0 flex-1 rounded-2xl bg-bg-deep-cream/80 px-4 py-4 sm:px-5">
+            <p className="font-body text-[11px] font-semibold tracking-[0.14em] text-ink-3 uppercase">
+              {t('you.footer.guideNoteLabel')}
+            </p>
+            <p className="mt-2 font-body text-sm leading-relaxed text-ink-2">
+              {t('you.footer.guideNoteBody')}
+            </p>
+          </aside>
         </footer>
       </div>
     </ProfilePage>

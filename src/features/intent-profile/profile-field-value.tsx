@@ -12,7 +12,7 @@ export function ProfileFieldValue({ value, onContinue }: ProfileFieldValueProps)
 
   if (hasProfileFieldContent(value)) {
     return (
-      <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-2">
+      <p className="mt-3 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-ink-2">
         {value}
       </p>
     );

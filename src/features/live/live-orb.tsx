@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/ui/brand-icon';
 import type { LiveSessionStatus } from '@/features/live/use-live-session';
 
 type LiveOrbSize = 'md' | 'lg';
@@ -18,16 +19,16 @@ const STATE_CLASSES: Record<LiveSessionStatus, string> = {
   ended: 'from-white/10 to-white/5 text-white/60',
 };
 
-const SIZE_CLASSES: Record<LiveOrbSize, { shell: string; core: string; type: string }> = {
+const SIZE_CLASSES: Record<LiveOrbSize, { shell: string; core: string; icon: string }> = {
   md: {
     shell: 'h-32 w-32',
-    core: 'h-28 w-28 text-4xl',
-    type: 'text-4xl',
+    core: 'h-28 w-28',
+    icon: 'h-12 w-12',
   },
   lg: {
     shell: 'h-48 w-48 sm:h-56 sm:w-56',
     core: 'h-40 w-40 sm:h-48 sm:w-48',
-    type: 'text-6xl sm:text-7xl',
+    icon: 'h-16 w-16 sm:h-20 sm:w-20',
   },
 };
 
@@ -58,11 +59,10 @@ export function LiveOrb({ status, size = 'md' }: LiveOrbProps) {
           'relative flex items-center justify-center rounded-full bg-gradient-to-br',
           sizeClass.core,
           stateClass,
-          'shadow-glow-success font-display font-semibold',
-          sizeClass.type,
+          'shadow-glow-success',
         ].join(' ')}
       >
-        D
+        <BrandIcon className={sizeClass.icon} />
       </div>
     </div>
   );

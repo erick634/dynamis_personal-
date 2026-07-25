@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
+import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import { ComparisonStage } from '@/features/possibility-map/comparison-stage';
 import { DimensionCard } from '@/features/possibility-map/dimension-card';
 import { densityFromDimensions } from '@/features/possibility-map/constellation-density';
@@ -55,7 +56,7 @@ export function PossibilityMap() {
           {hasRealProfile ? (
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {showGeneratingBanner ? (
-                <p className="font-body text-sm text-white/60">{t('possibilityMap.generating')}</p>
+                <UnlockLoadingIndicator variant="on-dark" label={t('possibilityMap.generating')} />
               ) : null}
               <button
                 type="button"

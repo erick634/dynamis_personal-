@@ -1,7 +1,6 @@
 import { CalendarDays } from 'lucide-react';
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '@/components/ui/brand-mark';
 import {
@@ -10,6 +9,7 @@ import {
   MIN_ONBOARDING_AGE,
 } from '@/features/onboarding/calculate-age-from-birth-date';
 import { saveProfileEmail } from '@/features/onboarding/profile-email-api';
+import { useHyperspaceNavigate } from '@/hooks/use-hyperspace-navigate';
 import { useCurrentUser } from '@/stores/current-user';
 
 import '@/features/onboarding/onboarding.css';
@@ -25,7 +25,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function CreateProfileScreen() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const hyperspaceNavigate = useHyperspaceNavigate();
   const setUser = useCurrentUser((state) => state.setUser);
 
   const nameId = useId();
@@ -111,7 +111,7 @@ export function CreateProfileScreen() {
         email: trimmedEmail,
       });
 
-      navigate('/guide');
+      hyperspaceNavigate('/guide');
     } catch {
       setErrors({ form: t('onboarding.errors.saveFailed') });
     } finally {

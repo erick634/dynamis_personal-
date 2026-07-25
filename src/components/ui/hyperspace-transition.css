@@ -1,0 +1,120 @@
+.hyperspace-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  color: white;
+  background: var(--bg-deep-end);
+  animation: hyperspace-enter 180ms ease-out both;
+}
+
+.hyperspace-transition__stars {
+  inset: -8%;
+  animation: hyperspace-push 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.hyperspace-transition__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0 18%, rgb(2 9 18 / 72%) 78%);
+}
+
+.hyperspace-transition__mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(5rem, 11vw, 7.5rem);
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 26px rgb(255 255 255 / 35%));
+  animation: hyperspace-mark 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hyperspace-transition__mark svg {
+  width: 100%;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hyperspace-transition__shackle {
+  transform-box: fill-box;
+  transform-origin: left bottom;
+  animation: hyperspace-unlock 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.hyperspace-transition__flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: white;
+  animation: hyperspace-flash 1.4s ease-in-out both;
+}
+
+@keyframes hyperspace-enter {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes hyperspace-push {
+  0% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.32);
+  }
+}
+
+@keyframes hyperspace-mark {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  28%,
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+@keyframes hyperspace-unlock {
+  0%,
+  38% {
+    transform: rotate(0);
+  }
+  70%,
+  100% {
+    /* Counter-clockwise lifts the right end of the shackle — lock opening. */
+    transform: rotate(-28deg);
+  }
+}
+
+@keyframes hyperspace-flash {
+  0%,
+  68% {
+    opacity: 0;
+  }
+  78% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hyperspace-transition {
+    display: none;
+  }
+}
