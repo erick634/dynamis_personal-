@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '@/components/ui/brand-mark';
+import { StarField } from '@/components/ui/star-field';
 import type { LiveChatMessage, LiveSessionStatus } from '@/features/live/use-live-session';
 import { formatMessageTime, messageTimeDateTime } from '@/features/live/format-message-time';
 import { useLiveSession } from '@/features/live/use-live-session';
@@ -227,10 +228,7 @@ export function WelcomeScreen() {
 
   return (
     <div className="awakening relative min-h-dvh w-full min-w-0 overflow-x-hidden text-white">
-      <div className="awakening__stars" aria-hidden>
-        <div className="awakening__stars-layer awakening__stars-layer--far" />
-        <div className="awakening__stars-layer awakening__stars-layer--near" />
-      </div>
+      <StarField className="z-0" />
 
       <BrandMark variant="on-dark" className="absolute top-8 left-4 z-20 sm:left-6 md:left-10" />
 

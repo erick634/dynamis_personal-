@@ -159,7 +159,7 @@ export function WatchtowersScreen() {
               {t('watchtowers.continueConversation.body')}
             </p>
             <Link
-              to="/welcome"
+              to="/guide"
               className="mt-4 inline-flex items-center justify-center rounded-full bg-blue px-5 py-2.5 font-body text-sm font-semibold text-white transition-opacity hover:opacity-90"
             >
               {t('watchtowers.continueConversation.cta')}

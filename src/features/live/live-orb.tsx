@@ -1,7 +1,10 @@
 import type { LiveSessionStatus } from '@/features/live/use-live-session';
 
+type LiveOrbSize = 'md' | 'lg';
+
 type LiveOrbProps = {
   status: LiveSessionStatus;
+  size?: LiveOrbSize;
 };
 
 const STATE_CLASSES: Record<LiveSessionStatus, string> = {
@@ -15,8 +18,22 @@ const STATE_CLASSES: Record<LiveSessionStatus, string> = {
   ended: 'from-white/10 to-white/5 text-white/60',
 };
 
-export function LiveOrb({ status }: LiveOrbProps) {
+const SIZE_CLASSES: Record<LiveOrbSize, { shell: string; core: string; type: string }> = {
+  md: {
+    shell: 'h-32 w-32',
+    core: 'h-28 w-28 text-4xl',
+    type: 'text-4xl',
+  },
+  lg: {
+    shell: 'h-48 w-48 sm:h-56 sm:w-56',
+    core: 'h-40 w-40 sm:h-48 sm:w-48',
+    type: 'text-6xl sm:text-7xl',
+  },
+};
+
+export function LiveOrb({ status, size = 'md' }: LiveOrbProps) {
   const stateClass = STATE_CLASSES[status];
+  const sizeClass = SIZE_CLASSES[size];
   const ringPulse =
     status === 'speaking'
       ? 'animate-[ping_1.4s_cubic-bezier(0,0,0.2,1)_infinite]'
@@ -25,7 +42,7 @@ export function LiveOrb({ status }: LiveOrbProps) {
         : 'opacity-0';
 
   return (
-    <div className="relative flex h-32 w-32 items-center justify-center" aria-hidden>
+    <div className={`relative flex items-center justify-center ${sizeClass.shell}`} aria-hidden>
       <span
         className={[
           'absolute inset-0 rounded-full bg-gradient-to-br',
@@ -34,16 +51,15 @@ export function LiveOrb({ status }: LiveOrbProps) {
         ].join(' ')}
       />
       <span
-        className={[
-          'absolute inset-0 rounded-full border border-white/30',
-          ringPulse,
-        ].join(' ')}
+        className={['absolute inset-0 rounded-full border border-white/30', ringPulse].join(' ')}
       />
       <div
         className={[
-          'relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br',
+          'relative flex items-center justify-center rounded-full bg-gradient-to-br',
+          sizeClass.core,
           stateClass,
-          'shadow-glow-success font-display text-4xl font-semibold',
+          'shadow-glow-success font-display font-semibold',
+          sizeClass.type,
         ].join(' ')}
       >
         D

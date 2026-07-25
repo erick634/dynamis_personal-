@@ -1,5 +1,6 @@
 import { Trans, useTranslation } from 'react-i18next';
 
+import { StarField } from '@/components/ui/star-field';
 import { AwakeningBenefits } from '@/features/awakening/awakening-benefits';
 import { AwakeningCta } from '@/features/awakening/awakening-cta';
 import { AwakeningNav } from '@/features/awakening/awakening-nav';
@@ -11,10 +12,7 @@ export function AwakeningScreen() {
 
   return (
     <div className="awakening relative min-h-dvh w-full min-w-0 overflow-x-hidden text-white">
-      <div className="awakening__stars" aria-hidden>
-        <div className="awakening__stars-layer awakening__stars-layer--far" />
-        <div className="awakening__stars-layer awakening__stars-layer--near" />
-      </div>
+      <StarField className="z-0" />
 
       <div className="awakening__spark" aria-hidden />
       <div className="awakening__ambient" aria-hidden />

@@ -174,16 +174,38 @@
     },
     "input": {
       "label": "Your message",
-      "placeholder": "Share what is on your mind…",
+      "placeholder": "Ask anything…",
       "sendLabel": "Send message",
       "micLabel": "Start voice input",
-      "micStopLabel": "Stop voice input"
+      "micStopLabel": "Stop voice input",
+      "speak": "Speak",
+      "speakLabel": "Start voice conversation"
     },
     "voice": {
       "listening": "Listening… your words appear here as you speak.",
       "placeholder": "Speak now…",
       "errorMicDenied": "Microphone access was denied. Allow the mic in your browser settings.",
       "errorNoToken": "Voice input needs a token — check VITE_DYNAMIS_JWT or enable VITE_ALLOW_EMPTY_TOKEN for local dev."
+    },
+    "empty": {
+      "headline": "Where are you headed, {{name}}?",
+      "subtitle": "Share what you are doing, studying, or preparing for — we will shape your Intent Profile together."
+    },
+    "identity": {
+      "title": "Before we continue",
+      "subtitle": "To keep going, I need your name, an email, and your year of birth.",
+      "promptBubble": "To continue our conversation, I need your name, an email, and your year of birth.",
+      "submit": "Continue conversation",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "profileRequired": "Create a short profile first (name and email) — then we can start Discovery together."
+    },
+    "live": {
+      "ariaLabel": "Live conversation with Lead Guide",
+      "closeLabel": "End live conversation",
+      "readyHeadline": "Your guide is with you",
+      "readyHint": "Speak naturally — your words become part of the Discovery conversation."
     },
     "sidePanel": {
       "profileTitle": "Intent Profile signals",
@@ -612,6 +634,7 @@
     "discovery": "Discovery",
     "guide": "Discovery",
     "live": "Live",
+    "chat": "Chat",
     "profile": "Profile",
     "you": "Intent Profile",
     "possibilityMap": "Possibility Map",

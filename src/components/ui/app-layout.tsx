@@ -1,7 +1,15 @@
-import { CalendarDays, Compass, ListTodo, LogOut, Radar, Radio, UserRound } from 'lucide-react';
+import {
+  CalendarDays,
+  Compass,
+  ListTodo,
+  LogOut,
+  MessageSquare,
+  Radar,
+  UserRound,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { useCurrentUser } from '@/stores/current-user';
 
@@ -9,6 +17,8 @@ type NavItem = {
   to: string;
   labelKey: string;
   icon: LucideIcon;
+  /** Paths that should also mark this item active (e.g. chat aliases). */
+  alsoActiveFor?: readonly string[];
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -16,13 +26,19 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/plan', labelKey: 'nav.plan', icon: ListTodo },
   { to: '/map', labelKey: 'nav.explore', icon: Compass },
   { to: '/watchtowers', labelKey: 'nav.watchtowers', icon: Radar },
-  { to: '/welcome', labelKey: 'nav.live', icon: Radio },
+  {
+    to: '/guide',
+    labelKey: 'nav.chat',
+    icon: MessageSquare,
+    alsoActiveFor: ['/', '/guide', '/discovery'],
+  },
   { to: '/you', labelKey: 'nav.profile', icon: UserRound },
 ];
 
 export function AppLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const clearUser = useCurrentUser((state) => state.clearUser);
 
   const handleLogout = () => {
@@ -51,12 +67,14 @@ export function AppLayout() {
                 >
                   <NavLink
                     to={item.to}
-                    className={({ isActive }) =>
-                      [
+                    className={({ isActive }) => {
+                      const active =
+                        isActive || (item.alsoActiveFor?.includes(location.pathname) ?? false);
+                      return [
                         'flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 font-body text-[10px] leading-tight font-medium transition-colors sm:text-[11px] md:flex-row md:justify-start md:gap-3 md:px-3 md:py-2.5 md:text-sm',
-                        isActive ? 'text-blue' : 'text-ink-3 hover:text-ink',
-                      ].join(' ')
-                    }
+                        active ? 'text-blue' : 'text-ink-3 hover:text-ink',
+                      ].join(' ');
+                    }}
                   >
                     <Icon className="h-5 w-5 shrink-0" aria-hidden />
                     <span className="max-w-full truncate text-center md:text-left">

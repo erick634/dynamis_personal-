@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(nav): replace Live with Chat — opens Discovery (`/guide`); `/welcome` and `/live` redirect there
+- feat(discovery): chat-first identity — start Discovery without onboarding; after the first message, inline card collects name, email, and birth year then continues
+- feat(app): gate main shell behind `RequireCurrentUser` — first visit / incognito redirects to `/onboarding` before Discovery chat
+- feat(discovery): Speak opens immersive live stage with full voice (`mode: full` + TTS) so the Lead Guide speaks again; mic stays STT-only dictation
+- feat(discovery): Speak opens immersive live stage — animated full-screen starfield + large “D” orb, Live badge, close to end (ChatGPT/Claude-style transition)
+- feat(ui): reusable `StarField` background (dark gradient + scrolling stars) shared by Awakening, Welcome, and Discovery chat
+- feat(app): `/` is Discovery chat inside AppLayout (starfield behind); Awakening lives at `/awakening`; `/guide` remains a chat alias
 - feat(backend): turn-based closing pressure (`buildClosingPressureSystemBlock`) for first-pass profile — soft at 5th user turn, hard at 6th (text `runAgentTurn` path)
 - fix(live): text-only sessions ignore voice WebSocket events; voice activates only via explicit switch
 - feat(welcome): mode choice before live session — voice or writing, with text-only path via `startTextSession`
@@ -28,6 +35,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- feat(discovery): agent chat auto-scrolls to latest message; dark thin scrollbar (`scrollbar-on-dark`) on the message list
+- feat(discovery): agent chat is full-width over starfield — centered empty state + floating input; Intent Profile signals panel out of the chat shell (component kept; profile on `/you`)
 - feat(you): profile completeness rings/bars + empty fields CTA to continue conversation
 - feat(backend): profile-first close pressure soft@5 / hard@6 — MUST essentials + specificity, stay-on-topic, strengths/focus as SHOULD only
 - feat(backend): Unlock chat is profile-only first pass (~5 exchanges) — unlock-plan transition, no in-conversation Watchtower; voice prompt aligned

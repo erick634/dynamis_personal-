@@ -1,0 +1,40 @@
+/* Immersive live-stage enter — ChatGPT/Claude-style transition */
+.discovery-live-stage {
+  animation: discovery-live-stage-fade 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.discovery-live-stage__orb {
+  animation: discovery-live-stage-orb 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.discovery-live-stage__copy {
+  animation: discovery-live-stage-fade 520ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+@keyframes discovery-live-stage-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes discovery-live-stage-orb {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discovery-live-stage,
+  .discovery-live-stage__orb,
+  .discovery-live-stage__copy {
+    animation: none !important;
+  }
+}

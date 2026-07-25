@@ -46,7 +46,7 @@ export function LoginScreen() {
         displayName: profile.displayName ?? trimmed.split('@')[0] ?? t('login.fallbackName'),
         email: profile.email,
       });
-      navigate('/welcome');
+      navigate('/guide');
     } catch {
       setError(t('login.errors.generic'));
     } finally {

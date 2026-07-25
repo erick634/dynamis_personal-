@@ -1,59 +1,8 @@
-/* Background layers — keep starfield / gradient / spark behavior unchanged */
+/* Spark / ambient / copy — starfield lives in @/components/ui/star-field */
 .awakening {
-  --awakening-gradient: radial-gradient(
-    120% 90% at 70% 20%,
-    var(--bg-awakening-start) 0%,
-    var(--bg-deep) 45%,
-    var(--bg-deep-end) 100%
-  );
   --awakening-coral: #f35f4b;
   --awakening-accent: #5468ff;
   --awakening-text-muted: rgb(255 255 255 / 75%);
-  background: var(--awakening-gradient);
-}
-
-.awakening__stars {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.awakening__stars-layer {
-  position: absolute;
-  inset: -50% 0 0;
-  width: 100%;
-  height: 200%;
-  background-repeat: repeat;
-  animation: awakening-stars-scroll 60s linear infinite;
-}
-
-.awakening__stars-layer--far {
-  background-image:
-    radial-gradient(1px 1px at 20px 30px, rgb(255 255 255 / 35%), transparent),
-    radial-gradient(1px 1px at 80px 120px, rgb(255 255 255 / 25%), transparent),
-    radial-gradient(1px 1px at 160px 60px, rgb(255 255 255 / 30%), transparent);
-  background-size: 200px 200px;
-  opacity: 0.5;
-}
-
-.awakening__stars-layer--near {
-  background-image:
-    radial-gradient(1.5px 1.5px at 40px 70px, rgb(255 255 255 / 55%), transparent),
-    radial-gradient(1.5px 1.5px at 120px 40px, rgb(255 255 255 / 45%), transparent),
-    radial-gradient(2px 2px at 200px 150px, rgb(255 255 255 / 40%), transparent);
-  background-size: 280px 280px;
-  opacity: 0.75;
-  animation-duration: 45s;
-}
-
-@keyframes awakening-stars-scroll {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-50%);
-  }
 }
 
 .awakening__spark {
@@ -285,7 +234,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .awakening__stars-layer,
   .awakening__spark,
   .awakening__nav,
   .awakening__fade-up {

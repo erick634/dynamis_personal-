@@ -62,7 +62,7 @@ export function IntentProfileScreen() {
   const signals = deriveProfileSignalsFromIntentProfile(profile);
 
   const continueConversation = () => {
-    navigate(user ? '/welcome' : '/onboarding');
+    navigate(user ? '/guide' : '/onboarding');
   };
 
   if (isLoading) {

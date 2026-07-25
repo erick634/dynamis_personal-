@@ -111,7 +111,7 @@ export function CreateProfileScreen() {
         email: trimmedEmail,
       });
 
-      navigate('/welcome');
+      navigate('/guide');
     } catch {
       setErrors({ form: t('onboarding.errors.saveFailed') });
     } finally {

@@ -2,12 +2,12 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from '@/components/ui/app-layout';
 import { AwakeningScreen } from '@/features/awakening/awakening-screen';
+import { DiscoveryChat } from '@/features/discovery/discovery-chat';
+import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
+import { LiveKitTestScreen } from '@/features/livekit-test/livekit-test-screen';
 import { CreateProfileScreen } from '@/features/onboarding/create-profile-screen';
 import { LoginScreen } from '@/features/onboarding/login-screen';
-import { WelcomeScreen } from '@/features/onboarding/welcome-screen';
-import { DiscoveryChat } from '@/features/discovery/discovery-chat';
-import { LiveKitTestScreen } from '@/features/livekit-test/livekit-test-screen';
-import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
+import { RequireCurrentUser } from '@/features/onboarding/require-current-user';
 import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { TodayScreen } from '@/features/today/today-screen';
 import { TransformationPlanScreen } from '@/features/transformation-plan/transformation-plan-screen';
@@ -17,24 +17,28 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AwakeningScreen />} />
-        <Route path="/awakening" element={<Navigate to="/" replace />} />
+        <Route path="/awakening" element={<AwakeningScreen />} />
         <Route path="/onboarding" element={<CreateProfileScreen />} />
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/welcome" element={<WelcomeScreen />} />
+        {/* Legacy live/welcome entry — chat is the conversation surface now. */}
+        <Route path="/welcome" element={<Navigate to="/guide" replace />} />
         {/* Temporary LiveKit proof of concept — remove with src/features/livekit-test/. */}
         <Route path="/livekit-test" element={<LiveKitTestScreen />} />
         <Route element={<AppLayout />}>
-          <Route path="/today" element={<TodayScreen />} />
-          <Route path="/plan" element={<TransformationPlanScreen />} />
-          <Route path="/map" element={<PossibilityMap />} />
-          <Route path="/possibility-map" element={<Navigate to="/map" replace />} />
+          {/* Chat-first entry: identity can be completed inline during Discovery. */}
+          <Route path="/" element={<DiscoveryChat />} />
           <Route path="/guide" element={<DiscoveryChat />} />
           <Route path="/discovery" element={<Navigate to="/guide" replace />} />
-          <Route path="/watchtowers" element={<WatchtowersScreen />} />
-          <Route path="/live" element={<Navigate to="/welcome" replace />} />
-          <Route path="/you" element={<IntentProfileScreen />} />
-          <Route path="/profile" element={<Navigate to="/you" replace />} />
+          <Route path="/live" element={<Navigate to="/guide" replace />} />
+          <Route element={<RequireCurrentUser />}>
+            <Route path="/today" element={<TodayScreen />} />
+            <Route path="/plan" element={<TransformationPlanScreen />} />
+            <Route path="/map" element={<PossibilityMap />} />
+            <Route path="/possibility-map" element={<Navigate to="/map" replace />} />
+            <Route path="/watchtowers" element={<WatchtowersScreen />} />
+            <Route path="/you" element={<IntentProfileScreen />} />
+            <Route path="/profile" element={<Navigate to="/you" replace />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -13,10 +13,8 @@ import type {
   DiscoverySessionMode,
   ProfileSignals,
 } from '@/features/discovery/discovery-types';
-import {
-  fetchDiscoverySignals,
-  parseChatSignalsPayload,
-} from '@/features/discovery/discovery-signals-api';
+import { fetchDiscoverySignals } from '@/features/discovery/discovery-signals-api';
+import { runDiscoveryChatTurn } from '@/features/discovery/run-discovery-chat-turn';
 import {
   boostSignalsFromUserMessages,
   deriveInsightFromMessages,
@@ -30,7 +28,6 @@ import {
 import { useDiscoveryVoice } from '@/features/discovery/use-discovery-voice';
 import { saveReflectionDidToday } from '@/features/transformation-plan/reflection-today-storage';
 import { useIntentProfile } from '@/features/you/use-intent-profile';
-import { API_BASE_URL, DYNAMIS_JWT } from '@/lib/config';
 import { useCurrentUser } from '@/stores/current-user';
 import type { ProfileDimension } from '@/types/intent-profile';
 
@@ -87,7 +84,9 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
   const [profileSignals, setProfileSignals] = useState<ProfileSignals>(EMPTY_SIGNALS);
   const [insightQuote, setInsightQuote] = useState('');
   const [reflectionSummary, setReflectionSummary] = useState<ReflectionSummary | null>(null);
-  const sendMessageRef = useRef<(text: string) => void>(() => {});
+  const sendMessageRef = useRef<
+    (text: string, options?: { skipUserAppend?: boolean; userIdOverride?: string }) => void
+  >(() => {});
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   const userTexts = useMemo(
@@ -168,21 +167,26 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     }, PROFILE_REFRESH_AFTER_CHAT_MS);
   }, [refreshSignalsFromServer]);
 
-  const sendMessage = useCallback(
+  const holdForIdentity = useCallback(
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) {
         return;
       }
 
-      const userMessage: DiscoveryMessage = {
-        id: `${instanceId}-user-${String(Date.now())}`,
-        role: 'user',
-        text: trimmed,
-      };
-
-      setMessages((prev) => [...prev, userMessage]);
-      setIsAgentThinking(true);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${instanceId}-user-${String(Date.now())}`,
+          role: 'user',
+          text: trimmed,
+        },
+        {
+          id: `${instanceId}-agent-identity-${String(Date.now())}`,
+          role: 'agent',
+          contentKey: 'discovery.identity.promptBubble',
+        },
+      ]);
 
       const nextUserTexts = [...userTexts, trimmed];
       const optimisticBase = deriveProfileSignalsFromIntentProfile(profile);
@@ -198,15 +202,61 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
           ),
         ),
       );
+    },
+    [instanceId, mode, profile, t, userTexts],
+  );
 
-      if (!userId) {
+  const sendMessage = useCallback(
+    (
+      text: string,
+      options?: {
+        skipUserAppend?: boolean;
+        userIdOverride?: string;
+      },
+    ) => {
+      const trimmed = text.trim();
+      if (!trimmed) {
+        return;
+      }
+
+      const effectiveUserId = options?.userIdOverride ?? userId;
+
+      if (!options?.skipUserAppend) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `${instanceId}-user-${String(Date.now())}`,
+            role: 'user',
+            text: trimmed,
+          },
+        ]);
+
+        const nextUserTexts = [...userTexts, trimmed];
+        const optimisticBase = deriveProfileSignalsFromIntentProfile(profile);
+        setProfileSignals(boostSignalsFromUserMessages(optimisticBase, nextUserTexts));
+        setInsightQuote(
+          deriveInsightFromMessages(
+            nextUserTexts,
+            profile,
+            t(
+              mode === 'reflection'
+                ? 'dailyReflection.insight.fallback'
+                : 'discovery.insight.fallback',
+            ),
+          ),
+        );
+      }
+
+      setIsAgentThinking(true);
+
+      if (!effectiveUserId) {
         setIsAgentThinking(false);
         setMessages((prev) => [
           ...prev,
           {
             id: `${instanceId}-agent-${String(Date.now())}`,
             role: 'agent',
-            text: "Your profile isn't set up yet — create one before starting Discovery.",
+            contentKey: 'discovery.identity.promptBubble',
           },
         ]);
         return;
@@ -214,45 +264,21 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
 
       const runChatTurn = async (): Promise<void> => {
         try {
-          const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-          };
-          if (DYNAMIS_JWT.trim()) {
-            headers.Authorization = `Bearer ${DYNAMIS_JWT}`;
-          }
-
-          const requestBody: Record<string, string> = {
-            user_id: userId,
+          const data = await runDiscoveryChatTurn({
+            userId: effectiveUserId,
             message: trimmed,
-          };
-          if (sessionIdRef.current) {
-            requestBody.session_id = sessionIdRef.current;
-          }
-
-          const response = await fetch(`${API_BASE_URL}/chat`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(requestBody),
+            sessionId: sessionIdRef.current,
           });
 
-          if (!response.ok) {
-            throw new Error(`POST /chat failed with status ${String(response.status)}`);
+          if (data.sessionId) {
+            sessionIdRef.current = data.sessionId;
           }
 
-          const data = (await response.json()) as {
-            reply?: string;
-            session_id?: string;
-            profile_signals?: ProfileSignals;
-            insight?: string;
-          };
-          if (data.session_id) {
-            sessionIdRef.current = data.session_id;
+          if (data.profileSignals) {
+            setProfileSignals(data.profileSignals);
           }
-
-          const signalsPayload = parseChatSignalsPayload(data);
-          if (signalsPayload) {
-            setProfileSignals(signalsPayload.profile_signals);
-            setInsightQuote(signalsPayload.insight);
+          if (data.insight) {
+            setInsightQuote(data.insight);
           }
 
           setMessages((prev) => [
@@ -260,7 +286,7 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
             {
               id: `${instanceId}-agent-${String(Date.now())}`,
               role: 'agent',
-              text: data.reply ?? '…',
+              text: data.reply,
             },
           ]);
 
@@ -288,15 +314,80 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
 
   sendMessageRef.current = sendMessage;
 
-  const { isVoiceActive, partialTranscript, voiceError, startVoice, stopVoice } = useDiscoveryVoice(
-    {
-      userId,
-      isDisabled: isAgentThinking,
-      onFinalTranscript: (text) => {
-        sendMessageRef.current(text);
-      },
+  const appendLiveUserUtterance = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) {
+        return;
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${instanceId}-user-${String(Date.now())}`,
+          role: 'user',
+          text: trimmed,
+        },
+      ]);
+      setIsAgentThinking(true);
+      const nextUserTexts = [...userTexts, trimmed];
+      const optimisticBase = deriveProfileSignalsFromIntentProfile(profile);
+      setProfileSignals(boostSignalsFromUserMessages(optimisticBase, nextUserTexts));
+      setInsightQuote(
+        deriveInsightFromMessages(
+          nextUserTexts,
+          profile,
+          t(
+            mode === 'reflection'
+              ? 'dailyReflection.insight.fallback'
+              : 'discovery.insight.fallback',
+          ),
+        ),
+      );
     },
+    [instanceId, mode, profile, t, userTexts],
   );
+
+  const appendLiveAgentReply = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) {
+        return;
+      }
+      setIsAgentThinking(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${instanceId}-agent-${String(Date.now())}`,
+          role: 'agent',
+          text: trimmed,
+        },
+      ]);
+      scheduleProfileRefresh();
+    },
+    [instanceId, scheduleProfileRefresh],
+  );
+
+  const {
+    isVoiceActive,
+    isConnecting,
+    voiceStatus,
+    partialTranscript,
+    voiceError,
+    startVoice,
+    stopVoice,
+  } = useDiscoveryVoice({
+    userId,
+    isDisabled: false,
+    getSessionId: () => sessionIdRef.current,
+    onSessionId: (sessionId) => {
+      sessionIdRef.current = sessionId;
+    },
+    onFinalTranscript: (text) => {
+      sendMessageRef.current(text);
+    },
+    onLiveUserUtterance: appendLiveUserUtterance,
+    onLiveAgentReply: appendLiveAgentReply,
+  });
 
   const finishReflection = useCallback(async () => {
     if (!userId) {
@@ -340,6 +431,8 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     isAgentThinking,
     profileSignals,
     isVoiceActive,
+    isConnecting,
+    voiceStatus,
     partialTranscript,
     voiceError,
     insightQuote: resolvedInsight,
@@ -347,6 +440,7 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     isGeneratingSummary,
     userMessageCount,
     sendMessage,
+    holdForIdentity,
     finishReflection,
     startVoice,
     stopVoice,

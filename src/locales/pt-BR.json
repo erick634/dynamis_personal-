@@ -174,16 +174,38 @@
     },
     "input": {
       "label": "Sua mensagem",
-      "placeholder": "Compartilhe o que está em sua mente…",
+      "placeholder": "Pergunte qualquer coisa…",
       "sendLabel": "Enviar mensagem",
       "micLabel": "Iniciar entrada por voz",
-      "micStopLabel": "Parar entrada por voz"
+      "micStopLabel": "Parar entrada por voz",
+      "speak": "Falar",
+      "speakLabel": "Iniciar conversa por voz"
     },
     "voice": {
       "listening": "Ouvindo… suas palavras aparecem aqui enquanto você fala.",
       "placeholder": "Fale agora…",
       "errorMicDenied": "Acesso ao microfone negado. Permita o microfone nas configurações do navegador.",
       "errorNoToken": "Entrada por voz precisa de token — verifique VITE_DYNAMIS_JWT ou VITE_ALLOW_EMPTY_TOKEN no dev local."
+    },
+    "empty": {
+      "headline": "Para onde você vai, {{name}}?",
+      "subtitle": "Conte o que está fazendo, estudando ou preparando — vamos montar seu Perfil de Intenção juntos."
+    },
+    "identity": {
+      "title": "Antes de continuar",
+      "subtitle": "Para seguirmos, preciso do seu nome, um e-mail e o seu ano de nascimento.",
+      "promptBubble": "Para continuarmos nossa conversa, preciso que me diga o seu nome, um e-mail e o seu ano de nascimento.",
+      "submit": "Continuar conversa",
+      "saving": "Salvando…"
+    },
+    "errors": {
+      "profileRequired": "Crie um perfil rápido primeiro (nome e e-mail) — aí começamos a Discovery juntos."
+    },
+    "live": {
+      "ariaLabel": "Conversa ao vivo com o Lead Guide",
+      "closeLabel": "Encerrar conversa ao vivo",
+      "readyHeadline": "Seu guia está com você",
+      "readyHint": "Fale naturalmente — suas palavras entram na conversa de Discovery."
     },
     "sidePanel": {
       "profileTitle": "Sinais do Perfil de Intenção",
@@ -612,6 +634,7 @@
     "discovery": "Descoberta",
     "guide": "Descoberta",
     "live": "Live",
+    "chat": "Chat",
     "profile": "Perfil",
     "you": "Perfil de Intenção",
     "possibilityMap": "Mapa de Possibilidades",
