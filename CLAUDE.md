@@ -107,7 +107,7 @@ One ~2,900-line CommonJS file. Because `tsconfig.json` sets `types: []` + `verba
 
 **Watchtower Recommendation** (per *DYNAMIS Discovery Agent PRD v3.0*) is the team's priority.
 
-Scope **in this repo**: generate 2–5 `watchtower_recommendation` objects from the user's completed intent profile, triggered automatically when `breadth_pass_complete` flips to true. That is the whole job here.
+Scope **in this repo**: generate **one** `watchtower_recommendation` from the user's completed intent profile (aligned to personal vs professional focus), with objectives + suggested cadence/reminder. That is the whole generation job here.
 
 The actual watchtower **scanning and monitoring is another team's responsibility — out of scope.** Generate the recommendation objects; do not build the thing that acts on them.
 

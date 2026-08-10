@@ -161,3 +161,30 @@ No Framer Motion — CSS keyframes only. All copy via i18n (`possibilityMap.*`).
 - Files: `possibility-map.tsx`, `dynamis-constellation.tsx`, `energeia-constellation.tsx`, `dimension-card.tsx`, `possibility-map-mock.ts`, `possibility-map.css`
 - `getPossibilityMap()` in `possibility-map-api.ts` replaces direct fetch for demo; swap implementation when backend is ready
 - Dimension i18n keys use `healthLongevity` and `purposeMeaning` (not generic `health`/`purpose`)
+
+## ADR-007: One Watchtower from a short Discovery first-pass
+
+Date: 2026-07-30
+Status: Accepted
+
+### Context
+
+The previous flow generated 2–5 Watchtower recommendations after a ~5–6 turn Discovery first-pass, without an early personal vs professional fork. Product direction is now: form a usable Intent Profile quickly, then surface **one** actionable Watchtower (objectives + cadence + reminders) for demos — not a list.
+
+### Decision
+
+1. Discovery first-pass asks early for personal vs professional focus, aims for 3–4 user turns, then offers a profile checkpoint (pause and look vs keep talking). Turns 5+ enter enrichment mode without re-interrogating.
+2. `POST /watchtower-recommendations` emits exactly one recommendation, with `suggested_reminder_time` on the intent spec.
+3. `/watchtowers` presents a single detail card: objectives, derived check-in calendar, and in-app reminder/alarm toggles persisted in localStorage (demo; no push yet).
+
+### Alternatives considered
+
+- Keep 2–5 recommendations — rejected; dilutes the demo "aha" moment.
+- Real push/alarm notifications in this sprint — deferred; in-app prefs are enough for the boss demo.
+- Image generation on the Watchtower — deferred.
+
+### Consequences
+
+- Prompt and closing-pressure blocks in `backend/index.ts` change; override via `ASSISTANT_SYSTEM_PROMPT` still wins if set in env.
+- Frontend Watchtower types include `suggested_reminder_time`; older payloads without it default to `09:00`.
+- Scanning/monitoring of Watchtowers remains out of scope for this repo.
