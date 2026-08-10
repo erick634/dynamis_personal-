@@ -3,6 +3,8 @@ const { createServer } = require('node:http') as typeof import('node:http');
 const express = require('express') as typeof import('express');
 const cors = require('cors') as typeof import('cors');
 const { PrismaClient } = require('./generated/prisma') as typeof import('./generated/prisma');
+const { createProfilesRepo, ProfileConflictError, ProfileNotFoundError, ProfileValidationError } =
+  require('./profiles') as typeof import('./profiles');
 const Anthropic = require('@anthropic-ai/sdk')
   .default as typeof import('@anthropic-ai/sdk').default;
 const { WebSocket, WebSocketServer } = require('ws') as typeof import('ws');
@@ -178,6 +180,7 @@ const VOICE_MODE_PROMPT = [
 ].join('\n');
 
 const prisma = new PrismaClient();
+const profilesRepo = createProfilesRepo(prisma);
 
 async function connectPrisma(): Promise<void> {
   await prisma.$connect();
@@ -258,8 +261,46 @@ function isValidUuid(value: string): boolean {
   return UUID_RE.test(value);
 }
 
+const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
+
+function isValidObjectId(value: string): boolean {
+  return OBJECT_ID_RE.test(value);
+}
+
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function serializeProfile(profile: import('./generated/prisma').Profile) {
+  return {
+    id: profile.id,
+    user_id: profile.user_id,
+    title: profile.title,
+    context: profile.context,
+    confidence: profile.confidence,
+    is_primary: profile.is_primary,
+    source: profile.source,
+    created_at: profile.created_at.toISOString(),
+    updated_at: profile.updated_at.toISOString(),
+  };
+}
+
+function sendProfilesRouteError(
+  res: import('express').Response,
+  error: unknown,
+  routeLabel: string,
+): import('express').Response {
+  if (error instanceof ProfileConflictError) {
+    return res.status(409).json({ error: error.message });
+  }
+  if (error instanceof ProfileNotFoundError) {
+    return res.status(404).json({ error: error.message });
+  }
+  if (error instanceof ProfileValidationError) {
+    return res.status(400).json({ error: error.message });
+  }
+  console.error(`${routeLabel} error:`, error);
+  return res.status(500).json({ error: 'Internal server error.' });
 }
 
 function getHeaderValue(value: string | string[] | undefined): string {
@@ -2534,6 +2575,133 @@ app.post('/auth/lookup-by-email', handleLookupProfileByEmail);
 app.get('/auth/lookup-by-email', handleLookupProfileByEmail);
 // Legacy alias (must stay above /profile/:userId).
 app.get('/profile/by-email', handleLookupProfileByEmail);
+
+app.get('/profiles', async (req: import('express').Request, res: import('express').Response) => {
+  try {
+    if (!isRequestAuthorized(req)) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
+    const userId = String(req.query.user_id ?? '').trim();
+    if (!userId || !isValidUuid(userId)) {
+      return res.status(400).json({
+        error: 'Invalid or missing user_id. Expected UUID.',
+      });
+    }
+
+    const profiles = await profilesRepo.listProfiles(userId);
+    return res.status(200).json({
+      profiles: profiles.map(serializeProfile),
+    });
+  } catch (error) {
+    return sendProfilesRouteError(res, error, 'GET /profiles');
+  }
+});
+
+app.post('/profiles', async (req: import('express').Request, res: import('express').Response) => {
+  try {
+    if (!isRequestAuthorized(req)) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
+    const userId = String(req.body?.user_id ?? '').trim();
+    if (!userId || !isValidUuid(userId)) {
+      return res.status(400).json({
+        error: 'Invalid or missing user_id. Expected UUID.',
+      });
+    }
+
+    const title = String(req.body?.title ?? '').trim();
+    const source = String(req.body?.source ?? '').trim();
+    const confidenceRaw = req.body?.confidence;
+    const confidence = typeof confidenceRaw === 'number' ? confidenceRaw : Number(confidenceRaw);
+
+    const hasContext = Object.prototype.hasOwnProperty.call(req.body ?? {}, 'context');
+    const profile = await profilesRepo.createProfile({
+      user_id: userId,
+      title,
+      confidence,
+      source,
+      ...(hasContext ? { context: req.body.context } : {}),
+    });
+
+    console.log('[profiles] create', {
+      user_id: userId,
+      id: profile.id,
+      is_primary: profile.is_primary,
+    });
+    return res.status(201).json({ profile: serializeProfile(profile) });
+  } catch (error) {
+    return sendProfilesRouteError(res, error, 'POST /profiles');
+  }
+});
+
+app.patch(
+  '/profiles/:id/primary',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const id = String(req.params.id ?? '').trim();
+      if (!id || !isValidObjectId(id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing id. Expected ObjectId.',
+        });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const profile = await profilesRepo.setPrimaryProfile(id, userId);
+      console.log('[profiles] set_primary', { user_id: userId, id: profile.id });
+      return res.status(200).json({ profile: serializeProfile(profile) });
+    } catch (error) {
+      return sendProfilesRouteError(res, error, 'PATCH /profiles/:id/primary');
+    }
+  },
+);
+
+app.patch(
+  '/profiles/:id',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const id = String(req.params.id ?? '').trim();
+      if (!id || !isValidObjectId(id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing id. Expected ObjectId.',
+        });
+      }
+
+      const hasTitle = Object.prototype.hasOwnProperty.call(req.body ?? {}, 'title');
+      const hasContext = Object.prototype.hasOwnProperty.call(req.body ?? {}, 'context');
+      if (!hasTitle && !hasContext) {
+        return res.status(400).json({
+          error: 'No fields to update. Provide title and/or context.',
+        });
+      }
+
+      const profile = await profilesRepo.updateProfile(id, {
+        ...(hasTitle ? { title: String(req.body.title ?? '') } : {}),
+        ...(hasContext ? { context: req.body.context } : {}),
+      });
+
+      console.log('[profiles] update', { id: profile.id });
+      return res.status(200).json({ profile: serializeProfile(profile) });
+    } catch (error) {
+      return sendProfilesRouteError(res, error, 'PATCH /profiles/:id');
+    }
+  },
+);
 
 app.post(
   '/profile/email',
