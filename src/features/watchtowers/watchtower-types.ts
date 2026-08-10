@@ -6,6 +6,8 @@ export type WatchtowerIntentSpec = {
   signals_of_interest: string[];
   suggested_sources: string[];
   suggested_frequency: string;
+  /** 24h HH:MM — suggested daily reminder clock time for the cadence. */
+  suggested_reminder_time: string;
   evidence_basis: string;
   rationale: string;
 };
@@ -24,4 +26,10 @@ export type WatchtowerRecommendation = {
 export type WatchtowerRecommendationsResponse = {
   recommendations: WatchtowerRecommendation[];
   reason?: string;
+};
+
+export type WatchtowerReminderPrefs = {
+  reminderEnabled: boolean;
+  alarmEnabled: boolean;
+  reminderTime: string;
 };

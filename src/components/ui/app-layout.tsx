@@ -3,6 +3,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Compass,
+  History,
   ListTodo,
   LogOut,
   MessageSquare,
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: MessageSquare,
     alsoActiveFor: ['/', '/guide', '/discovery'],
   },
+  { to: '/chats', labelKey: 'nav.oldChats', icon: History },
   { to: '/you', labelKey: 'nav.profile', icon: UserRound },
 ];
 
@@ -108,7 +110,15 @@ export function AppLayout() {
                     }}
                     className={({ isActive }) => {
                       const active =
-                        isActive || (item.alsoActiveFor?.includes(location.pathname) ?? false);
+                        isActive ||
+                        (item.alsoActiveFor?.some(
+                          (path) =>
+                            location.pathname === path || location.pathname.startsWith(`${path}/`),
+                        ) ??
+                          false) ||
+                        (item.to !== '/' &&
+                          location.pathname !== item.to &&
+                          location.pathname.startsWith(`${item.to}/`));
                       return [
                         'flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 font-body text-[10px] leading-tight font-medium transition-colors sm:text-[11px]',
                         'md:py-2.5 md:text-sm',

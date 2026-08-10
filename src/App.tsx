@@ -3,6 +3,8 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/ui/app-layout';
 import { HyperspaceTransition } from '@/components/ui/hyperspace-transition';
 import { AwakeningScreen } from '@/features/awakening/awakening-screen';
+import { ChatHistoryScreen } from '@/features/chat-history/chat-history-screen';
+import { ChatSessionScreen } from '@/features/chat-history/chat-session-screen';
 import { DiscoveryChat } from '@/features/discovery/discovery-chat';
 import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
 import { LiveKitTestScreen } from '@/features/livekit-test/livekit-test-screen';
@@ -38,6 +40,8 @@ export function App() {
             <Route path="/map" element={<PossibilityMap />} />
             <Route path="/possibility-map" element={<Navigate to="/map" replace />} />
             <Route path="/watchtowers" element={<WatchtowersScreen />} />
+            <Route path="/chats" element={<ChatHistoryScreen />} />
+            <Route path="/chats/:sessionId" element={<ChatSessionScreen />} />
             <Route path="/you" element={<IntentProfileScreen />} />
             <Route path="/profile" element={<Navigate to="/you" replace />} />
           </Route>

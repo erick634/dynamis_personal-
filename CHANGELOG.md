@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- feat(backend): Discovery agent commits to helping organize life (anti passive interview loop; Watchtower may be named once)
+- feat(discovery): identity gate speaks the “complete a few details” line via Cartesia (`POST /tts`)
+- feat(chat-history): Old chats list + session transcript (`/chats`, continue in Chat, new chat)
+- feat(discovery): returning-user intent picker — refine / new Watchtower / advance
+- feat(watchtowers): single Watchtower detail card with objectives, check-in calendar, and in-app reminder/alarm toggles (localStorage)
 - feat(nav): replace Live with Chat — opens Discovery (`/guide`); `/welcome` and `/live` redirect there
 - feat(discovery): chat-first identity — start Discovery without onboarding; after the first message, inline card collects name, email, and birth year then continues
 - feat(app): gate main shell behind `RequireCurrentUser` — first visit / incognito redirects to `/onboarding` before Discovery chat
@@ -35,6 +40,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- fix(backend): voice path applies profile checkpoint pressure; Intent Profile extraction on voice defaults ON (`PROFILE_UPDATE_ON_VOICE`)
+- feat(backend): Discovery first-pass is 3–4 turns with early personal/professional axis, profile checkpoint (pause vs continue), then enrichment mode
+- feat(backend): `POST /watchtower-recommendations` generates exactly one Watchtower (with suggested reminder time) instead of 2–5
+- feat(watchtowers): `/watchtowers` shows one actionable Watchtower instead of a list of recommendations
 - feat(ui): brand mark uses open padlock (`BrandIcon` / Lucide `Unlock`) instead of letter D — BrandMark, LiveOrb, Discovery empty state
 - feat(ui): favicon + document title use Unlock (open padlock replaces letter R; `<title>` Dynamis → Unlock)
 - feat(ui): brand blue softened to night navy (`#1c4a7e`) so sidebar Unlock/active nav pair with the starfield chat

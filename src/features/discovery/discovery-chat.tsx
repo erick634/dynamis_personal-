@@ -6,14 +6,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandIcon } from '@/components/ui/brand-icon';
 import { StarField } from '@/components/ui/star-field';
 import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
+import { fetchChatSessionDetail } from '@/features/chat-history/chat-history-api';
 import { EndTheDayButton } from '@/features/daily-reflection/end-the-day-button';
 import { ReflectionPrompt } from '@/features/daily-reflection/reflection-prompt';
 import { DiscoveryIdentityCard } from '@/features/discovery/discovery-identity-card';
 import { DiscoveryInput } from '@/features/discovery/discovery-input';
+import {
+  DiscoveryIntentPicker,
+  type ConversationIntent,
+} from '@/features/discovery/discovery-intent-picker';
 import { DiscoveryLiveStage } from '@/features/discovery/discovery-live-stage';
 import { DiscoveryMessageBubble } from '@/features/discovery/discovery-message';
 import type { DiscoverySessionMode } from '@/features/discovery/discovery-types';
 import { ReflectionSummaryView } from '@/features/discovery/reflection-summary-view';
+import { speakAgentLine, unlockAgentAudio } from '@/features/discovery/speak-agent-line';
 import { useDiscoverySession } from '@/features/discovery/use-discovery-session';
 import { useHyperspaceNavigate } from '@/hooks/use-hyperspace-navigate';
 import { useCurrentUser, type CurrentUser } from '@/stores/current-user';
@@ -26,9 +32,21 @@ function hasIdentity(user: CurrentUser | null): boolean {
   return Boolean(user?.userId && user.email.trim() && user.displayName.trim());
 }
 
+function hasReturningProfile(
+  profile: { roleContext?: string | null; aspirations?: string | null } | null,
+): boolean {
+  return Boolean(profile?.roleContext?.trim() || profile?.aspirations?.trim());
+}
+
+const INTENT_MESSAGE_KEYS: Record<ConversationIntent, string> = {
+  refine: 'discovery.intent.refine.message',
+  newWatchtower: 'discovery.intent.newWatchtower.message',
+  advance: 'discovery.intent.advance.message',
+};
+
 export function DiscoveryChat() {
-  const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
+  const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const hyperspaceNavigate = useHyperspaceNavigate();
   const user = useCurrentUser((state) => state.user);
@@ -38,6 +56,9 @@ export function DiscoveryChat() {
   const [isLiveStageOpen, setIsLiveStageOpen] = useState(false);
   const [isIdentityGateOpen, setIsIdentityGateOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [intentChosen, setIntentChosen] = useState(false);
+  const sessionLoadRef = useRef<string | null>(null);
+  const identitySpeechAbortRef = useRef<AbortController | null>(null);
 
   const {
     messages,
@@ -49,9 +70,13 @@ export function DiscoveryChat() {
     reflectionSummary,
     isGeneratingSummary,
     userMessageCount,
+    profile,
     sendMessage,
     holdForIdentity,
+    promptForIdentity,
     finishReflection,
+    startNewChat,
+    loadSession,
     startVoice,
     stopVoice,
   } = useDiscoverySession(mode);
@@ -62,6 +87,79 @@ export function DiscoveryChat() {
   const isFreshStart = userMessageCount === 0 && !showReflectionSummary && !isIdentityGateOpen;
   const greetingName = user?.displayName.trim() || t('discovery.greetingFallbackName');
   const identityReady = hasIdentity(user);
+  const showIntentPicker =
+    !isReflection && isFreshStart && identityReady && hasReturningProfile(profile) && !intentChosen;
+
+  const openIdentityGate = (pendingText?: string) => {
+    unlockAgentAudio();
+    const trimmed = pendingText?.trim() ?? '';
+    if (trimmed) {
+      setPendingMessage(trimmed);
+      holdForIdentity(trimmed);
+    } else {
+      promptForIdentity();
+    }
+    setIsIdentityGateOpen(true);
+  };
+
+  useEffect(() => {
+    if (!isIdentityGateOpen) {
+      identitySpeechAbortRef.current?.abort();
+      identitySpeechAbortRef.current = null;
+      return;
+    }
+
+    const spoken = t('discovery.identity.promptBubble');
+    const controller = new AbortController();
+    identitySpeechAbortRef.current?.abort();
+    identitySpeechAbortRef.current = controller;
+
+    void speakAgentLine(spoken, controller.signal).catch(() => {
+      // Soft-fail: form still works if TTS is down.
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [isIdentityGateOpen, t, i18n.language]);
+
+  useEffect(() => {
+    const wantsNew = searchParams.get('new') === '1';
+    if (!wantsNew) {
+      return;
+    }
+    startNewChat();
+    setIntentChosen(false);
+    sessionLoadRef.current = null;
+    const next = new URLSearchParams(searchParams);
+    next.delete('new');
+    next.delete('session');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, startNewChat]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get('session')?.trim() ?? '';
+    if (!sessionId || !user?.userId || sessionLoadRef.current === sessionId) {
+      return;
+    }
+    sessionLoadRef.current = sessionId;
+    void (async () => {
+      try {
+        const detail = await fetchChatSessionDetail(user.userId, sessionId);
+        loadSession(
+          detail.session_id,
+          detail.messages.map((message) => ({
+            id: message.id,
+            role: message.role,
+            text: message.text,
+          })),
+        );
+        setIntentChosen(true);
+      } catch {
+        sessionLoadRef.current = null;
+      }
+    })();
+  }, [loadSession, searchParams, user?.userId]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -71,25 +169,22 @@ export function DiscoveryChat() {
     container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [messages, isAgentThinking, isGeneratingSummary, isFreshStart, isIdentityGateOpen]);
 
-  const requestIdentity = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) {
-      return;
-    }
-    setPendingMessage(trimmed);
-    holdForIdentity(trimmed);
-    setIsIdentityGateOpen(true);
-  };
-
   const handleSendMessage = (text: string) => {
     if (!identityReady) {
-      requestIdentity(text);
+      openIdentityGate(text);
       return;
     }
+    setIntentChosen(true);
     sendMessage(text);
   };
 
+  const handleIntentSelect = (intent: ConversationIntent) => {
+    setIntentChosen(true);
+    sendMessage(t(INTENT_MESSAGE_KEYS[intent]));
+  };
+
   const handleIdentityCompleted = (savedUser: CurrentUser) => {
+    identitySpeechAbortRef.current?.abort();
     setIsIdentityGateOpen(false);
     const pending = pendingMessage?.trim() ?? null;
     setPendingMessage(null);
@@ -103,7 +198,7 @@ export function DiscoveryChat() {
 
   const handleStartLive = () => {
     if (!identityReady) {
-      setIsIdentityGateOpen(true);
+      openIdentityGate();
       return;
     }
     hyperspaceNavigate(null, () => {
@@ -170,6 +265,12 @@ export function DiscoveryChat() {
                     <p className="mt-3 max-w-sm font-body text-sm text-white/70">
                       {t('discovery.empty.subtitle')}
                     </p>
+                    {showIntentPicker ? (
+                      <DiscoveryIntentPicker
+                        disabled={isAgentThinking}
+                        onSelect={handleIntentSelect}
+                      />
+                    ) : null}
                   </div>
                 ) : (
                   <div className="flex w-full flex-col gap-5 pb-4">
@@ -225,7 +326,7 @@ export function DiscoveryChat() {
                     onSendMessage={handleSendMessage}
                     onStartVoice={() => {
                       if (!identityReady) {
-                        setIsIdentityGateOpen(true);
+                        openIdentityGate();
                         return;
                       }
                       setIsLiveStageOpen(false);

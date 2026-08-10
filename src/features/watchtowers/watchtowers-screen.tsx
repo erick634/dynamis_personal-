@@ -4,54 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import { fetchWatchtowerRecommendations } from '@/features/watchtowers/watchtower-api';
-import type { WatchtowerRecommendation } from '@/features/watchtowers/watchtower-types';
+import { WatchtowerDetailCard } from '@/features/watchtowers/watchtower-detail-card';
 import { useCurrentUser } from '@/stores/current-user';
-
-function WatchtowerCard({ recommendation }: { recommendation: WatchtowerRecommendation }) {
-  const { t } = useTranslation();
-  const { watchtower_intent_spec: spec } = recommendation;
-  const coverageKey =
-    recommendation.coverage_type === 'personal'
-      ? 'watchtowers.coverage.personal'
-      : 'watchtowers.coverage.professional';
-
-  return (
-    <article className="min-w-0 rounded-2xl border border-line-soft bg-white/80 p-4 shadow-sm sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <h2 className="min-w-0 flex-1 font-display text-xl font-semibold break-words text-ink">
-          {recommendation.display_name}
-        </h2>
-        <span className="rounded-full border border-line-soft bg-bg px-2.5 py-0.5 font-body text-[11px] font-semibold tracking-wide text-ink-3 uppercase">
-          {t(coverageKey)}
-        </span>
-      </div>
-      <p className="mt-3 font-body text-base leading-relaxed break-words text-ink">
-        {recommendation.user_facing_description}
-      </p>
-      <details className="mt-4 border-t border-line-soft pt-3">
-        <summary className="cursor-pointer font-body text-sm font-medium text-ink-3 hover:text-ink">
-          {t('watchtowers.details.toggle')}
-        </summary>
-        <div className="mt-3 space-y-2 font-body text-sm text-ink-2">
-          <p>
-            <span className="font-semibold text-ink">{t('watchtowers.details.frequency')}: </span>
-            {spec.suggested_frequency}
-          </p>
-          {spec.signals_of_interest.length > 0 ? (
-            <div>
-              <p className="font-semibold text-ink">{t('watchtowers.details.signals')}</p>
-              <ul className="mt-1 list-disc space-y-1 pl-5">
-                {spec.signals_of_interest.map((signal) => (
-                  <li key={signal}>{signal}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      </details>
-    </article>
-  );
-}
 
 function GuideCta({ bodyKey, ctaKey }: { bodyKey: string; ctaKey: string }) {
   const { t } = useTranslation();
@@ -85,9 +39,9 @@ export function WatchtowersScreen() {
     gcTime: Number.POSITIVE_INFINITY,
   });
 
-  const recommendations = data?.recommendations ?? [];
+  const recommendation = data?.recommendations[0] ?? null;
   const isInsufficient = data?.reason === 'insufficient_profile';
-  const isEmpty = Boolean(userId) && !isLoading && !isError && recommendations.length === 0;
+  const isEmpty = Boolean(userId) && !isLoading && !isError && !recommendation;
   const isRefreshing = isFetching && !isLoading;
 
   return (
@@ -132,7 +86,7 @@ export function WatchtowersScreen() {
         <GuideCta bodyKey="watchtowers.empty.body" ctaKey="watchtowers.empty.cta" />
       ) : null}
 
-      {recommendations.length > 0 ? (
+      {recommendation ? (
         <>
           <div className="mt-8 flex justify-end">
             <button
@@ -146,13 +100,12 @@ export function WatchtowersScreen() {
               {isRefreshing ? t('watchtowers.refreshing') : t('watchtowers.refresh')}
             </button>
           </div>
-          <ul className="mt-4 flex flex-col gap-4">
-            {recommendations.map((recommendation) => (
-              <li key={recommendation.recommendation_id}>
-                <WatchtowerCard recommendation={recommendation} />
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4">
+            <WatchtowerDetailCard
+              key={recommendation.recommendation_id}
+              recommendation={recommendation}
+            />
+          </div>
           <div className="mt-8 rounded-2xl border border-line-soft bg-white/70 p-5">
             <p className="font-body text-sm leading-relaxed text-ink-2">
               {t('watchtowers.continueConversation.body')}

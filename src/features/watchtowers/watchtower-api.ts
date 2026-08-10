@@ -38,6 +38,14 @@ function parseCoverageType(raw: unknown): WatchtowerCoverageType | null {
   return null;
 }
 
+function parseReminderTime(raw: unknown): string {
+  const value = asString(raw);
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) {
+    return value;
+  }
+  return '09:00';
+}
+
 function parseIntentSpec(raw: unknown): WatchtowerIntentSpec | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -57,6 +65,7 @@ function parseIntentSpec(raw: unknown): WatchtowerIntentSpec | null {
     signals_of_interest: coerceStringArray(record.signals_of_interest),
     suggested_sources: coerceStringArray(record.suggested_sources),
     suggested_frequency: suggestedFrequency,
+    suggested_reminder_time: parseReminderTime(record.suggested_reminder_time),
     evidence_basis: evidenceBasis,
     rationale,
   };

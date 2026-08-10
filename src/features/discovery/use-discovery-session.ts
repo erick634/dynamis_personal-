@@ -206,6 +206,26 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     [instanceId, mode, profile, t, userTexts],
   );
 
+  /** Opens the identity ask without a pending user utterance (Speak / mic). */
+  const promptForIdentity = useCallback(() => {
+    setMessages((prev) => {
+      const alreadyPrompted = prev.some(
+        (message) => message.contentKey === 'discovery.identity.promptBubble',
+      );
+      if (alreadyPrompted) {
+        return prev;
+      }
+      return [
+        ...prev,
+        {
+          id: `${instanceId}-agent-identity-${String(Date.now())}`,
+          role: 'agent',
+          contentKey: 'discovery.identity.promptBubble',
+        },
+      ];
+    });
+  }, [instanceId]);
+
   const sendMessage = useCallback(
     (
       text: string,
@@ -411,6 +431,36 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     setIsGeneratingSummary(false);
   }, [messages, resolveMessageText, t, userId]);
 
+  const startNewChat = useCallback(() => {
+    sessionIdRef.current = null;
+    setMessages(buildInitialMessages(instanceId, mode));
+    setIsAgentThinking(false);
+    setReflectionSummary(null);
+    setIsGeneratingSummary(false);
+  }, [instanceId, mode]);
+
+  const loadSession = useCallback(
+    (
+      sessionId: string,
+      sessionMessages: { role: 'user' | 'agent'; text: string; id: string }[],
+    ) => {
+      sessionIdRef.current = sessionId;
+      setMessages(
+        sessionMessages
+          .filter((message) => !message.text.startsWith('[Voice session'))
+          .map((message) => ({
+            id: message.id,
+            role: message.role,
+            text: message.text,
+          })),
+      );
+      setIsAgentThinking(false);
+      setReflectionSummary(null);
+      setIsGeneratingSummary(false);
+    },
+    [],
+  );
+
   const applyProfileSignal = useCallback((dimension: ProfileDimension, delta: number) => {
     setProfileSignals((prev) => ({
       ...prev,
@@ -439,9 +489,14 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     reflectionSummary,
     isGeneratingSummary,
     userMessageCount,
+    sessionId: sessionIdRef.current,
+    profile,
     sendMessage,
     holdForIdentity,
+    promptForIdentity,
     finishReflection,
+    startNewChat,
+    loadSession,
     startVoice,
     stopVoice,
     applyProfileSignal,

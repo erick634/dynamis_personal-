@@ -194,10 +194,28 @@
       "headline": "Para onde você vai, {{name}}?",
       "subtitle": "Conte o que está fazendo, estudando ou preparando — vamos montar seu Perfil de Intenção juntos."
     },
+    "intent": {
+      "prompt": "O que você quer fazer nesta conversa?",
+      "refine": {
+        "title": "Refinar o que já sabemos",
+        "body": "Adicionar detalhe para o retrato ficar mais nítido.",
+        "message": "Quero refinar o que você já sabe sobre mim — me ajude a aprofundar meu foco e meus objetivos atuais."
+      },
+      "newWatchtower": {
+        "title": "Criar um novo Watchtower",
+        "body": "Abrir uma área nova para observar por mim.",
+        "message": "Quero criar um novo Watchtower — uma área nova para você observar com base no que importa pra mim agora."
+      },
+      "advance": {
+        "title": "Avançar no que já tenho",
+        "body": "Dar o próximo passo no que já está em andamento.",
+        "message": "Quero avançar no que já tenho em andamento — me ajude a dar um próximo passo concreto."
+      }
+    },
     "identity": {
       "title": "Antes de continuar",
       "subtitle": "Para seguirmos, preciso do seu nome, um e-mail e o seu ano de nascimento.",
-      "promptBubble": "Para continuarmos nossa conversa, preciso que me diga o seu nome, um e-mail e o seu ano de nascimento.",
+      "promptBubble": "Olha, antes de continuar, você consegue completar algumas informações pra mim, por favor? Assim eu consigo continuar a conversa com você sem nenhum problema.",
       "submit": "Continuar conversa",
       "saving": "Salvando…"
     },
@@ -630,15 +648,31 @@
     }
   },
   "watchtowers": {
-    "eyebrow": "Watchtowers",
-    "title": "O que vamos observar por você.",
-    "subtitle": "Áreas recorrentes que seu guia pode monitorar — ancoradas no que você já compartilhou.",
-    "generating": "Montando seus Watchtowers a partir do Perfil de Intenção…",
-    "refresh": "Atualizar recomendações",
+    "eyebrow": "Watchtower",
+    "title": "Seu Watchtower.",
+    "subtitle": "Uma área em foco — com objetivos, calendário de check-ins e lembretes que você controla.",
+    "generating": "Montando seu Watchtower a partir do Perfil de Intenção…",
+    "refresh": "Atualizar Watchtower",
     "refreshing": "Atualizando…",
     "coverage": {
       "personal": "Pessoal",
       "professional": "Profissional"
+    },
+    "objectives": {
+      "label": "Objetivos"
+    },
+    "calendar": {
+      "title": "Calendário de check-ins",
+      "cadence": "Cadência: {{frequency}}",
+      "checkIn": "Check-in"
+    },
+    "reminders": {
+      "title": "Lembretes",
+      "subtitle": "Ative um lembrete (e alarme opcional) para os próximos check-ins. Salvo neste dispositivo no demo.",
+      "reminderToggle": "Lembrete",
+      "alarmToggle": "Alarme",
+      "timeLabel": "Horário",
+      "nextHint": "Próximo lembrete: {{date}} às {{time}}"
     },
     "details": {
       "toggle": "O que este Watchtower acompanha",
@@ -646,11 +680,11 @@
       "signals": "Sinais de interesse"
     },
     "noUser": {
-      "body": "Crie seu perfil e converse com seu Lead Guide primeiro — os Watchtowers nascem dessa conversa.",
+      "body": "Crie seu perfil e converse com seu Lead Guide primeiro — seu Watchtower nasce dessa conversa.",
       "cta": "Falar com meu Lead Guide"
     },
     "insufficientProfile": {
-      "body": "Seu Perfil de Intenção ainda é fino. Converse com seu Lead Guide para termos o suficiente para propor Watchtowers.",
+      "body": "Seu Perfil de Intenção ainda é fino. Converse com seu Lead Guide para termos o suficiente para propor um Watchtower.",
       "cta": "Continuar a Discovery"
     },
     "empty": {
@@ -658,11 +692,11 @@
       "cta": "Falar com meu Lead Guide"
     },
     "error": {
-      "title": "Não foi possível carregar os Watchtowers",
+      "title": "Não foi possível carregar seu Watchtower",
       "fallback": "Algo deu errado. Tente de novo em instantes."
     },
     "continueConversation": {
-      "body": "Quer mais? Continue conversando com seu guia para descobrir novas áreas para observar.",
+      "body": "Quer refinar isto? Continue conversando com seu guia — o Watchtower fica mais nítido conforme o perfil aprofunda.",
       "cta": "Continuar a conversa"
     }
   },
@@ -673,13 +707,35 @@
     "guide": "Descoberta",
     "live": "Live",
     "chat": "Chat",
+    "oldChats": "Conversas antigas",
     "profile": "Perfil",
     "you": "Perfil de Intenção",
     "possibilityMap": "Mapa de Possibilidades",
     "explore": "Explorar",
     "plan": "Plano",
     "today": "Hoje",
-    "watchtowers": "Watchtowers"
+    "watchtowers": "Watchtower"
+  },
+  "chatHistory": {
+    "eyebrow": "Histórico",
+    "title": "Conversas antigas",
+    "subtitle": "Conversas anteriores com seu Lead Guide.",
+    "newChat": "Nova conversa",
+    "loading": "Carregando conversas…",
+    "empty": "Ainda não há conversas. Comece uma com seu Lead Guide.",
+    "noUser": "Entre para ver seu histórico de conversas.",
+    "list": {
+      "messageCount": "{{count}} mensagens"
+    },
+    "detail": {
+      "title": "Conversa",
+      "back": "Voltar às conversas antigas",
+      "continue": "Continuar no Chat"
+    },
+    "error": {
+      "title": "Não foi possível carregar as conversas",
+      "fallback": "Algo deu errado. Tente de novo em instantes."
+    }
   },
   "routes": {
     "stubMessage": "Em breve — estrutura do demo"

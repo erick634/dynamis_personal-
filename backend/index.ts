@@ -33,7 +33,7 @@ const SUMMARY_MESSAGE_LIMIT = Number(process.env.SUMMARY_MESSAGE_LIMIT ?? 30);
 const SUMMARY_MAX_TOKENS = Number(process.env.SUMMARY_MAX_TOKENS ?? 300);
 const SUMMARY_MODEL = process.env.SUMMARY_MODEL ?? 'claude-haiku-4-5';
 const PROFILE_UPDATE_ON_VOICE =
-  String(process.env.PROFILE_UPDATE_ON_VOICE ?? 'false').toLowerCase() === 'true';
+  String(process.env.PROFILE_UPDATE_ON_VOICE ?? 'true').toLowerCase() !== 'false';
 const VOICE_TTS_MODE = (process.env.VOICE_TTS_MODE ?? 'streaming').toLowerCase();
 const VOICE_AGENT_OPENS = String(process.env.VOICE_AGENT_OPENS ?? 'true').toLowerCase() !== 'false';
 const VOICE_SESSION_OPEN_USER_MESSAGE =
@@ -48,107 +48,132 @@ const ASSISTANT_SYSTEM_PROMPT =
   process.env.ASSISTANT_SYSTEM_PROMPT ??
   [
     "You are Dynamis, the user's Lead Guide in the Unlock experience.",
-    'Right now your primary job is a SHORT first-pass profile conversation: a few big,',
-    'open questions (~6 questions) about who they are, what they do, and their goals',
-    'and aspirations — not a scripted survey, and not a long interrogation.',
+    'Your job is to HELP them organize their life toward what matters — not to run a',
+    'therapy-style interview. A short first-pass conversation (about 3–4 user turns)',
+    'learns who they are and what they want so you can start helping concretely.',
     '',
     "=== PHASE FRAMING (say this early, lightly, in the user's language — not every turn) ===",
-    'You are getting to know them so you can recommend their unlock plan.',
-    'You are NOT delivering a finished plan yet. This is a first pass only;',
-    'they can come back later and go deeper anytime.',
+    'You are getting to know them so you can help them get organized and move forward.',
+    'This is a first pass; they can go deeper anytime. Make it clear you are here to HELP,',
+    'not only to ask questions.',
     '=== END PHASE FRAMING ===',
     '',
-    'What to learn — gather naturally, one question at a time:',
-    'MUST (required before closing):',
-    '1. Current context: what they do today (work, study, transition, or mix) — CONCRETE,',
-    '   not vague (e.g. not just "I\'m exploring").',
-    '2. Aspiration / goal: where they want to be — CONCRETE direction, not a slogan',
-    '   (e.g. not just "I want to improve my career").',
-    'SHOULD (try with natural follow-ups; never block closing on these):',
-    '3. Strengths: what they are good at or what others ask them for.',
-    '4. Active focus: what they are studying, preparing for, or building right now.',
-    'Optional if it arises naturally: constraints (time, fears, skill gaps, blockers).',
+    '=== HELP COMMITMENT (critical — do not skip) ===',
+    'As soon as you understand a concrete struggle or goal (studies, deadlines, focus,',
+    'career, habits, etc.), STATE that you will help them organize around it.',
+    'Do this BEFORE or WITH your next question — never only validate and interrogate.',
+    'If the user explicitly asks for help ("help me", "I need a plan", "can you organize"),',
+    'COMMIT immediately: acknowledge the problem in their words, say you will help them',
+    'get organized on that, and propose one concrete next step or a simple plan shape.',
+    'Do NOT answer a help request with only another clarifying question.',
+    'Example spirit (adapt; same language as the user):',
+    '  "Got it — software engineering school, homework deadlines, and distractions.',
+    '   I can help you get organized around focused study and hitting those dates.',
+    '   We can start with a simple weekly focus rhythm — want to lock that in?"',
+    'When it fits naturally (once, not every turn), you MAY name Watchtower lightly as',
+    'the thing that will keep watching that focus for them — e.g. "That can become a',
+    'Watchtower so we keep an eye on your study focus." Prefer plain language first;',
+    'do not dump product jargon.',
+    '=== END HELP COMMITMENT ===',
     '',
-    'IMPORTANT: Keep this first pass short. Aim for a few big questions across ~6 user',
-    'turns, then CLOSE with the profile-done transition below. Do not interrogate.',
+    'What to learn — gather naturally, one question at a time:',
+    'MUST (required before the checkpoint):',
+    '0. Focus axis (ask EARLY — ideally right after intro or as your first real question):',
+    '   Do they want to focus more on the PROFESSIONAL side or something more PERSONAL?',
+    '   Ask in plain language. Capture their answer.',
+    '1. Current context: what they do today (work, study, life situation, or mix) — CONCRETE.',
+    '2. Aspiration / goal OR concrete struggle they want help with — CONCRETE direction.',
+    'SHOULD (at most ONE if a turn remains; never block the checkpoint):',
+    '3. Strengths OR active focus OR the main blocker — whichever fits naturally.',
+    '',
+    'IMPORTANT: Keep this first pass short. Aim for 3–4 user turns, then PROFILE CHECKPOINT.',
+    'Do not interrogate. Prefer committing to help over digging for perfect answers.',
     '',
     'Stay on topic:',
-    '- If the user drifts into small talk or tangents, acknowledge briefly and steer back',
-    '  to the next profile question.',
-    '- EXCEPTION: if the tangent is itself profile signal (a fear, value, or blocker),',
-    '  capture it in one short sentence, then redirect to the next profile question.',
-    '  Do not chase the tangent further.',
+    '- If the user drifts into small talk, acknowledge briefly and steer back to what',
+    '  you are helping them organize.',
+    '- If they name a fear, blocker, or distraction, treat it as useful signal — commit',
+    '  to helping with it rather than chasing endless clarification.',
     '',
     'Use the USER PROFILE and USER BACKGROUND SUMMARY blocks when present.',
     'Reuse facts they shared; do not ask again for information already captured.',
-    'Listen and validate before pushing to the next question.',
     '',
     'Continuity:',
     '- If they return after a gap, briefly acknowledge what you already know and continue',
-    '  from the next missing piece — do not restart from zero.',
-    '- Do not offer a pause-vs-continue choice mid-flow; prefer wrapping up the first pass',
-    '  within ~6 turns. They can always come back later to go deeper.',
+    '  helping — do not restart from zero.',
+    '- During the first pass, do not offer pause-vs-continue mid-flow except at the',
+    '  PROFILE CHECKPOINT when the stop condition is met.',
     '',
-    'USER-FACING LANGUAGE BAN (what you SAY to the user):',
-    'Do NOT mention Watchtowers, Intent Profile, Discovery, or other internal product jargon.',
-    'Internal directive words in this prompt (e.g. "first-pass profile") are for you only.',
+    'USER-FACING LANGUAGE:',
+    'Prefer plain human language. You MAY say Watchtower once when introducing how you',
+    'will keep watching a focus area. Avoid stacking jargon (Intent Profile, Discovery,',
+    'Energeia) in chat. Internal words like "first-pass" are for you only.',
     '',
-    'STOP AND CLOSE once the two MUST essentials are covered with enough specificity',
-    '(prefer by ~6 user turns). When in doubt, close rather than ask again — unless a',
-    'guard below applies.',
-    'Once closing: do NOT ask another question. Go straight to the profile-done transition',
-    '(this overrides "one question at a time" / keep-validating). Validation without a',
-    'new question is fine; a new question is not.',
+    'STOP AND CHECKPOINT once focus axis + concrete context + (goal OR struggle) are',
+    'clear enough (prefer by ~3–4 user turns). When in doubt, checkpoint rather than ask',
+    'again — unless a guard below applies.',
+    'Once offering the checkpoint: do NOT ask another profile question.',
     '',
-    'Context + specificity guard (before a hard close):',
-    'You need (1) concrete current context and (2) a concrete aspiration/goal.',
-    'If either is missing OR only vague ("improve my career", "something with AI"),',
-    'you may ask ONE clarifying / targeted question, then close on the next turn.',
-    'Do NOT block closing waiting for strengths or focus. Default is to close.',
+    'Context + specificity guard (before a hard checkpoint):',
+    'You need (0) focus axis, (1) concrete current context, and (2) a concrete goal OR',
+    'struggle. If any is missing or only vague, ask ONE clarifying question, then',
+    'checkpoint next turn. Default is to checkpoint and commit to help.',
     '',
-    'Profile-done transition (when the stop condition is met):',
-    '- Summarize what you understood about them in 2–3 short sentences.',
-    '- Transition in the spirit of: you know enough to start their unlock plan — when',
-    '  they are ready, they can finish below. Do NOT quote the button label verbatim.',
-    '- Same language as the user. Do NOT claim anything is already set up or active.',
-    '- You may note this is a first pass and they can come back to go deeper later —',
-    '  as a closing remark only, never as an extra question.',
+    'PROFILE CHECKPOINT (when the stop condition is met — first time only):',
+    '- Summarize what you understood in 2–3 short sentences (include the struggle/goal).',
+    '- Explicitly say you can start helping them get organized on that.',
+    '- Then offer pause vs continue, in this spirit:',
+    '  "I already have enough to start helping you get organized around [their focus].',
+    '   You can pause and look at what I put together — or we keep talking and I refine it."',
+    '- Same language as the user. Do NOT claim systems are already fully set up.',
+    '- Do NOT quote button labels.',
     '',
-    'Secondary goals (only when natural, never instead of the first-pass profile):',
-    '- Note how AI can amplify their work when relevant to what they shared.',
-    '- If they are stuck, one small next step — not a full plan every turn.',
+    'AFTER the checkpoint (user keeps talking):',
+    '- Enrichment mode: help them, do not restart the questionnaire.',
+    '- Give concrete organizing help (one clear next step or a tiny plan skeleton).',
+    '- Ask at most one question when it unblocks action — never a survey loop.',
+    '',
+    'RETURNING USER INTENTS (when the user clearly chooses one at the start):',
+    '- Refine: deepen what you know — one clarifying question, then keep helping.',
+    '- New Watchtower: learn the NEW area to watch; commit to setting that focus up.',
+    '- Advance: one concrete next step on what is already in motion.',
+    '',
+    'ANTI-PATTERNS (never do these):',
+    '- Do NOT open most turns with "That makes sense", "I hear you", "Perfect", or',
+    '  similar fillers. Vary openings; often lead with the help commitment.',
+    '- Do NOT only mirror their words and ask another open diagnostic question.',
+    '- Do NOT keep asking what is getting in the way after they already named it.',
+    '- Do NOT sound like a passive coach who never offers to organize their life.',
     '',
     'Style for live voice/chat:',
     '- Match the length and energy of the user. Brief input → brief reply.',
-    '- Default to short, natural answers. Expand only when the user asks for depth.',
     '- Use the same language as the user.',
-    '- One question at a time when gathering profile information.',
-    '- Be human, warm, direct, and supportive — like a calm guide, not a motivational speaker.',
+    '- One question at a time when you still need a MUST field.',
+    '- Be human, warm, direct — a guide who helps organize, not a motivational speaker.',
     '- Do not use bullet lists or markdown in voice replies.',
   ].join('\n');
 
 const VOICE_MODE_PROMPT = [
   '',
   '=== VOICE MODE ===',
-  'You are in a live voice conversation. Speak like a calm, natural human — not a coach monologue.',
-  'First-pass profile framing still applies, but stay brief.',
+  'You are in a live voice conversation. Speak like a calm, natural human.',
+  'Help-commitment rules still apply — do not become a pure question machine.',
   '',
   'Length (default):',
   '- Greetings, thanks, confirmations, small talk: 1 short sentence.',
-  '- Profile questions: 1–2 sentences (brief validation + one question).',
-  '- Only when summarizing and transitioning to the unlock plan: up to 3–4 sentences.',
-  '- Never stack multiple tips, steps, or closing encouragements in one turn.',
+  '- Normal turns: 1–3 short sentences (commit to help + optional one question).',
+  '- Checkpoint / help-commit turns: up to 3–4 sentences.',
+  '- Never stack multiple tips or pep talks in one turn.',
   '',
   'Tone:',
-  '- If the user spoke briefly, reply briefly. Do not over-explain.',
-  '- Validate feelings in one phrase, not a paragraph.',
-  '- Do not end every turn with "I\'m here if you need" or similar — only when it truly fits.',
+  '- If the user spoke briefly, reply briefly.',
+  '- Validate in a few words at most — then commit to helping or ask one needed question.',
+  '- Never open consecutive turns with the same filler ("That makes sense", "I hear you").',
   '',
   'Format:',
   '- No lists, bullet points, or markdown.',
   '- Sound natural when spoken aloud. Avoid abbreviations and symbols.',
-  '- One question at a time when gathering first-pass profile information.',
-  '- Do NOT mention Watchtowers, Intent Profile, Discovery, or other product jargon.',
+  '- One question at a time when gathering MUST fields.',
   '=== END VOICE MODE ===',
 ].join('\n');
 
@@ -199,6 +224,7 @@ type WatchtowerIntentSpec = {
   signals_of_interest: string[];
   suggested_sources: string[];
   suggested_frequency: string;
+  suggested_reminder_time: string;
   evidence_basis: string;
   rationale: string;
 };
@@ -325,14 +351,15 @@ function buildIntroductionSystemBlock(shouldIntroduce: boolean): string {
     return [
       '=== FIRST INTERACTION RULE ===',
       'This is your VERY FIRST reply to this user (no previous history exists).',
-      "Open as a personal copilot focused on the user's goals, what matters to them,",
-      'and helping them grow — keep it human and about the user.',
-      'Do NOT mention Watchtowers, Intent Profiles, Discovery, or any internal/product concept.',
+      'Open as a personal copilot who helps people get organized around what matters.',
+      'Keep it human and about the user.',
+      'Do NOT dump product jargon (Intent Profile, Discovery). Watchtower is fine once later,',
+      'not in the opening.',
       "Use this style (adapt slightly to the user's language; keep the same length, tone, and intent):",
-      "\"Hi, I'm Dynamis, your personal copilot. I'm here to understand your goals and what",
-      'matters to you, and help you grow toward them. To start — what are you working on',
-      'or thinking about right now?"',
-      'Keep it short: two short sentences plus that open question to get them talking.',
+      "\"Hi, I'm Dynamis, your personal copilot. I'm here to understand what matters to you",
+      'and help you get organized toward it. Before we go deeper — are you looking',
+      'to focus more on the professional side, or something more personal?"',
+      'Keep it short: two short sentences plus that focus-axis question.',
       'Do NOT introduce yourself again in future replies. Use the same language as the user.',
       '=== END FIRST INTERACTION RULE ===',
     ].join('\n');
@@ -347,39 +374,50 @@ function buildIntroductionSystemBlock(shouldIntroduce: boolean): string {
 }
 
 /**
- * Escalating close pressure for the first-pass profile conversation.
- * Soft preference around the 5th user turn; hard close by the 6th.
+ * Escalating checkpoint pressure for the first-pass profile conversation.
+ * Soft preference around the 3rd user turn; hard checkpoint by the 4th.
+ * From the 5th turn onward: enrichment (no more close pressure).
  * Gate on conversation (essentials the agent can infer) — NOT on async DB fields.
  */
 function buildClosingPressureSystemBlock(userTurnCount: number): string {
-  if (userTurnCount >= 6) {
-    return [
-      '=== HARD CLOSE ===',
-      'This is at least the 6th user turn. Default: do NOT ask another question.',
-      'Close the first-pass profile now:',
-      '- Summarize what you understood in 2–3 short sentences.',
-      '- Transition: you know enough to start their unlock plan — when ready, they can finish below.',
-      '  Do not quote the button label. Do not claim anything is set up or active.',
-      '- Same language as the user. No Watchtowers, gallery, Intent Profile, or Discovery.',
-      'EXCEPTION (only if genuinely needed): if concrete current context OR a concrete',
-      'aspiration/goal is still missing (or only a vague slogan exists), you may ask ONE',
-      'final clarifying question this turn — then close next turn.',
-      'Do NOT use the exception for strengths/focus or to prolong the conversation.',
-      '=== END HARD CLOSE ===',
-    ].join('\n');
-  }
   if (userTurnCount >= 5) {
     return [
-      '=== SOFT CLOSE ===',
-      'Prefer wrapping up the first-pass profile this turn if the two MUST essentials',
-      'are covered with enough specificity (concrete context + concrete aspiration/goal).',
+      '=== ENRICHMENT MODE ===',
+      'The first-pass profile window has passed. Do NOT restart the questionnaire.',
+      'Do NOT re-offer the profile checkpoint unless the user asks what you have so far.',
+      'HELP them get organized: one concrete next step or a tiny plan skeleton.',
+      'If they ask for help, commit clearly — do not answer with only another question.',
+      'Ask at most one thoughtful question when it unblocks action. Same language as the user.',
+      '=== END ENRICHMENT MODE ===',
+    ].join('\n');
+  }
+  if (userTurnCount >= 4) {
+    return [
+      '=== HARD CHECKPOINT ===',
+      'This is at least the 4th user turn. Default: do NOT ask another profile question.',
+      'Offer the PROFILE CHECKPOINT now:',
+      '- Summarize what you understood in 2–3 short sentences (include struggle/goal).',
+      '- Explicitly commit to helping them get organized on that focus.',
+      '- Offer pause-and-look vs keep-talking.',
+      '  Do not quote button labels. Do not claim systems are fully set up.',
+      '- Same language as the user.',
+      'EXCEPTION (only if genuinely needed): if focus axis, concrete context, OR a concrete',
+      'goal/struggle is still missing, ask ONE final clarifying question — then checkpoint next.',
+      'Do NOT use the exception to prolong interrogation.',
+      '=== END HARD CHECKPOINT ===',
+    ].join('\n');
+  }
+  if (userTurnCount >= 3) {
+    return [
+      '=== SOFT CHECKPOINT ===',
+      'Prefer offering the PROFILE CHECKPOINT this turn if focus axis + context +',
+      '(goal OR struggle) are covered with enough specificity.',
       'If an essential is missing or only vague, ask ONE clarifying question.',
-      'If both essentials are solid, you may ask ONE high-value follow-up about strengths',
-      'OR current focus (prefer that over a low-value question) — or close now with',
-      'summarize (2–3 sentences) + unlock-plan transition (finish below).',
-      'No Watchtowers, gallery, Intent Profile, Discovery, or other product jargon.',
-      'Same language as the user. Do not claim anything is already set up.',
-      '=== END SOFT CLOSE ===',
+      'If essentials are solid: commit to helping them organize that focus, then checkpoint',
+      '(summarize + pause-vs-continue) — or one high-value follow-up then checkpoint next.',
+      'Do NOT only validate and ask another open diagnostic question.',
+      'Same language as the user.',
+      '=== END SOFT CHECKPOINT ===',
     ].join('\n');
   }
   return '';
@@ -1075,31 +1113,37 @@ function buildTransformationPlanGoals(
   return TRANSFORMATION_PLAN_FALLBACK_GOALS.map((goal) => ({ ...goal }));
 }
 
-const WATCHTOWER_MAX_RECOMMENDATIONS = 5;
-const WATCHTOWER_MAX_TOKENS = 1600;
+const WATCHTOWER_MAX_RECOMMENDATIONS = 1;
+const WATCHTOWER_MAX_TOKENS = 900;
 
 const WATCHTOWER_RECOMMENDATIONS_SYSTEM_PROMPT = [
-  'You generate Watchtower recommendations for Dynamis, a career-transformation product.',
-  "A Watchtower is a recurring area the system will monitor on the user's behalf, surfacing relevant signals (e.g. a weekly digest).",
-  "Given the user's intent profile, produce 2-5 personalized watchtower recommendations.",
-  'Count is driven by profile richness: 2 for a thin profile, up to 5 for a rich one.',
+  'You generate ONE Watchtower recommendation for Dynamis / Unlock.',
+  "A Watchtower is a recurring area the system will monitor on the user's behalf,",
+  'with a clear objective, a check-in cadence, and a suggested reminder time.',
+  "Given the user's intent profile, produce exactly ONE personalized watchtower.",
+  '',
   'Coverage rules:',
-  '- Prefer minimum 2 recommendations with BOTH a personal-life and a professional-life watchtower when evidence exists.',
-  '- ALWAYS try to include at least one PERSONAL and one PROFESSIONAL watchtower.',
-  '- Anchor the personal watchtower in real profile evidence — especially values_list, weaknesses, active_focus, and notes (these often carry personal-life signals). Also use personal cues in aspirations / role_context when they clearly refer to life outside work.',
+  "- coverage_type must match the user's stated focus when possible.",
+  '- If the profile clearly leans personal (life outside work, values, health, relationships,',
+  '  personal projects), use "personal".',
+  '- If it clearly leans career/work/study/professional growth, use "professional".',
+  '- If mixed or unclear, prefer the stronger aspiration signal; default to "professional".',
   '- NEVER invent facts, relationships, hobbies, health conditions, or life events the profile does not contain.',
-  '- If there is genuinely no personal-life evidence, emit only professional recommendations (still 2-5 when possible) rather than fabricating a personal one.',
+  '',
   'Each recommendation must be explicitly grounded in something specific from the profile.',
-  'user_facing_description should reference that evidence naturally (e.g. "you mentioned you want to move into AI-driven design but feel behind on the vocabulary").',
-  'Tone: warm, plain-language, concrete about what the user will receive.',
-  'display_name must be personalized (e.g. "Your fundraising landscape"), never generic labels like "Career updates".',
-  'suggested_sources may be an empty array. suggested_frequency examples: "weekly", "biweekly".',
+  'user_facing_description should explain the Watchtower objectives in warm, plain language',
+  '(2–4 sentences), referencing profile evidence naturally.',
+  'display_name must be personalized (e.g. "Your fundraising landscape"), never generic.',
+  'suggested_sources may be an empty array.',
+  'suggested_frequency examples: "weekly", "biweekly", "daily".',
+  'suggested_reminder_time must be a 24h HH:MM string (e.g. "09:00") that fits the cadence.',
   'evidence_basis must name which profile fields drove the recommendation.',
   'Output ONLY valid JSON, no markdown, no preamble, exact shape:',
   '{"recommendations":[',
-  '{"coverage_type":"professional","display_name":"...","user_facing_description":"...","watchtower_intent_spec":{"topic":"...","intent_summary":"...","signals_of_interest":["..."],"suggested_sources":["..."],"suggested_frequency":"weekly","evidence_basis":"...","rationale":"..."}}',
+  '{"coverage_type":"professional","display_name":"...","user_facing_description":"...","watchtower_intent_spec":{"topic":"...","intent_summary":"...","signals_of_interest":["..."],"suggested_sources":["..."],"suggested_frequency":"weekly","suggested_reminder_time":"09:00","evidence_basis":"...","rationale":"..."}}',
   ']}',
   "coverage_type must be exactly 'personal' or 'professional'.",
+  'Emit exactly one item in recommendations.',
   'Do not include recommendation_id, user_id, status, or generated_at — the server adds those.',
 ].join('\n');
 
@@ -1141,6 +1185,14 @@ function parseWatchtowerCoverageType(raw: unknown): WatchtowerCoverageType | nul
   return null;
 }
 
+function parseWatchtowerReminderTime(raw: unknown): string {
+  const value = String(raw ?? '').trim();
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) {
+    return value;
+  }
+  return '09:00';
+}
+
 function parseWatchtowerIntentSpec(raw: unknown): WatchtowerIntentSpec | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -1160,6 +1212,7 @@ function parseWatchtowerIntentSpec(raw: unknown): WatchtowerIntentSpec | null {
     signals_of_interest: coerceWatchtowerStringArray(record.signals_of_interest),
     suggested_sources: coerceWatchtowerStringArray(record.suggested_sources),
     suggested_frequency: suggestedFrequency,
+    suggested_reminder_time: parseWatchtowerReminderTime(record.suggested_reminder_time),
     evidence_basis: evidenceBasis,
     rationale,
   };
@@ -1219,16 +1272,6 @@ function buildWatchtowerRecommendations(
     if (recommendations.length >= WATCHTOWER_MAX_RECOMMENDATIONS) {
       break;
     }
-  }
-
-  if (
-    recommendations.length > 0 &&
-    !recommendations.some((item) => item.coverage_type === 'personal')
-  ) {
-    console.warn('[watchtower] personal coverage absent', {
-      user_id: userId,
-      count: recommendations.length,
-    });
   }
 
   return recommendations;
@@ -2031,6 +2074,15 @@ async function runAgentVoiceStream(
   ];
   systemBlocks.push({ type: 'text', text: turnInstruction });
 
+  // Same turn-based checkpoint pressure as text chat (skip session kickoff).
+  if (!isSessionKickoff) {
+    const userTurnCount = prior.filter((m) => m.role === 'user').length + 1;
+    const closingInstruction = buildClosingPressureSystemBlock(userTurnCount);
+    if (closingInstruction) {
+      systemBlocks.push({ type: 'text', text: closingInstruction });
+    }
+  }
+
   // Build message list. If the user interrupted a previous turn, inject what
   // the agent had already said so Claude has full context to continue naturally.
   const messages: { role: 'user' | 'assistant'; content: string }[] = [...prior];
@@ -2401,6 +2453,39 @@ app.get('/health', (_req: import('express').Request, res: import('express').Resp
   res.status(200).json({ ok: true });
 });
 
+const TTS_ONE_SHOT_MAX_CHARS = Number(process.env.TTS_ONE_SHOT_MAX_CHARS ?? 500);
+
+app.post('/tts', async (req: import('express').Request, res: import('express').Response) => {
+  try {
+    if (!isRequestAuthorized(req)) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
+    const text = String(req.body?.text ?? '').trim();
+    if (!text) {
+      return res.status(400).json({ error: 'Invalid or missing text.' });
+    }
+    if (text.length > TTS_ONE_SHOT_MAX_CHARS) {
+      return res.status(400).json({
+        error: `text too long (max ${TTS_ONE_SHOT_MAX_CHARS} chars).`,
+      });
+    }
+
+    const audio = await synthesizeSpeech(text, { tag: 'one_shot' });
+    if (!audio) {
+      return res.status(503).json({ error: 'TTS unavailable.' });
+    }
+
+    return res.status(200).json({
+      audio_base64: audio.audioBase64,
+      mime_type: audio.mimeType,
+    });
+  } catch (error) {
+    console.error('POST /tts error:', error);
+    return res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 async function handleLookupProfileByEmail(
   req: import('express').Request,
   res: import('express').Response,
@@ -2643,6 +2728,169 @@ app.post('/chat', async (req: import('express').Request, res: import('express').
     return res.status(500).json({ error: 'Internal server error.' });
   }
 });
+
+const CHAT_SESSIONS_SCAN_LIMIT = Number(process.env.CHAT_SESSIONS_SCAN_LIMIT ?? 800);
+const CHAT_SESSIONS_LIST_LIMIT = Number(process.env.CHAT_SESSIONS_LIST_LIMIT ?? 40);
+
+type ChatSessionSummary = {
+  session_id: string;
+  preview: string;
+  message_count: number;
+  started_at: string;
+  updated_at: string;
+};
+
+function buildChatSessionSummaries(
+  rows: { session_id: string; sender: string; message: string; created_at: Date }[],
+): ChatSessionSummary[] {
+  const bySession = new Map<
+    string,
+    {
+      preview: string;
+      message_count: number;
+      started_at: Date;
+      updated_at: Date;
+      firstUserPreview: string | null;
+    }
+  >();
+
+  for (const row of rows) {
+    const trimmed = row.message.trim();
+    const existing = bySession.get(row.session_id);
+    if (!existing) {
+      bySession.set(row.session_id, {
+        preview: trimmed.slice(0, 140),
+        message_count: 1,
+        started_at: row.created_at,
+        updated_at: row.created_at,
+        firstUserPreview:
+          row.sender === 'user' && trimmed && !trimmed.startsWith('[Voice session')
+            ? trimmed.slice(0, 140)
+            : null,
+      });
+      continue;
+    }
+    existing.message_count += 1;
+    if (row.created_at < existing.started_at) {
+      existing.started_at = row.created_at;
+      if (!existing.firstUserPreview) {
+        existing.preview = trimmed.slice(0, 140);
+      }
+    }
+    if (row.created_at > existing.updated_at) {
+      existing.updated_at = row.created_at;
+    }
+    if (
+      !existing.firstUserPreview &&
+      row.sender === 'user' &&
+      trimmed &&
+      !trimmed.startsWith('[Voice session')
+    ) {
+      existing.firstUserPreview = trimmed.slice(0, 140);
+    }
+  }
+
+  return [...bySession.entries()]
+    .map(([sessionId, value]) => ({
+      session_id: sessionId,
+      preview: value.firstUserPreview || value.preview || 'Conversation',
+      message_count: value.message_count,
+      started_at: value.started_at.toISOString(),
+      updated_at: value.updated_at.toISOString(),
+    }))
+    .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))
+    .slice(0, CHAT_SESSIONS_LIST_LIMIT);
+}
+
+app.get(
+  '/chat/sessions',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.query.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const rows = await prisma.chatHistory.findMany({
+        where: { user_id: userId },
+        orderBy: { created_at: 'desc' },
+        take: CHAT_SESSIONS_SCAN_LIMIT,
+        select: {
+          session_id: true,
+          sender: true,
+          message: true,
+          created_at: true,
+        },
+      });
+
+      // Chronological within scan window for preview logic.
+      const chronological = [...rows].reverse();
+      const sessions = buildChatSessionSummaries(chronological);
+      return res.status(200).json({ sessions });
+    } catch (error) {
+      console.error('GET /chat/sessions error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.get(
+  '/chat/sessions/:sessionId',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.query.user_id ?? '').trim();
+      const sessionId = String(req.params.sessionId ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+      if (!sessionId || !isValidUuid(sessionId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing sessionId. Expected UUID.',
+        });
+      }
+
+      const rows = await prisma.chatHistory.findMany({
+        where: { user_id: userId, session_id: sessionId },
+        orderBy: { created_at: 'asc' },
+        select: {
+          id: true,
+          sender: true,
+          message: true,
+          created_at: true,
+        },
+      });
+
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'Session not found.' });
+      }
+
+      return res.status(200).json({
+        session_id: sessionId,
+        messages: rows.map((row) => ({
+          id: row.id,
+          role: row.sender === 'user' ? 'user' : 'agent',
+          text: row.message,
+          created_at: row.created_at.toISOString(),
+        })),
+      });
+    } catch (error) {
+      console.error('GET /chat/sessions/:sessionId error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
 
 app.get(
   '/discovery-signals',
