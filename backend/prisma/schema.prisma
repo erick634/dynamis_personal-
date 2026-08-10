@@ -44,3 +44,20 @@ model UserProfile {
 
   @@map("user_profiles")
 }
+
+model Profile {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id    String
+  title      String
+  context    String?
+  confidence Int
+  is_primary Boolean  @default(false)
+  source     String // "agent" | "user" | "promoted"
+  created_at DateTime
+  updated_at DateTime
+
+  @@index([user_id])
+  @@index([user_id, is_primary])
+  @@unique([user_id, title])
+  @@map("profiles")
+}
