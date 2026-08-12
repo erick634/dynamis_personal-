@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - feat(backend): Profile REST layer — `profiles` repo + GET/POST/PATCH `/profiles` (multi-profile per user, single primary)
+
+### Changed
+
+- feat(backend): Discovery assumes professional focus by default — no personal-vs-professional fork in MUST #0 or first welcome
 - feat(backend): Discovery agent commits to helping organize life (anti passive interview loop; Watchtower may be named once)
 - feat(discovery): identity gate speaks the “complete a few details” line via Cartesia (`POST /tts`)
 - feat(chat-history): Old chats list + session transcript (`/chats`, continue in Chat, new chat)
