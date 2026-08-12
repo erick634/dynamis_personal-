@@ -222,6 +222,14 @@ type ProfileExtractionPayload = {
   active_focus?: string | null;
   notes?: string | null;
 };
+type DetectedProfileItem = {
+  title: string;
+  confidence: number;
+};
+type ProfilesExtractionPayload = {
+  confirmed: boolean;
+  profiles: DetectedProfileItem[];
+};
 type WatchtowerCoverageType = 'personal' | 'professional';
 type WatchtowerIntentSpec = {
   topic: string;
@@ -1716,6 +1724,193 @@ async function persistProfileUpdate(
   return fieldsChanged;
 }
 
+const PROFILE_CREATION_CONFIRM_RE =
+  /\b(sim|yes|yeah|yep|ok|okay|pode|cria|criar|quero|isso|confirmo|confirma|claro|please|go\s*ahead|pode\s*criar|cria\s*a[ií]|faz\s*isso|let'?s\s*go)\b/i;
+
+function hasProfileCreationConfirmationSignal(latestUserMessage: string): boolean {
+  const text = latestUserMessage.replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+  return PROFILE_CREATION_CONFIRM_RE.test(text);
+}
+
+function pickDetectedProfiles(raw: unknown): DetectedProfileItem[] {
+  if (!Array.isArray(raw)) return [];
+  const out: DetectedProfileItem[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'object' || item === null) continue;
+    const record = item as { title?: unknown; confidence?: unknown };
+    const title = pickProfileString(record.title);
+    if (!title) continue;
+    const confidenceRaw =
+      typeof record.confidence === 'number' ? record.confidence : Number(record.confidence);
+    if (!Number.isFinite(confidenceRaw)) continue;
+    const confidence = Math.max(0, Math.min(100, Math.trunc(confidenceRaw)));
+    out.push({ title: title.slice(0, 120), confidence });
+  }
+  return out;
+}
+
+async function extractProfilesFromConversation(
+  userId: string,
+): Promise<ProfilesExtractionPayload | null> {
+  const recentRows = await prisma.chatHistory.findMany({
+    where: { user_id: userId },
+    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    take: PROFILE_EXTRACTION_MESSAGE_LIMIT,
+  });
+  if (recentRows.length === 0) {
+    return null;
+  }
+  const transcript = recentRows
+    .reverse()
+    .map((r) => {
+      const role = String(r.sender ?? '') === 'user' ? 'User' : 'Dynamis';
+      const clean = String(r.message ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return `${role}: ${clean.slice(0, 600)}`;
+    })
+    .join('\n');
+
+  const extractorSystem = [
+    'You analyze a conversation between a user and Dynamis (an AI career copilot).',
+    'Decide TWO things from CLEAR evidence only:',
+    '(a) Did the user EXPLICITLY confirm they want professional profiles created',
+    '    (e.g. agreeing to set up separate tracks/sides the agent proposed)?',
+    '(b) Which distinct professional contexts were clearly described',
+    '    (concrete role titles + confidence 0-100)?',
+    '',
+    'HARD RULES:',
+    '- Never invent a context the user did not clearly describe.',
+    '- If there is NO explicit confirmation to create profiles, return confirmed:false',
+    '  and profiles:[].',
+    '- Titles must be concrete professional roles (e.g. "Software Engineer",',
+    '  "Software Architect"), not vague labels.',
+    '- Confidence is an integer 0-100 reflecting how clearly that role appeared.',
+    '',
+    'Respond ONLY with a single JSON object using these exact keys:',
+    '{',
+    '  "confirmed": boolean,',
+    '  "profiles": [{"title": string, "confidence": number}]',
+    '}',
+    'No prose, no markdown, no code fences. JSON only.',
+  ].join('\n');
+
+  const res = await anthropic.messages.create({
+    model: PROFILE_EXTRACTION_MODEL,
+    system: extractorSystem,
+    max_tokens: PROFILE_EXTRACTION_MAX_TOKENS,
+    messages: [
+      {
+        role: 'user',
+        content: `RECENT TRANSCRIPT:\n${transcript}\n\nReturn the JSON now.`,
+      },
+    ],
+  });
+  const block = res.content[0];
+  if (!block || block.type !== 'text') {
+    return null;
+  }
+  const raw = block.text.trim();
+  const jsonStart = raw.indexOf('{');
+  const jsonEnd = raw.lastIndexOf('}');
+  if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+    console.warn('[profiles] extraction returned no json', {
+      user_id: userId,
+      sample: raw.slice(0, 200),
+    });
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1)) as {
+      confirmed?: unknown;
+      profiles?: unknown;
+    };
+    return {
+      confirmed: parsed.confirmed === true,
+      profiles: pickDetectedProfiles(parsed.profiles),
+    };
+  } catch (err) {
+    console.warn('[profiles] extraction json parse failed', {
+      user_id: userId,
+      error: String(err),
+    });
+    return null;
+  }
+}
+
+async function persistDetectedProfiles(
+  userId: string,
+  profiles: DetectedProfileItem[],
+): Promise<string[]> {
+  const createdTitles: string[] = [];
+  for (const item of profiles) {
+    try {
+      const created = await profilesRepo.createProfile({
+        user_id: userId,
+        title: item.title,
+        confidence: item.confidence,
+        source: 'agent',
+      });
+      createdTitles.push(created.title);
+    } catch (error) {
+      if (error instanceof ProfileConflictError) {
+        console.log('[profiles] skip_duplicate_title', {
+          user_id: userId,
+          title: item.title,
+        });
+        continue;
+      }
+      throw error;
+    }
+  }
+  return createdTitles;
+}
+
+async function maybeCreateProfilesFromConversation(userId: string): Promise<void> {
+  const startedAt = Date.now();
+  const latest = await prisma.chatHistory.findFirst({
+    where: { user_id: userId, sender: 'user' },
+    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    select: { message: true },
+  });
+  const latestMessage = String(latest?.message ?? '');
+  if (!hasProfileCreationConfirmationSignal(latestMessage)) {
+    console.log('[profiles] skipped', { user_id: userId, reason: 'no_confirm_signal' });
+    return;
+  }
+
+  const extracted = await extractProfilesFromConversation(userId);
+  if (!extracted) {
+    console.log('[profiles] skipped', { user_id: userId, reason: 'no_extraction' });
+    return;
+  }
+  if (!extracted.confirmed || extracted.profiles.length === 0) {
+    console.log('[profiles] skipped', {
+      user_id: userId,
+      reason: 'not_confirmed_or_empty',
+      confirmed: extracted.confirmed,
+      elapsed_ms: Date.now() - startedAt,
+    });
+    return;
+  }
+
+  const titles = await persistDetectedProfiles(userId, extracted.profiles);
+  if (titles.length === 0) {
+    console.log('[profiles] no_creates', {
+      user_id: userId,
+      elapsed_ms: Date.now() - startedAt,
+    });
+    return;
+  }
+
+  console.log('[profiles] created', {
+    user_id: userId,
+    titles,
+    elapsed_ms: Date.now() - startedAt,
+  });
+}
+
 function enqueueProfileUpdate(userId: string): void {
   void (async () => {
     const startedAt = Date.now();
@@ -1724,23 +1919,29 @@ function enqueueProfileUpdate(userId: string): void {
       const extracted = await extractProfileFromConversation(userId, current);
       if (!extracted) {
         console.log('[profile] skipped', { user_id: userId, reason: 'no_extraction' });
-        return;
-      }
-      const fieldsChanged = await persistProfileUpdate(userId, current, extracted);
-      if (fieldsChanged.length === 0) {
-        console.log('[profile] no_changes', {
-          user_id: userId,
-          elapsed_ms: Date.now() - startedAt,
-        });
       } else {
-        console.log('[profile] update', {
-          user_id: userId,
-          fields_changed: fieldsChanged,
-          elapsed_ms: Date.now() - startedAt,
-        });
+        const fieldsChanged = await persistProfileUpdate(userId, current, extracted);
+        if (fieldsChanged.length === 0) {
+          console.log('[profile] no_changes', {
+            user_id: userId,
+            elapsed_ms: Date.now() - startedAt,
+          });
+        } else {
+          console.log('[profile] update', {
+            user_id: userId,
+            fields_changed: fieldsChanged,
+            elapsed_ms: Date.now() - startedAt,
+          });
+        }
       }
     } catch (err) {
       console.error('[profile] update_failed', { user_id: userId, error: String(err) });
+    }
+
+    try {
+      await maybeCreateProfilesFromConversation(userId);
+    } catch (err) {
+      console.error('[profiles] create_failed', { user_id: userId, error: String(err) });
     }
   })();
 }
