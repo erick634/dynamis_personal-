@@ -4,6 +4,7 @@ import {
   ChevronsRight,
   Compass,
   History,
+  Layers,
   ListTodo,
   LogOut,
   MessageSquare,
@@ -40,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { to: '/chats', labelKey: 'nav.oldChats', icon: History },
   { to: '/you', labelKey: 'nav.profile', icon: UserRound },
+  { to: '/profiles', labelKey: 'nav.profiles', icon: Layers },
 ];
 
 export function AppLayout() {

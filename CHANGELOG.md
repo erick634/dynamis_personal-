@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 - feat(backend): Profile REST layer — `profiles` repo + GET/POST/PATCH `/profiles` (multi-profile per user, single primary)
 - feat(backend): on explicit user confirmation, extract and create multi-Profiles via `enqueueProfileUpdate` (cheap confirm-signal guard; skip duplicate titles)
+- feat(profiles): frontend data layer — `listProfiles` / `updateProfile` / `setPrimaryProfile` (`src/features/profiles/`)
 
 ### Changed
 
