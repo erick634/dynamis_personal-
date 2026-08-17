@@ -61,3 +61,24 @@ model Profile {
   @@unique([user_id, title])
   @@map("profiles")
 }
+
+type PortfolioLink {
+  label String
+  url   String
+}
+
+model PortfolioItem {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  user_id      String
+  title        String
+  description  String?
+  contribution String?
+  links        PortfolioLink[]
+  profile_ids  String[]
+  created_at   DateTime
+  updated_at   DateTime
+
+  @@index([user_id])
+  @@index([profile_ids])
+  @@map("portfolio_items")
+}
