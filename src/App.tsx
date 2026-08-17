@@ -12,6 +12,7 @@ import { CreateProfileScreen } from '@/features/onboarding/create-profile-screen
 import { LoginScreen } from '@/features/onboarding/login-screen';
 import { RequireCurrentUser } from '@/features/onboarding/require-current-user';
 import { PossibilityMap } from '@/features/possibility-map/possibility-map';
+import { PortfolioScreen } from '@/features/portfolio/portfolio-screen';
 import { ProfilesScreen } from '@/features/profiles/profiles-screen';
 import { TodayScreen } from '@/features/today/today-screen';
 import { TransformationPlanScreen } from '@/features/transformation-plan/transformation-plan-screen';
@@ -45,6 +46,7 @@ export function App() {
             <Route path="/chats/:sessionId" element={<ChatSessionScreen />} />
             <Route path="/you" element={<IntentProfileScreen />} />
             <Route path="/profiles" element={<ProfilesScreen />} />
+            <Route path="/portfolio" element={<PortfolioScreen />} />
             <Route path="/profile" element={<Navigate to="/you" replace />} />
           </Route>
         </Route>

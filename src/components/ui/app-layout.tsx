@@ -1,4 +1,5 @@
 import {
+  Briefcase,
   CalendarDays,
   ChevronsLeft,
   ChevronsRight,
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/chats', labelKey: 'nav.oldChats', icon: History },
   { to: '/you', labelKey: 'nav.profile', icon: UserRound },
   { to: '/profiles', labelKey: 'nav.profiles', icon: Layers },
+  { to: '/portfolio', labelKey: 'nav.portfolio', icon: Briefcase },
 ];
 
 export function AppLayout() {
