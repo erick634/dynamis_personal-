@@ -5,6 +5,8 @@ const cors = require('cors') as typeof import('cors');
 const { PrismaClient } = require('./generated/prisma') as typeof import('./generated/prisma');
 const { createProfilesRepo, ProfileConflictError, ProfileNotFoundError, ProfileValidationError } =
   require('./profiles') as typeof import('./profiles');
+const { createPortfolioRepo, PortfolioNotFoundError, PortfolioValidationError } =
+  require('./portfolio') as typeof import('./portfolio');
 const Anthropic = require('@anthropic-ai/sdk')
   .default as typeof import('@anthropic-ai/sdk').default;
 const { WebSocket, WebSocketServer } = require('ws') as typeof import('ws');
@@ -183,6 +185,7 @@ const VOICE_MODE_PROMPT = [
 
 const prisma = new PrismaClient();
 const profilesRepo = createProfilesRepo(prisma);
+const portfolioRepo = createPortfolioRepo(prisma);
 
 async function connectPrisma(): Promise<void> {
   await prisma.$connect();
@@ -307,6 +310,35 @@ function sendProfilesRouteError(
     return res.status(404).json({ error: error.message });
   }
   if (error instanceof ProfileValidationError) {
+    return res.status(400).json({ error: error.message });
+  }
+  console.error(`${routeLabel} error:`, error);
+  return res.status(500).json({ error: 'Internal server error.' });
+}
+
+function serializePortfolioItem(item: import('./generated/prisma').PortfolioItem) {
+  return {
+    id: item.id,
+    user_id: item.user_id,
+    title: item.title,
+    description: item.description,
+    contribution: item.contribution,
+    links: item.links,
+    profile_ids: item.profile_ids,
+    created_at: item.created_at.toISOString(),
+    updated_at: item.updated_at.toISOString(),
+  };
+}
+
+function sendPortfolioRouteError(
+  res: import('express').Response,
+  error: unknown,
+  routeLabel: string,
+): import('express').Response {
+  if (error instanceof PortfolioNotFoundError) {
+    return res.status(404).json({ error: error.message });
+  }
+  if (error instanceof PortfolioValidationError) {
     return res.status(400).json({ error: error.message });
   }
   console.error(`${routeLabel} error:`, error);
@@ -2901,6 +2933,147 @@ app.patch(
       return res.status(200).json({ profile: serializeProfile(profile) });
     } catch (error) {
       return sendProfilesRouteError(res, error, 'PATCH /profiles/:id');
+    }
+  },
+);
+
+app.get('/portfolio', async (req: import('express').Request, res: import('express').Response) => {
+  try {
+    if (!isRequestAuthorized(req)) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
+    const userId = String(req.query.user_id ?? '').trim();
+    if (!userId || !isValidUuid(userId)) {
+      return res.status(400).json({
+        error: 'Invalid or missing user_id. Expected UUID.',
+      });
+    }
+
+    const profileIdRaw = String(req.query.profile_id ?? '').trim();
+    if (profileIdRaw && !isValidObjectId(profileIdRaw)) {
+      return res.status(400).json({
+        error: 'Invalid profile_id. Expected ObjectId.',
+      });
+    }
+    const profileId = profileIdRaw.length > 0 ? profileIdRaw : undefined;
+
+    const items = await portfolioRepo.listPortfolioItems(userId, profileId);
+    return res.status(200).json({
+      items: items.map(serializePortfolioItem),
+    });
+  } catch (error) {
+    return sendPortfolioRouteError(res, error, 'GET /portfolio');
+  }
+});
+
+app.post('/portfolio', async (req: import('express').Request, res: import('express').Response) => {
+  try {
+    if (!isRequestAuthorized(req)) {
+      return res.status(401).json({ error: 'Acesso não autorizado' });
+    }
+
+    const userId = String(req.body?.user_id ?? '').trim();
+    if (!userId || !isValidUuid(userId)) {
+      return res.status(400).json({
+        error: 'Invalid or missing user_id. Expected UUID.',
+      });
+    }
+
+    const body = req.body ?? {};
+    const hasDescription = Object.prototype.hasOwnProperty.call(body, 'description');
+    const hasContribution = Object.prototype.hasOwnProperty.call(body, 'contribution');
+    const hasLinks = Object.prototype.hasOwnProperty.call(body, 'links');
+    const hasProfileIds = Object.prototype.hasOwnProperty.call(body, 'profile_ids');
+
+    const item = await portfolioRepo.createPortfolioItem({
+      user_id: userId,
+      title: String(body.title ?? ''),
+      ...(hasDescription ? { description: body.description } : {}),
+      ...(hasContribution ? { contribution: body.contribution } : {}),
+      ...(hasLinks ? { links: body.links } : {}),
+      ...(hasProfileIds ? { profile_ids: body.profile_ids } : {}),
+    });
+
+    console.log('[portfolio] create', { user_id: userId, id: item.id });
+    return res.status(201).json({ item: serializePortfolioItem(item) });
+  } catch (error) {
+    return sendPortfolioRouteError(res, error, 'POST /portfolio');
+  }
+});
+
+app.patch(
+  '/portfolio/:id',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const id = String(req.params.id ?? '').trim();
+      if (!id || !isValidObjectId(id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing id. Expected ObjectId.',
+        });
+      }
+
+      const body = req.body ?? {};
+      const hasTitle = Object.prototype.hasOwnProperty.call(body, 'title');
+      const hasDescription = Object.prototype.hasOwnProperty.call(body, 'description');
+      const hasContribution = Object.prototype.hasOwnProperty.call(body, 'contribution');
+      const hasLinks = Object.prototype.hasOwnProperty.call(body, 'links');
+      const hasProfileIds = Object.prototype.hasOwnProperty.call(body, 'profile_ids');
+
+      if (!hasTitle && !hasDescription && !hasContribution && !hasLinks && !hasProfileIds) {
+        return res.status(400).json({
+          error:
+            'No fields to update. Provide title, description, contribution, links, and/or profile_ids.',
+        });
+      }
+
+      const item = await portfolioRepo.updatePortfolioItem(id, {
+        ...(hasTitle ? { title: String(body.title ?? '') } : {}),
+        ...(hasDescription ? { description: body.description } : {}),
+        ...(hasContribution ? { contribution: body.contribution } : {}),
+        ...(hasLinks ? { links: body.links } : {}),
+        ...(hasProfileIds ? { profile_ids: body.profile_ids } : {}),
+      });
+
+      console.log('[portfolio] update', { id: item.id });
+      return res.status(200).json({ item: serializePortfolioItem(item) });
+    } catch (error) {
+      return sendPortfolioRouteError(res, error, 'PATCH /portfolio/:id');
+    }
+  },
+);
+
+app.delete(
+  '/portfolio/:id',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const id = String(req.params.id ?? '').trim();
+      if (!id || !isValidObjectId(id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing id. Expected ObjectId.',
+        });
+      }
+
+      const userId = String(req.body?.user_id ?? req.query.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      await portfolioRepo.deletePortfolioItem(id, userId);
+      console.log('[portfolio] delete', { user_id: userId, id });
+      return res.status(200).json({ ok: true });
+    } catch (error) {
+      return sendPortfolioRouteError(res, error, 'DELETE /portfolio/:id');
     }
   },
 );
