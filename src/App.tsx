@@ -14,6 +14,7 @@ import { RequireCurrentUser } from '@/features/onboarding/require-current-user';
 import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { PortfolioScreen } from '@/features/portfolio/portfolio-screen';
 import { ProfilesScreen } from '@/features/profiles/profiles-screen';
+import { SharePublicPage } from '@/features/share/share-public-page';
 import { TodayScreen } from '@/features/today/today-screen';
 import { TransformationPlanScreen } from '@/features/transformation-plan/transformation-plan-screen';
 import { WatchtowersScreen } from '@/features/watchtowers/watchtowers-screen';
@@ -26,6 +27,7 @@ export function App() {
         <Route path="/awakening" element={<AwakeningScreen />} />
         <Route path="/onboarding" element={<CreateProfileScreen />} />
         <Route path="/login" element={<LoginScreen />} />
+        <Route path="/share/:token" element={<SharePublicPage />} />
         {/* Legacy live/welcome entry — chat is the conversation surface now. */}
         <Route path="/welcome" element={<Navigate to="/guide" replace />} />
         {/* Temporary LiveKit proof of concept — remove with src/features/livekit-test/. */}

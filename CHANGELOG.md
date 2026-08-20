@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - feat(profiles): frontend data layer — `listProfiles` / `updateProfile` / `setPrimaryProfile` (`src/features/profiles/`)
 - feat(backend): Portfolio REST layer — `portfolio` repo + GET/POST/PATCH/DELETE `/portfolio`
 - feat(backend): shareable Profile pages — generate/revoke token + public `GET /share/:token` (whitelist payload)
+- feat(share): public share page at `/share/:token` — dark premium, no auth/shell, Portuguese copy
 
 ### Changed
 
