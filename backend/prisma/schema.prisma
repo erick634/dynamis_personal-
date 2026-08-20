@@ -55,10 +55,13 @@ model Profile {
   source     String // "agent" | "user" | "promoted"
   created_at DateTime
   updated_at DateTime
+  share_token String? // random public token; null when not shared
+  is_public   Boolean @default(false)
 
   @@index([user_id])
   @@index([user_id, is_primary])
   @@unique([user_id, title])
+  @@index([share_token])
   @@map("profiles")
 }
 
