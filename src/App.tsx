@@ -15,7 +15,6 @@ import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { PortfolioScreen } from '@/features/portfolio/portfolio-screen';
 import { ProfilesScreen } from '@/features/profiles/profiles-screen';
 import { SharePublicPage } from '@/features/share/share-public-page';
-import { TodayScreen } from '@/features/today/today-screen';
 import { TransformationPlanScreen } from '@/features/transformation-plan/transformation-plan-screen';
 import { WatchtowersScreen } from '@/features/watchtowers/watchtowers-screen';
 
@@ -39,7 +38,6 @@ export function App() {
           <Route path="/discovery" element={<Navigate to="/guide" replace />} />
           <Route path="/live" element={<Navigate to="/guide" replace />} />
           <Route element={<RequireCurrentUser />}>
-            <Route path="/today" element={<TodayScreen />} />
             <Route path="/plan" element={<TransformationPlanScreen />} />
             <Route path="/map" element={<PossibilityMap />} />
             <Route path="/possibility-map" element={<Navigate to="/map" replace />} />

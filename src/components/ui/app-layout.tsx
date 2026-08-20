@@ -1,6 +1,5 @@
 import {
   Briefcase,
-  CalendarDays,
   ChevronsLeft,
   ChevronsRight,
   Compass,
@@ -30,7 +29,6 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/today', labelKey: 'nav.today', icon: CalendarDays },
   { to: '/plan', labelKey: 'nav.plan', icon: ListTodo },
   { to: '/map', labelKey: 'nav.explore', icon: Compass },
   { to: '/watchtowers', labelKey: 'nav.watchtowers', icon: Radar },
