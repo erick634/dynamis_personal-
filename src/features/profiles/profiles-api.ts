@@ -84,3 +84,39 @@ export async function setPrimaryProfile(id: string, userId: string): Promise<Pro
   }
   return data.profile;
 }
+
+export async function generateShareLink(profileId: string, userId: string): Promise<Profile> {
+  const response = await fetch(`${API_BASE_URL}/profiles/${encodeURIComponent(profileId)}/share`, {
+    method: 'POST',
+    headers: buildAuthHeaders(),
+    body: JSON.stringify({ user_id: userId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate share link (${String(response.status)})`);
+  }
+
+  const data = (await response.json()) as ProfileEnvelope;
+  if (!isProfileRow(data.profile)) {
+    throw new Error('Invalid profile payload from backend.');
+  }
+  return data.profile;
+}
+
+export async function revokeShareLink(profileId: string, userId: string): Promise<Profile> {
+  const response = await fetch(`${API_BASE_URL}/profiles/${encodeURIComponent(profileId)}/share`, {
+    method: 'DELETE',
+    headers: buildAuthHeaders(),
+    body: JSON.stringify({ user_id: userId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to revoke share link (${String(response.status)})`);
+  }
+
+  const data = (await response.json()) as ProfileEnvelope;
+  if (!isProfileRow(data.profile)) {
+    throw new Error('Invalid profile payload from backend.');
+  }
+  return data.profile;
+}

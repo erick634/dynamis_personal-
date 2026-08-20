@@ -1,8 +1,14 @@
-import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useId, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Layers, Pencil, Sparkles } from 'lucide-react';
+import { Check, Copy, Layers, Link, Pencil, Share2, Sparkles } from 'lucide-react';
 
-import { listProfiles, setPrimaryProfile, updateProfile } from '@/features/profiles/profiles-api';
+import {
+  generateShareLink,
+  listProfiles,
+  revokeShareLink,
+  setPrimaryProfile,
+  updateProfile,
+} from '@/features/profiles/profiles-api';
 import type { Profile } from '@/features/profiles/profiles-types';
 import { useCurrentUser } from '@/stores/current-user';
 
@@ -50,15 +56,43 @@ function ConfidenceBar({ value }: { value: number }) {
 function ProfileCard({
   profile,
   isPrimaryPending,
+  isSharePending,
+  isRevokePending,
   onSetPrimary,
   onEdit,
+  onShare,
+  onRevoke,
 }: {
   profile: Profile;
   isPrimaryPending: boolean;
+  isSharePending: boolean;
+  isRevokePending: boolean;
   onSetPrimary: (profile: Profile) => void;
   onEdit: (profile: Profile) => void;
+  onShare: (profile: Profile) => void;
+  onRevoke: (profile: Profile) => void;
 }) {
+  const [copied, setCopied] = useState(false);
   const canSetPrimary = !profile.is_primary && !isPrimaryPending;
+  const shareUrl =
+    profile.share_token != null && profile.share_token.length > 0
+      ? `${window.location.origin}/share/${profile.share_token}`
+      : null;
+  const isPublic = Boolean(profile.is_public && shareUrl);
+
+  const handleCopy = (event: MouseEvent) => {
+    event.stopPropagation();
+    if (!shareUrl) return;
+    void navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      window.setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    });
+  };
+
+  const chipClass =
+    'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-body text-[11px] font-semibold tracking-wide text-[#a8b0bd] transition-colors hover:text-[#f4f6f8] disabled:opacity-60';
 
   return (
     <article
@@ -96,7 +130,7 @@ function ProfileCard({
             </p>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           {profile.is_primary ? (
             <span
               className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-body text-[11px] font-semibold tracking-wide"
@@ -106,9 +140,24 @@ function ProfileCard({
               Primary
             </span>
           ) : null}
+          {!isPublic ? (
+            <button
+              type="button"
+              className={chipClass}
+              style={{ borderColor: COLORS.border, backgroundColor: 'rgba(255,255,255,0.03)' }}
+              disabled={isSharePending}
+              onClick={(event) => {
+                event.stopPropagation();
+                onShare(profile);
+              }}
+            >
+              <Share2 className="size-3" aria-hidden />
+              {isSharePending ? 'Sharing…' : 'Share'}
+            </button>
+          ) : null}
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-body text-[11px] font-semibold tracking-wide text-[#a8b0bd] transition-colors hover:text-[#f4f6f8]"
+            className={chipClass}
             style={{ borderColor: COLORS.border, backgroundColor: 'rgba(255,255,255,0.03)' }}
             onClick={(event) => {
               event.stopPropagation();
@@ -121,6 +170,53 @@ function ProfileCard({
         </div>
       </div>
       <ConfidenceBar value={profile.confidence} />
+      {isPublic && shareUrl ? (
+        <div
+          className="mt-4 rounded-xl border px-3 py-3"
+          style={{ borderColor: COLORS.border, backgroundColor: 'rgba(255,255,255,0.02)' }}
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <Link className="mt-0.5 size-3.5 shrink-0 text-[#a8b0bd]" aria-hidden />
+            <p className="min-w-0 flex-1 break-all font-body text-[11px] leading-relaxed text-[#a8b0bd]">
+              {shareUrl}
+            </p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={chipClass}
+              style={{ borderColor: COLORS.border, backgroundColor: 'rgba(255,255,255,0.03)' }}
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="size-3" aria-hidden />
+              ) : (
+                <Copy className="size-3" aria-hidden />
+              )}
+              {copied ? 'Copied!' : 'Copy link'}
+            </button>
+            <button
+              type="button"
+              className={chipClass}
+              style={{
+                borderColor: COLORS.border,
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                color: COLORS.danger,
+              }}
+              disabled={isRevokePending}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRevoke(profile);
+              }}
+            >
+              {isRevokePending ? 'Revoking…' : 'Revoke'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -308,6 +404,26 @@ export function ProfilesScreen() {
     },
   });
 
+  const shareMutation = useMutation({
+    mutationFn: (profileId: string) => {
+      if (!userId) throw new Error('userId is required');
+      return generateShareLink(profileId, userId);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [PROFILES_QUERY_KEY, userId] });
+    },
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: (profileId: string) => {
+      if (!userId) throw new Error('userId is required');
+      return revokeShareLink(profileId, userId);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [PROFILES_QUERY_KEY, userId] });
+    },
+  });
+
   const profiles = data ?? [];
   const isEmpty = Boolean(userId) && !isLoading && !isError && profiles.length === 0;
 
@@ -368,12 +484,22 @@ export function ProfilesScreen() {
                   isPrimaryPending={
                     primaryMutation.isPending && primaryMutation.variables === profile.id
                   }
+                  isSharePending={shareMutation.isPending && shareMutation.variables === profile.id}
+                  isRevokePending={
+                    revokeMutation.isPending && revokeMutation.variables === profile.id
+                  }
                   onSetPrimary={(next) => {
                     primaryMutation.mutate(next.id);
                   }}
                   onEdit={(next) => {
                     setEditError(null);
                     setEditingProfile(next);
+                  }}
+                  onShare={(next) => {
+                    shareMutation.mutate(next.id);
+                  }}
+                  onRevoke={(next) => {
+                    revokeMutation.mutate(next.id);
                   }}
                 />
               </li>

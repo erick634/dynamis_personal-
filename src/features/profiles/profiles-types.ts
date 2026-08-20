@@ -8,6 +8,8 @@ export type Profile = {
   source: string;
   created_at: string;
   updated_at: string;
+  share_token: string | null;
+  is_public: boolean;
 };
 
 export function isProfileRow(value: unknown): value is Profile {
