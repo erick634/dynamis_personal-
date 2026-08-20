@@ -293,6 +293,8 @@ function serializeProfile(profile: import('./generated/prisma').Profile) {
     confidence: profile.confidence,
     is_primary: profile.is_primary,
     source: profile.source,
+    share_token: profile.share_token ?? null,
+    is_public: profile.is_public,
     created_at: profile.created_at.toISOString(),
     updated_at: profile.updated_at.toISOString(),
   };
@@ -2897,6 +2899,91 @@ app.patch(
       return res.status(200).json({ profile: serializeProfile(profile) });
     } catch (error) {
       return sendProfilesRouteError(res, error, 'PATCH /profiles/:id/primary');
+    }
+  },
+);
+
+app.post(
+  '/profiles/:id/share',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const id = String(req.params.id ?? '').trim();
+      if (!id || !isValidObjectId(id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing id. Expected ObjectId.',
+        });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const profile = await profilesRepo.generateShareToken(id, userId);
+      console.log('[profiles] share_generate', { user_id: userId, id: profile.id });
+      return res.status(200).json({ profile: serializeProfile(profile) });
+    } catch (error) {
+      return sendProfilesRouteError(res, error, 'POST /profiles/:id/share');
+    }
+  },
+);
+
+app.delete(
+  '/profiles/:id/share',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const id = String(req.params.id ?? '').trim();
+      if (!id || !isValidObjectId(id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing id. Expected ObjectId.',
+        });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const profile = await profilesRepo.revokeShareToken(id, userId);
+      console.log('[profiles] share_revoke', { user_id: userId, id: profile.id });
+      return res.status(200).json({ profile: serializeProfile(profile) });
+    } catch (error) {
+      return sendProfilesRouteError(res, error, 'DELETE /profiles/:id/share');
+    }
+  },
+);
+
+app.get(
+  '/share/:token',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      // Public route — intentionally no isRequestAuthorized.
+      const token = String(req.params.token ?? '').trim();
+      if (!token) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      const payload = await profilesRepo.getPublicProfileByToken(token);
+      if (!payload) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      return res.status(200).json(payload);
+    } catch (error) {
+      console.error('GET /share/:token error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
     }
   },
 );

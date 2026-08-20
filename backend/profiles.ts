@@ -1,7 +1,11 @@
+const { randomBytes } = require('node:crypto') as typeof import('node:crypto');
+
 type PrismaClient = import('./generated/prisma').PrismaClient;
 type Profile = import('./generated/prisma').Profile;
 
 const PROFILE_SOURCES = new Set(['agent', 'user', 'promoted']);
+const SHARE_TOKEN_BYTES = 16;
+const SHARE_TOKEN_MAX_ATTEMPTS = 5;
 
 class ProfileConflictError extends Error {
   constructor(message = 'A profile with this title already exists for this user.') {
@@ -37,6 +41,20 @@ type UpdateProfileInput = {
   context?: string | null;
 };
 
+type PublicSharePayload = {
+  profile: {
+    title: string;
+    context: string | null;
+    confidence: number;
+  };
+  portfolio: Array<{
+    title: string;
+    description: string | null;
+    contribution: string | null;
+    links: Array<{ label: string; url: string }>;
+  }>;
+};
+
 function isPrismaCode(error: unknown, code: string): boolean {
   return (
     typeof error === 'object' &&
@@ -52,6 +70,10 @@ function normalizeOptionalContext(context: string | null | undefined): string | 
   }
   const trimmed = String(context).trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function createShareToken(): string {
+  return randomBytes(SHARE_TOKEN_BYTES).toString('base64url');
 }
 
 function createProfilesRepo(prisma: PrismaClient) {
@@ -176,11 +198,101 @@ function createProfilesRepo(prisma: PrismaClient) {
     });
   }
 
+  async function generateShareToken(profileId: string, userId: string): Promise<Profile> {
+    const existing = await prisma.profile.findFirst({
+      where: { id: profileId, user_id: userId },
+    });
+    if (!existing) {
+      throw new ProfileNotFoundError();
+    }
+
+    let lastError: unknown;
+    for (let attempt = 0; attempt < SHARE_TOKEN_MAX_ATTEMPTS; attempt += 1) {
+      const shareToken = createShareToken();
+      try {
+        return await prisma.profile.update({
+          where: { id: profileId },
+          data: {
+            share_token: shareToken,
+            is_public: true,
+            updated_at: new Date(),
+          },
+        });
+      } catch (error) {
+        if (isPrismaCode(error, 'P2002')) {
+          lastError = error;
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error('Failed to generate a unique share token.');
+  }
+
+  async function revokeShareToken(profileId: string, userId: string): Promise<Profile> {
+    const existing = await prisma.profile.findFirst({
+      where: { id: profileId, user_id: userId },
+    });
+    if (!existing) {
+      throw new ProfileNotFoundError();
+    }
+
+    return prisma.profile.update({
+      where: { id: profileId },
+      data: {
+        share_token: null,
+        is_public: false,
+        updated_at: new Date(),
+      },
+    });
+  }
+
+  async function getPublicProfileByToken(token: string): Promise<PublicSharePayload | null> {
+    const shareToken = String(token ?? '').trim();
+    if (!shareToken) {
+      return null;
+    }
+
+    const profile = await prisma.profile.findFirst({
+      where: { share_token: shareToken },
+    });
+    if (!profile || !profile.is_public) {
+      return null;
+    }
+
+    const items = await prisma.portfolioItem.findMany({
+      where: { profile_ids: { has: profile.id } },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return {
+      profile: {
+        title: profile.title,
+        context: profile.context,
+        confidence: profile.confidence,
+      },
+      portfolio: items.map((item) => ({
+        title: item.title,
+        description: item.description,
+        contribution: item.contribution,
+        links: item.links.map((link) => ({
+          label: link.label,
+          url: link.url,
+        })),
+      })),
+    };
+  }
+
   return {
     createProfile,
     listProfiles,
     updateProfile,
     setPrimaryProfile,
+    generateShareToken,
+    revokeShareToken,
+    getPublicProfileByToken,
   };
 }
 

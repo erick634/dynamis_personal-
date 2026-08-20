@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - feat(backend): on explicit user confirmation, extract and create multi-Profiles via `enqueueProfileUpdate` (cheap confirm-signal guard; skip duplicate titles)
 - feat(profiles): frontend data layer — `listProfiles` / `updateProfile` / `setPrimaryProfile` (`src/features/profiles/`)
 - feat(backend): Portfolio REST layer — `portfolio` repo + GET/POST/PATCH/DELETE `/portfolio`
+- feat(backend): shareable Profile pages — generate/revoke token + public `GET /share/:token` (whitelist payload)
 
 ### Changed
 
