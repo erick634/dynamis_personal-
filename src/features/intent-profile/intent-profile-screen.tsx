@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { UnlockLoadingIndicator } from '@/components/ui/unlock-loading-indicator';
 import { deriveProfileSignalsFromIntentProfile } from '@/features/discovery/derive-profile-signals';
 import { ProfileCompletenessCard } from '@/features/intent-profile/profile-completeness-card';
+import { ProfileBalanceRadar } from '@/features/intent-profile/profile-balance-radar';
+import { LifeAreaCards } from '@/features/intent-profile/life-area-cards';
 import { ProfileFieldValue } from '@/features/intent-profile/profile-field-value';
 import { ProfileHeroCard } from '@/features/intent-profile/profile-hero-card';
 import { ProfileInsightGrid } from '@/features/intent-profile/profile-insight-grid';
@@ -25,7 +27,7 @@ function parseSummaryBullets(summary: string | null): string[] {
 function ProfilePage({ children }: { children: ReactNode }) {
   return (
     <div className="w-full min-w-0 bg-bg font-body text-ink">
-      <div className="mx-auto w-full max-w-4xl min-w-0 px-4 py-8 sm:px-6 md:px-8 md:py-10">
+      <div className="mx-auto w-full max-w-7xl min-w-0 px-4 py-8 sm:px-6 md:px-8 md:py-10">
         {children}
       </div>
     </div>
@@ -152,8 +154,12 @@ export function IntentProfileScreen() {
           }}
         />
 
-        <ProfileCompletenessCard signals={signals} />
+        <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-2 lg:items-stretch">
+          <ProfileCompletenessCard signals={signals} />
+          <ProfileBalanceRadar professionalScore={completenessPercent} />
+        </div>
 
+        <LifeAreaCards professionalScore={completenessPercent} />
         <ProfileInsightGrid
           roleContext={profile.roleContext}
           aspirations={profile.aspirations}

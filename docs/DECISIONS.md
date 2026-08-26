@@ -188,3 +188,26 @@ The previous flow generated 2–5 Watchtower recommendations after a ~5–6 turn
 - Prompt and closing-pressure blocks in `backend/index.ts` change; override via `ASSISTANT_SYSTEM_PROMPT` still wins if set in env.
 - Frontend Watchtower types include `suggested_reminder_time`; older payloads without it default to `09:00`.
 - Scanning/monitoring of Watchtowers remains out of scope for this repo.
+
+## ADR-008: Life-area public share via Mongo snapshot
+
+Date: 2026-08-25
+Status: Accepted
+
+### Context
+
+Life-area goals, links, documents, and images live in the browser (localStorage). Sharing a beautiful public page for people without accounts requires that data to be readable server-side.
+
+### Decision
+
+On “Share this profile”, the client POSTs a normalized snapshot to `POST /life-area-share`. The backend upserts a `LifeAreaShare` document (one per user + area) with a stable `share_token`. Public viewers load `GET /share/area/:token` with no auth. Re-sharing refreshes the snapshot and keeps the same token.
+
+### Alternatives considered
+
+- Persist all life-area state continuously in Mongo — deferred; larger migration than the share need.
+- Client-only share (encode snapshot in URL) — rejected; images blow past URL limits.
+
+### Consequences
+
+- Collection `life_area_shares`; public route is separate from Profile `/share/:token`.
+- Shared pages show a frozen snapshot until the owner shares again.

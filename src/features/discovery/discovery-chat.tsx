@@ -15,9 +15,14 @@ import {
   DiscoveryIntentPicker,
   type ConversationIntent,
 } from '@/features/discovery/discovery-intent-picker';
+import {
+  DiscoveryContinueProfilePicker,
+  type ContinueProfileChoice,
+} from '@/features/discovery/discovery-continue-profile-picker';
 import { DiscoveryLiveStage } from '@/features/discovery/discovery-live-stage';
 import { DiscoveryMessageBubble } from '@/features/discovery/discovery-message';
 import type { DiscoverySessionMode } from '@/features/discovery/discovery-types';
+import { LifeAreaGoalSuggestionCard } from '@/features/discovery/life-area-goal-suggestion-card';
 import { ReflectionSummaryView } from '@/features/discovery/reflection-summary-view';
 import { speakAgentLine, unlockAgentAudio } from '@/features/discovery/speak-agent-line';
 import { useDiscoverySession } from '@/features/discovery/use-discovery-session';
@@ -38,7 +43,7 @@ function hasReturningProfile(
   return Boolean(profile?.roleContext?.trim() || profile?.aspirations?.trim());
 }
 
-const INTENT_MESSAGE_KEYS: Record<ConversationIntent, string> = {
+const INTENT_MESSAGE_KEYS: Record<Exclude<ConversationIntent, 'continueProfile'>, string> = {
   refine: 'discovery.intent.refine.message',
   newWatchtower: 'discovery.intent.newWatchtower.message',
   advance: 'discovery.intent.advance.message',
@@ -57,6 +62,7 @@ export function DiscoveryChat() {
   const [isIdentityGateOpen, setIsIdentityGateOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [intentChosen, setIntentChosen] = useState(false);
+  const [showContinueProfile, setShowContinueProfile] = useState(false);
   const sessionLoadRef = useRef<string | null>(null);
   const identitySpeechAbortRef = useRef<AbortController | null>(null);
 
@@ -79,6 +85,9 @@ export function DiscoveryChat() {
     loadSession,
     startVoice,
     stopVoice,
+    pendingGoalSuggestion,
+    acceptGoalSuggestion,
+    dismissGoalSuggestion,
   } = useDiscoverySession(mode);
 
   const showReflectionSummary = isReflection && reflectionSummary != null;
@@ -88,7 +97,12 @@ export function DiscoveryChat() {
   const greetingName = user?.displayName.trim() || t('discovery.greetingFallbackName');
   const identityReady = hasIdentity(user);
   const showIntentPicker =
-    !isReflection && isFreshStart && identityReady && hasReturningProfile(profile) && !intentChosen;
+    !isReflection &&
+    isFreshStart &&
+    identityReady &&
+    hasReturningProfile(profile) &&
+    !intentChosen &&
+    !showContinueProfile;
 
   const openIdentityGate = (pendingText?: string) => {
     unlockAgentAudio();
@@ -130,6 +144,7 @@ export function DiscoveryChat() {
     }
     startNewChat();
     setIntentChosen(false);
+    setShowContinueProfile(false);
     sessionLoadRef.current = null;
     const next = new URLSearchParams(searchParams);
     next.delete('new');
@@ -179,8 +194,30 @@ export function DiscoveryChat() {
   };
 
   const handleIntentSelect = (intent: ConversationIntent) => {
+    if (intent === 'continueProfile') {
+      setShowContinueProfile(true);
+      return;
+    }
     setIntentChosen(true);
     sendMessage(t(INTENT_MESSAGE_KEYS[intent]));
+  };
+
+  const handleContinueProfileConfirm = (choice: ContinueProfileChoice) => {
+    setShowContinueProfile(false);
+    setIntentChosen(true);
+    if (choice.kind === 'lifeArea') {
+      sendMessage(
+        t('discovery.intent.continueProfile.messageLifeArea', {
+          area: t(`you.balanceRadar.areas.${choice.areaId}`),
+        }),
+      );
+      return;
+    }
+    sendMessage(
+      t('discovery.intent.continueProfile.messageProfile', {
+        title: choice.title,
+      }),
+    );
   };
 
   const handleIdentityCompleted = (savedUser: CurrentUser) => {
@@ -271,6 +308,15 @@ export function DiscoveryChat() {
                         onSelect={handleIntentSelect}
                       />
                     ) : null}
+                    {showContinueProfile ? (
+                      <DiscoveryContinueProfilePicker
+                        disabled={isAgentThinking}
+                        onConfirm={handleContinueProfileConfirm}
+                        onBack={() => {
+                          setShowContinueProfile(false);
+                        }}
+                      />
+                    ) : null}
                   </div>
                 ) : (
                   <div className="flex w-full flex-col gap-5 pb-4">
@@ -303,6 +349,13 @@ export function DiscoveryChat() {
 
               {!isGeneratingSummary && !isIdentityGateOpen ? (
                 <div className="shrink-0">
+                  {pendingGoalSuggestion ? (
+                    <LifeAreaGoalSuggestionCard
+                      suggestion={pendingGoalSuggestion}
+                      onAccept={acceptGoalSuggestion}
+                      onDismiss={dismissGoalSuggestion}
+                    />
+                  ) : null}
                   {showEndCheckIn ? (
                     <div className="mb-3 px-1">
                       <button

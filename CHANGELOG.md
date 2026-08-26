@@ -15,6 +15,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - feat(backend): shareable Profile pages — generate/revoke token + public `GET /share/:token` (whitelist payload)
 - feat(share): public share page at `/share/:token` — dark premium, no auth/shell
 - feat(profiles): Share / Copy link / Revoke controls on each profile card
+- feat(you): Balance radar on Intent Profile — life-area spider chart beside Profile clarity
+- feat(you): clickable life areas — detail page, add/remove areas, cards grid under radar
+- feat(you): life-area assets — motto, links, documents, and images per area; mirrored on Profile cards
+- feat(you): life-area moral — system-generated phrase from per-item progress reasons (`POST /life-area-motto`)
+- feat(you): progress-reason fields collapse behind a chevron (closed by default)
+- feat(you): Add link / document / image sections collapse as whole boxes (closed by default)
+- feat(you): life-area motto is a short theme line beside the score ring (not a full block)
+- feat(you): life-area gallery at the bottom showing every added link, document, and image
+- feat(you): confirm before deleting life-area gallery items (progress chart impact warning)
+- feat(you): life-area goals — final goal + mixable daily/weekly/monthly tasks, progress %, expandable panel
+- feat(you): edit and delete life-area goals and tasks from the area detail page
+- feat(discovery): Lead Guide can suggest a life-area goal in chat — Accept adds it to `/you`
+- feat(you): life-area goals — horizon (1–12 months), task duration, weekday/weekend daily option, skip today only
+- feat(you): collapsible task rows inside open goals, plus week/month calendar view per goal
+- fix(you): life-area goal progress counts completed sessions across the horizon, not template checkboxes
+- fix(you): life-area score ring / radar follow goal session progress when the area has goals
+- feat(you): What's growing lists real goals; click opens insight popup with chart, tasks, and praise
+- feat(you): link/document/image can relate to a goal; What's growing insight shows that evidence
+- feat(you): life-area summary under the title is click-to-edit (persisted per area)
+- feat(you): click the life-area score ring to see how each goal contributes to that %
+- feat(you): What's growing pills — blue new, red behind, yellow partial, green on track
+- feat(you): Share this profile — public life-area snapshot at `/share/area/:token` (goals, images, links, docs)
+- feat(share): life-area public page matches main profile layout; image lightbox; comments on profile/photos/docs (also shown to owner)
+- feat(share): emoji picker on life-area share comments
+- feat(you): mark a life-area goal as complete (manual) — 100% progress + green badge
+- feat(you): life-area goals and tasks support priority (essential / more important / less important)
+- feat(plan): Transformation Plan lists life-area tasks (All / Today / Week / Month), sorted by priority and time; edit/complete syncs with Profile
+- feat(plan): Plan shows which profile it belongs to, a motivational line, and a period progress chart by life area
+- fix(plan): Week/Month progress counts every task session in the period (today’s completions roll up); chart bars are per task
+- feat(map): Possibility Map restyled to Profile warm-paper UI — real Intent Profile label/motivation, life-area progress strip, paper Dynamis→Energeia stage
+- feat(you): life-area Unlock suggestion — ask for goal/tasks and book/site/YouTube resources; Accept applies to Profile
+- feat(map): tap a life area on Possibility Map to expand an Unlock suggestion drop (Accept applies to Profile)
+- feat(discovery): Continue a profile intent — pick life area or professional profile (stale suggestion + focus caveat); agent focuses on goal-setting
 
 ### Changed
 

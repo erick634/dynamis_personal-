@@ -92,8 +92,8 @@ export function DynamisConstellation({
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="white"
-            strokeOpacity="0.2"
+            stroke="var(--ink)"
+            strokeOpacity="0.18"
             strokeWidth="1"
           />
         );
@@ -105,15 +105,15 @@ export function DynamisConstellation({
             cx={node.x}
             cy={node.y}
             r={node.r * 2.2}
-            fill={node.accent ? 'var(--blue-2)' : 'white'}
-            fillOpacity={node.accent ? 0.18 : 0.08}
+            fill={node.accent ? 'var(--blue)' : 'var(--ink)'}
+            fillOpacity={node.accent ? 0.16 : 0.08}
           />
           <circle
             cx={node.x}
             cy={node.y}
             r={node.r}
-            fill={node.accent ? 'var(--blue-2)' : 'white'}
-            fillOpacity={node.accent ? 1 : 0.85}
+            fill={node.accent ? 'var(--blue)' : 'var(--ink)'}
+            fillOpacity={node.accent ? 1 : 0.55}
           />
         </g>
       ))}

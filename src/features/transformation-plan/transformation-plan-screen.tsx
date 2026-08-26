@@ -1,103 +1,72 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshCcw } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 
 import { BrandMark } from '@/components/ui/brand-mark';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import type { GoalTaskInput } from '@/features/intent-profile/life-area-goals-types';
+import { useLifeAreaGoals } from '@/features/intent-profile/use-life-area-goals';
+import { useLifeAreas } from '@/features/intent-profile/use-life-areas';
+import { listProfiles } from '@/features/profiles/profiles-api';
 import { PlanFilter, type PlanFilterId } from '@/features/transformation-plan/plan-filter';
-import { PlanTrailMap, type TrailNode } from '@/features/transformation-plan/plan-trail-map';
+import { PlanLifeAreaTaskItem } from '@/features/transformation-plan/plan-life-area-task-item';
 import {
-  applyStreakOnMark,
-  createEmptyStreakData,
-  getPlanForUser,
-  savePlanForUser,
-  clearPlanForUser,
-  type StreakData,
-} from '@/features/transformation-plan/plan-storage';
-import { fetchGeneratedPlan } from '@/features/transformation-plan/transformation-plan-llm-api';
-import { MOCK_PLAN_GOALS } from '@/features/transformation-plan/transformation-plan-mock';
-import {
-  getReflectionDidToday,
-  isReflectionTodayGoalId,
-  reflectionItemsToGoals,
-} from '@/features/transformation-plan/reflection-today-storage';
-import { queryClient } from '@/lib/api';
+  buildPlanLifeAreaTaskRows,
+  type PlanLifeAreaTaskRow,
+} from '@/features/transformation-plan/plan-life-area-tasks';
+import { PlanProgressChart } from '@/features/transformation-plan/plan-progress-chart';
+import { resolvePlanMotivation } from '@/features/transformation-plan/resolve-plan-motivation';
+import { useIntentProfile } from '@/features/you/use-intent-profile';
 import { useCurrentUser } from '@/stores/current-user';
-import type { DynamisGoal } from '@/types/energeia';
 
-function filterPlanGoals(goals: DynamisGoal[], filter: PlanFilterId): DynamisGoal[] {
-  switch (filter) {
-    case 'today':
-      return goals.filter((goal) => goal.dueLabelKey === 'todayAt');
-    case 'high':
-      return goals.filter((goal) => goal.priority === 'high');
-    case 'build':
-      return goals.filter((goal) => goal.tag === 'build');
-    default:
-      return goals;
-  }
-}
-
-function buildVisibleGoals(
-  planGoals: DynamisGoal[],
-  reflectionTodayGoals: DynamisGoal[],
-  filter: PlanFilterId,
-): DynamisGoal[] {
-  if (filter === 'today') {
-    const scheduledToday = planGoals.filter((goal) => goal.dueLabelKey === 'todayAt');
-    return [...reflectionTodayGoals, ...scheduledToday];
-  }
-  return filterPlanGoals(planGoals, filter);
-}
-
-function buildInitialRealizedIds(goals: DynamisGoal[]): Set<string> {
-  return new Set(goals.filter((goal) => goal.realized).map((goal) => goal.id));
-}
-
-function syncGoalsWithRealizedIds(goals: DynamisGoal[], realizedIds: Set<string>): DynamisGoal[] {
-  return goals.map((goal) => {
-    const realized = realizedIds.has(goal.id);
-    return {
-      ...goal,
-      realized,
-      realizedAt: realized ? (goal.realizedAt ?? new Date().toISOString()) : null,
-    };
-  });
-}
-
-const PLAN_FILTER_IDS: PlanFilterId[] = ['all', 'today', 'high', 'build'];
+const PLAN_FILTER_IDS: PlanFilterId[] = ['all', 'today', 'week', 'month'];
+const PROFILES_QUERY_KEY = 'profiles' as const;
 
 function isPlanFilterId(value: string | null): value is PlanFilterId {
   return value != null && PLAN_FILTER_IDS.includes(value as PlanFilterId);
 }
 
+function firstNonEmpty(...values: Array<string | null | undefined>): string | null {
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed) return trimmed;
+  }
+  return null;
+}
+
+function pickPrimaryProfileTitle(
+  profiles: { title: string; is_primary: boolean }[] | undefined,
+): string | null {
+  if (!profiles || profiles.length === 0) return null;
+  const primary = profiles.find((profile) => profile.is_primary) ?? profiles[0];
+  if (!primary) return null;
+  return firstNonEmpty(primary.title);
+}
+
 export function TransformationPlanScreen() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const userId = useCurrentUser((state) => state.user?.userId);
+  const user = useCurrentUser((state) => state.user);
+  const { profile } = useIntentProfile();
+  const goalsByArea = useLifeAreaGoals((state) => state.goalsByArea);
+  const toggleTaskDate = useLifeAreaGoals((state) => state.toggleTaskDate);
+  const updateTask = useLifeAreaGoals((state) => state.updateTask);
+  const activeAreaIds = useLifeAreas((state) => state.activeAreaIds);
+  const contentByArea = useLifeAreas((state) => state.contentByArea);
+
+  const { data: profiles } = useQuery({
+    queryKey: [PROFILES_QUERY_KEY, user?.userId],
+    queryFn: () => {
+      if (!user?.userId) throw new Error('userId is required');
+      return listProfiles(user.userId);
+    },
+    enabled: Boolean(user?.userId),
+  });
+
   const [activeFilter, setActiveFilter] = useState<PlanFilterId>(() => {
     const fromUrl = searchParams.get('filter');
-    return isPlanFilterId(fromUrl) ? fromUrl : 'all';
+    return isPlanFilterId(fromUrl) ? fromUrl : 'today';
   });
-  const [goals, setGoals] = useState<DynamisGoal[]>(MOCK_PLAN_GOALS);
-  const [realizedIds, setRealizedIds] = useState<Set<string>>(() =>
-    buildInitialRealizedIds(MOCK_PLAN_GOALS),
-  );
-  const [streakData, setStreakData] = useState<StreakData>(createEmptyStreakData);
-  const [generatedAt, setGeneratedAt] = useState<string>(() => new Date().toISOString());
-  const [hasPersistedPlan, setHasPersistedPlan] = useState(false);
-  const [planStorageReady, setPlanStorageReady] = useState(false);
-  const [showNewPlanConfirm, setShowNewPlanConfirm] = useState(false);
-  const [reflectionTodayGoals, setReflectionTodayGoals] = useState<DynamisGoal[]>([]);
-
-  const goalsHydratedRef = useRef(false);
-  const streakDataRef = useRef(streakData);
-
-  useEffect(() => {
-    streakDataRef.current = streakData;
-  }, [streakData]);
 
   useEffect(() => {
     const fromUrl = searchParams.get('filter');
@@ -106,186 +75,39 @@ export function TransformationPlanScreen() {
     }
   }, [searchParams]);
 
-  const persistPlan = useCallback(
-    (
-      nextGoals: DynamisGoal[],
-      nextRealizedIds: Set<string>,
-      nextStreakData: StreakData,
-      nextGeneratedAt: string,
-    ) => {
-      if (!userId) {
-        return;
-      }
-      savePlanForUser(userId, {
-        userId,
-        goals: nextGoals,
-        realizedIds: Array.from(nextRealizedIds),
-        streakData: nextStreakData,
-        generatedAt: nextGeneratedAt,
-      });
-    },
-    [userId],
+  const rows = useMemo(
+    () => buildPlanLifeAreaTaskRows(goalsByArea, activeFilter),
+    [goalsByArea, activeFilter],
   );
 
-  useEffect(() => {
-    goalsHydratedRef.current = false;
-    setPlanStorageReady(false);
-    setHasPersistedPlan(false);
+  const profileLabel =
+    firstNonEmpty(
+      pickPrimaryProfileTitle(profiles),
+      profile?.roleContext,
+      profile?.displayName,
+      user?.displayName,
+    ) ?? t('transformationPlan.profile.fallback');
 
-    if (!userId) {
-      setGoals(MOCK_PLAN_GOALS);
-      setRealizedIds(buildInitialRealizedIds(MOCK_PLAN_GOALS));
-      setStreakData(createEmptyStreakData());
-      setPlanStorageReady(true);
-      return;
-    }
-
-    const persisted = getPlanForUser(userId);
-    if (persisted) {
-      const loadedRealizedIds = new Set(persisted.realizedIds);
-      setGoals(syncGoalsWithRealizedIds(persisted.goals, loadedRealizedIds));
-      setRealizedIds(loadedRealizedIds);
-      setStreakData(persisted.streakData);
-      setGeneratedAt(persisted.generatedAt);
-      setHasPersistedPlan(true);
-      goalsHydratedRef.current = true;
-    }
-
-    setPlanStorageReady(true);
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) {
-      setReflectionTodayGoals([]);
-      return;
-    }
-    setReflectionTodayGoals(reflectionItemsToGoals(getReflectionDidToday(userId)));
-  }, [userId]);
-
-  const { data: llmGoals, isLoading: isPlanLoading } = useQuery({
-    queryKey: ['transformation-plan-llm', userId],
-    queryFn: () => {
-      if (!userId) {
-        throw new Error('userId is required');
-      }
-      return fetchGeneratedPlan(userId);
-    },
-    enabled: Boolean(userId) && planStorageReady && !hasPersistedPlan,
-    staleTime: Infinity,
-    gcTime: Number.POSITIVE_INFINITY,
-  });
-
-  useEffect(() => {
-    if (!userId || hasPersistedPlan) {
-      return;
-    }
-    if (goalsHydratedRef.current) {
-      return;
-    }
-    if (isPlanLoading) {
-      return;
-    }
-
-    const rawGoals = llmGoals != null && llmGoals.length > 0 ? llmGoals : MOCK_PLAN_GOALS;
-    const nextRealizedIds = new Set<string>();
-    const nextGoals = syncGoalsWithRealizedIds(rawGoals, nextRealizedIds);
-    const nextGeneratedAt = new Date().toISOString();
-
-    setGoals(nextGoals);
-    setRealizedIds(nextRealizedIds);
-    setGeneratedAt(nextGeneratedAt);
-
-    persistPlan(nextGoals, nextRealizedIds, streakDataRef.current, nextGeneratedAt);
-    setHasPersistedPlan(true);
-    goalsHydratedRef.current = true;
-  }, [userId, hasPersistedPlan, isPlanLoading, llmGoals, persistPlan]);
-
-  const filteredGoals = useMemo(
-    () => buildVisibleGoals(goals, reflectionTodayGoals, activeFilter),
-    [goals, reflectionTodayGoals, activeFilter],
+  const motivation = useMemo(
+    () =>
+      resolvePlanMotivation({
+        activeAreaIds,
+        contentByArea,
+        goalsByArea,
+        activeFocus: profile?.activeFocus,
+        t,
+      }),
+    [activeAreaIds, contentByArea, goalsByArea, profile?.activeFocus, t],
   );
 
-  const trailNodes = useMemo((): TrailNode[] => {
-    let foundCurrent = false;
+  function handleToggleDone(row: PlanLifeAreaTaskRow) {
+    if (row.skipped) return;
+    toggleTaskDate(row.areaId, row.goalId, row.taskId, row.focusDateKey);
+  }
 
-    return filteredGoals.map((goal) => {
-      const resolvedTitle = goal.title ?? t(`transformationPlan.items.${goal.id}.title`);
-      const isDone = goal.realized;
-      let state: TrailNode['state'];
-
-      if (isDone) {
-        state = 'done';
-      } else if (!foundCurrent) {
-        state = 'current';
-        foundCurrent = true;
-      } else {
-        state = 'locked';
-      }
-
-      return {
-        goal,
-        resolvedTitle,
-        state,
-        tone: goal.tag === 'build' ? 'ember' : 'blue',
-      };
-    });
-  }, [filteredGoals, t]);
-
-  const handleToggleRealized = (goalId: string, realized: boolean) => {
-    if (isReflectionTodayGoalId(goalId)) {
-      return;
-    }
-
-    const wasRealized = realizedIds.has(goalId);
-
-    let nextStreakData = streakData;
-    if (realized && !wasRealized) {
-      nextStreakData = applyStreakOnMark(streakData);
-    }
-    // POC: unmarking a goal does not roll back streak (already counted for the day).
-
-    const nextRealizedIds = new Set(realizedIds);
-    if (realized) {
-      nextRealizedIds.add(goalId);
-    } else {
-      nextRealizedIds.delete(goalId);
-    }
-
-    const nextGoals = goals.map((goal) => {
-      if (goal.id !== goalId) {
-        return goal;
-      }
-      if (realized) {
-        // eslint-disable-next-line no-console -- TODO(livekit): replace with data channel emit
-        console.warn('TODO: emit energeia.realized via data channel', { goal_id: goalId });
-      }
-      return {
-        ...goal,
-        realized,
-        realizedAt: realized ? new Date().toISOString() : null,
-      };
-    });
-
-    setRealizedIds(nextRealizedIds);
-    setGoals(nextGoals);
-    setStreakData(nextStreakData);
-    persistPlan(nextGoals, nextRealizedIds, nextStreakData, generatedAt);
-  };
-
-  const handleConfirmNewPlan = async () => {
-    if (!userId) {
-      return;
-    }
-
-    setShowNewPlanConfirm(false);
-    clearPlanForUser(userId);
-    setHasPersistedPlan(false);
-    goalsHydratedRef.current = false;
-
-    await queryClient.invalidateQueries({
-      queryKey: ['transformation-plan-llm', userId],
-    });
-  };
+  function handleSaveTask(row: PlanLifeAreaTaskRow, payload: GoalTaskInput) {
+    updateTask(row.areaId, row.goalId, row.taskId, payload);
+  }
 
   return (
     <div className="w-full min-w-0 bg-bg font-body text-ink">
@@ -301,47 +123,45 @@ export function TransformationPlanScreen() {
           {t('transformationPlan.title')}
         </h1>
 
-        <div className="mt-10">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <PlanFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
-            <button
-              type="button"
-              onClick={() => {
-                if (userId) {
-                  setShowNewPlanConfirm(true);
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 font-body text-xs font-medium text-ink-2 transition-colors hover:text-ink"
-            >
-              <RefreshCcw className="h-3.5 w-3.5" aria-hidden />
-              {t('transformationPlan.newPlanButton')}
-            </button>
-          </div>
+        <p className="mt-3 inline-flex max-w-full items-center rounded-full bg-blue-soft/70 px-3 py-1 font-body text-xs font-semibold text-blue">
+          {t('transformationPlan.profile.belongsTo', { profile: profileLabel })}
+        </p>
 
-          <PlanTrailMap nodes={trailNodes} onToggleRealized={handleToggleRealized} />
+        <blockquote className="mt-4 max-w-2xl border-l-2 border-blue/40 pl-4 font-display text-base text-ink-2 italic sm:text-lg">
+          {motivation}
+        </blockquote>
 
-          {filteredGoals.length === 0 ? (
-            <p className="mt-6 font-body text-sm text-ink-2">
-              {t('transformationPlan.emptyFilter')}
+        <p className="mt-3 max-w-2xl font-body text-sm text-ink-2">
+          {t('transformationPlan.lifeAreaTasks.subtitle')}
+        </p>
+
+        <div className="mt-8">
+          <PlanFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+        </div>
+
+        <div className="mt-6">
+          <PlanProgressChart rows={rows} filter={activeFilter} />
+        </div>
+
+        <div className="mt-8">
+          {rows.length === 0 ? (
+            <p className="font-body text-sm text-ink-2">
+              {t('transformationPlan.lifeAreaTasks.empty')}
             </p>
-          ) : null}
+          ) : (
+            <ul className="list-none space-y-3 p-0">
+              {rows.map((row) => (
+                <PlanLifeAreaTaskItem
+                  key={row.id}
+                  row={row}
+                  onToggleDone={handleToggleDone}
+                  onSaveTask={handleSaveTask}
+                />
+              ))}
+            </ul>
+          )}
         </div>
       </div>
-
-      <ConfirmDialog
-        open={showNewPlanConfirm}
-        title={t('transformationPlan.newPlanConfirmTitle')}
-        description={t('transformationPlan.newPlanConfirmDescription')}
-        confirmLabel={t('transformationPlan.newPlanConfirmAction')}
-        cancelLabel={t('common.cancel')}
-        destructive={false}
-        onConfirm={() => {
-          void handleConfirmNewPlan();
-        }}
-        onCancel={() => {
-          setShowNewPlanConfirm(false);
-        }}
-      />
     </div>
   );
 }

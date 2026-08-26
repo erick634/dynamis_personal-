@@ -27,6 +27,8 @@ import {
 } from '@/features/discovery/reflection-summary-api';
 import { useDiscoveryVoice } from '@/features/discovery/use-discovery-voice';
 import { saveReflectionDidToday } from '@/features/transformation-plan/reflection-today-storage';
+import type { LifeAreaGoalSuggestion } from '@/features/intent-profile/use-life-area-goals';
+import { useLifeAreaGoals } from '@/features/intent-profile/use-life-area-goals';
 import { useIntentProfile } from '@/features/you/use-intent-profile';
 import { useCurrentUser } from '@/stores/current-user';
 import type { ProfileDimension } from '@/types/intent-profile';
@@ -84,6 +86,10 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
   const [profileSignals, setProfileSignals] = useState<ProfileSignals>(EMPTY_SIGNALS);
   const [insightQuote, setInsightQuote] = useState('');
   const [reflectionSummary, setReflectionSummary] = useState<ReflectionSummary | null>(null);
+  const [pendingGoalSuggestion, setPendingGoalSuggestion] = useState<LifeAreaGoalSuggestion | null>(
+    null,
+  );
+  const applySuggestion = useLifeAreaGoals((state) => state.applySuggestion);
   const sendMessageRef = useRef<
     (text: string, options?: { skipUserAppend?: boolean; userIdOverride?: string }) => void
   >(() => {});
@@ -300,6 +306,9 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
           if (data.insight) {
             setInsightQuote(data.insight);
           }
+          if (data.lifeAreaGoalSuggestion) {
+            setPendingGoalSuggestion(data.lifeAreaGoalSuggestion);
+          }
 
           setMessages((prev) => [
             ...prev,
@@ -436,6 +445,7 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     setMessages(buildInitialMessages(instanceId, mode));
     setIsAgentThinking(false);
     setReflectionSummary(null);
+    setPendingGoalSuggestion(null);
     setIsGeneratingSummary(false);
   }, [instanceId, mode]);
 
@@ -456,6 +466,7 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
       );
       setIsAgentThinking(false);
       setReflectionSummary(null);
+      setPendingGoalSuggestion(null);
       setIsGeneratingSummary(false);
     },
     [],
@@ -466,6 +477,18 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
       ...prev,
       [dimension]: Math.min(100, Math.max(0, prev[dimension] + delta)),
     }));
+  }, []);
+
+  const acceptGoalSuggestion = useCallback(() => {
+    if (!pendingGoalSuggestion) {
+      return;
+    }
+    applySuggestion(pendingGoalSuggestion);
+    setPendingGoalSuggestion(null);
+  }, [applySuggestion, pendingGoalSuggestion]);
+
+  const dismissGoalSuggestion = useCallback(() => {
+    setPendingGoalSuggestion(null);
   }, []);
 
   const resolvedInsight =
@@ -491,6 +514,7 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     userMessageCount,
     sessionId: sessionIdRef.current,
     profile,
+    pendingGoalSuggestion,
     sendMessage,
     holdForIdentity,
     promptForIdentity,
@@ -500,5 +524,7 @@ export function useDiscoverySession(mode: DiscoverySessionMode = 'discovery') {
     startVoice,
     stopVoice,
     applyProfileSignal,
+    acceptGoalSuggestion,
+    dismissGoalSuggestion,
   };
 }

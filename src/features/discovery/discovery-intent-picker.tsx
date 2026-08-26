@@ -1,7 +1,7 @@
-import { Sparkles, Target, Wrench } from 'lucide-react';
+import { Layers, Sparkles, Target, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type ConversationIntent = 'refine' | 'newWatchtower' | 'advance';
+export type ConversationIntent = 'refine' | 'newWatchtower' | 'advance' | 'continueProfile';
 
 type DiscoveryIntentPickerProps = {
   onSelect: (intent: ConversationIntent) => void;
@@ -31,6 +31,12 @@ const INTENTS: {
     icon: Wrench,
     titleKey: 'discovery.intent.advance.title',
     bodyKey: 'discovery.intent.advance.body',
+  },
+  {
+    id: 'continueProfile',
+    icon: Layers,
+    titleKey: 'discovery.intent.continueProfile.title',
+    bodyKey: 'discovery.intent.continueProfile.body',
   },
 ];
 

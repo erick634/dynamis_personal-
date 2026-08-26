@@ -13,20 +13,18 @@ export function ComparisonStage({ density }: ComparisonStageProps) {
 
   return (
     <div className="possibility-map__comparison relative">
-      <div className="possibility-map__stage-glow" aria-hidden />
-
       <div className="possibility-map__comparison-grid">
         <article className="possibility-map__pole-card possibility-map__pole-card--dynamis possibility-map__reveal-dynamis">
-          <p className="possibility-map__pole-prelude font-display italic text-white/55">
+          <p className="possibility-map__pole-prelude font-display italic">
             {t('possibilityMap.dynamis.prelude')}
           </p>
-          <h2 className="possibility-map__pole-title font-display text-white">
+          <h2 className="possibility-map__pole-title font-display">
             {t('possibilityMap.dynamis.name')}
           </h2>
           <div className="possibility-map__pole-visual">
             <DynamisConstellation visibleNodeCount={density.dynamisVisibleNodes} />
           </div>
-          <p className="possibility-map__pole-tagline font-body italic text-white/50">
+          <p className="possibility-map__pole-tagline font-body italic">
             {t('possibilityMap.dynamis.tagline')}
           </p>
         </article>
@@ -36,7 +34,7 @@ export function ComparisonStage({ density }: ComparisonStageProps) {
         </div>
 
         <article className="possibility-map__pole-card possibility-map__pole-card--energeia possibility-map__reveal-energeia">
-          <p className="possibility-map__pole-prelude font-display italic text-white/55">
+          <p className="possibility-map__pole-prelude font-display italic">
             {t('possibilityMap.energeia.prelude')}
           </p>
           <h2 className="possibility-map__pole-title possibility-map__pole-title--energeia font-display">
@@ -49,7 +47,7 @@ export function ComparisonStage({ density }: ComparisonStageProps) {
               accentNodeCount={density.energeiaAccentNodes}
             />
           </div>
-          <p className="possibility-map__pole-tagline font-body italic text-white/50">
+          <p className="possibility-map__pole-tagline font-body italic">
             {t('possibilityMap.energeia.tagline')}
           </p>
         </article>

@@ -140,6 +140,21 @@
     "leverageSuffix": "{{value}} de alavancagem",
     "generating": "Montando seu mapa a partir do Perfil de Intenção…",
     "regenerate": "Regenerar mapa",
+    "dimensionsTitle": "Onde a IA multiplica o seu alcance",
+    "dimensionsSubtitle": "Quatro dimensões de alavancagem moldadas a partir do seu Intent Profile.",
+    "profile": {
+      "belongsTo": "Mapa de {{profile}}",
+      "fallback": "seu perfil"
+    },
+    "motivation": {
+      "fallback": "Suas palavras viram o mapa — continue a Descoberta para afiar cada dimensão."
+    },
+    "lifeAreas": {
+      "title": "Áreas da vida agora",
+      "subtitle": "Progresso ao vivo do Perfil. Toque numa área para ver a sugestão do Unlock — metas, tasks e recursos.",
+      "suggestionEyebrow": "Sugestão do Unlock",
+      "openArea": "Abrir área"
+    },
     "noProfile": {
       "body": "Conclua a Descoberta primeiro para mapear seu potencial com suas próprias palavras — não o persona de demo.",
       "cta": "Iniciar Descoberta"
@@ -210,6 +225,25 @@
         "title": "Avançar no que já tenho",
         "body": "Dar o próximo passo no que já está em andamento.",
         "message": "Quero avançar no que já tenho em andamento — me ajude a dar um próximo passo concreto."
+      },
+      "continueProfile": {
+        "title": "Continuar um perfil",
+        "body": "Escolha uma área da vida ou perfil profissional para atualizar com novas metas.",
+        "listPrompt": "Qual perfil você quer continuar atualizando?",
+        "lifeAreasHeading": "Áreas da vida",
+        "profilesHeading": "Perfis profissionais",
+        "suggestedBadge": "Sugerido",
+        "primaryBadge": "Principal",
+        "staleBadge": "{{days}}+ dias parado",
+        "suggestNever": "Eu sugeriria {{name}} — você ainda não montou metas ali, e isso pode atrapalhar o progresso nessa área.",
+        "suggestStale": "Eu sugeriria {{name}} — faz cerca de {{days}} dias sem atualização, e isso pode afetar o progresso nessa área.",
+        "suggestDefault": "Eu começaria por {{name}}.",
+        "focusCaveat": "Se neste momento você está focado em “{{focus}}”, podemos seguir por aí.",
+        "confirm": "Continuar com este",
+        "back": "Voltar",
+        "empty": "Ainda não há perfis ou áreas. Adicione no Perfil, ou escolha outro intent.",
+        "messageLifeArea": "Quero continuar atualizando meu perfil de {{area}}. Me ajude a definir metas claras e tasks diárias, semanais ou mensais. Faça perguntas até ter o suficiente e então proponha um plano de meta sólido.",
+        "messageProfile": "Quero continuar atualizando meu perfil profissional “{{title}}”. Me ajude a definir metas claras e tasks acionáveis. Faça perguntas focadas até ter o suficiente e então sugira um plano concreto."
       }
     },
     "identity": {
@@ -218,6 +252,12 @@
       "promptBubble": "Olha, antes de continuar, você consegue completar algumas informações pra mim, por favor? Assim eu consigo continuar a conversa com você sem nenhum problema.",
       "submit": "Continuar conversa",
       "saving": "Salvando…"
+    },
+    "goalSuggestion": {
+      "eyebrow": "Meta sugerida",
+      "title": "Adicionar em {{area}}?",
+      "accept": "Adicionar às minhas metas",
+      "dismiss": "Agora não"
     },
     "errors": {
       "profileRequired": "Crie um perfil rápido primeiro (nome e e-mail) — aí começamos a Discovery juntos."
@@ -261,8 +301,38 @@
       "label": "Filtrar itens do plano",
       "all": "Todos",
       "today": "Hoje",
+      "week": "Semana",
+      "month": "Mês",
       "high": "Alta",
       "build": "Construir"
+    },
+    "lifeAreaTasks": {
+      "subtitle": "Tarefas das suas áreas da vida — ordenadas por prioridade e horário. Alterações sincronizam com o Perfil.",
+      "empty": "Nenhuma tarefa neste período. Adicione metas no Perfil, ou tente outro filtro.",
+      "goalMeta": "{{goal}} · {{area}}",
+      "edit": "Editar tarefa",
+      "markDone": "Marcar “{{title}}” como feita",
+      "markNotDone": "Marcar “{{title}}” como não feita",
+      "periodProgress": "{{done}}/{{total}} no período"
+    },
+    "profile": {
+      "belongsTo": "Plano de {{profile}}",
+      "fallback": "seu perfil"
+    },
+    "motivation": {
+      "fallback": "Passos pequenos e constantes transformam Dynamis em Energeia."
+    },
+    "chart": {
+      "title": "Progresso neste período",
+      "summary": "{{done}} de {{total}} sessões de tarefas feitas",
+      "ringLabel": "{{percent}} por cento das sessões feitas",
+      "empty": "Nenhuma tarefa para o gráfico neste período.",
+      "period": {
+        "all": "Nas próximas tarefas",
+        "today": "Hoje",
+        "week": "Esta semana",
+        "month": "Este mês"
+      }
     },
     "tags": {
       "high": "Alta",
@@ -387,6 +457,348 @@
         "constraints": {
           "label": "Áreas de crescimento",
           "description": "Oportunidades de desenvolvimento"
+        }
+      }
+    },
+    "balanceRadar": {
+      "title": "Radar de equilíbrio",
+      "subtitle": "Como cada área da vida está se desenvolvendo",
+      "viewScores": "Ver pontuações",
+      "hideScores": "Ocultar pontuações",
+      "chartAria": "Gráfico de radar do desenvolvimento nas áreas da vida",
+      "areas": {
+        "professional": "Profissional",
+        "health": "Saúde",
+        "studies": "Estudos",
+        "spirituality": "Espiritualidade",
+        "leisure": "Lazer",
+        "family": "Família",
+        "economy": "Economia"
+      },
+      "bands": {
+        "high": "76–100",
+        "mid": "51–75",
+        "low": "0–50"
+      }
+    },
+    "lifeArea": {
+      "cardsTitle": "Suas áreas da vida",
+      "cardsSubtitle": "Cada área carrega uma linha curta do tema ao lado do progresso. Abra uma para adicionar evidências.",
+      "addArea": "Adicionar área",
+      "removeArea": "Remover {{area}}",
+      "empty": "Nenhuma área ativa ainda. Adicione uma para começar a mapear seu equilíbrio.",
+      "scoreOutOf": "{{score}} / 100",
+      "backToBalance": "Voltar ao equilíbrio",
+      "eyebrow": "Área da vida",
+      "summary": {
+        "editHint": "Clique para editar este resumo",
+        "editLabel": "Editar resumo da área da vida"
+      },
+      "scoreBreakdown": {
+        "open": "Ver quanto cada meta forma este progresso",
+        "eyebrow": "Progresso da área",
+        "title": "{{score}}% desta área",
+        "subtitle": "O progresso da área é a média das suas metas. Cada linha mostra quanto aquela meta contribui.",
+        "empty": "Adicione metas nesta área para ver quanto cada uma forma o progresso.",
+        "contribution": "{{points}} pts",
+        "close": "Fechar"
+      },
+      "goalsTitle": "Metas desta área",
+      "growingTitle": "O que está crescendo",
+      "shareArea": "Compartilhar esta área",
+      "agentSuggestion": {
+        "title": "Sugestão do Unlock",
+        "subtitle": "Peça uma meta, tasks diárias/semanais/mensais, ou livros, sites e vídeos do YouTube para esta área.",
+        "ask": "Pedir ao Unlock",
+        "loading": "Pensando…",
+        "error": "Não foi possível gerar a sugestão. Tente de novo.",
+        "empty": "Nenhuma sugestão agora. Adicione um pouco mais de contexto e tente de novo.",
+        "newGoal": "Nova meta",
+        "existingGoal": "Adicionar tasks a uma meta existente",
+        "resources": "Recursos",
+        "resourceKind": {
+          "book": "Livro",
+          "site": "Site",
+          "youtube": "YouTube"
+        },
+        "accept": "Aceitar",
+        "dismiss": "Dispensar"
+      },
+      "shareProfile": "Compartilhar este perfil",
+      "shareProfilePending": "Compartilhando…",
+      "shareProfileCopied": "Link copiado — qualquer pessoa pode abrir sem conta.",
+      "shareProfileError": "Não foi possível criar o link. Tente de novo.",
+      "shareComments": {
+        "title": "Comentários do seu share",
+        "subtitle": "O que as pessoas escreveram no seu perfil público, fotos e documentos.",
+        "loading": "Carregando comentários…",
+        "empty": "Ainda não há comentários. Compartilhe este perfil para receber feedback.",
+        "error": "Não foi possível carregar os comentários."
+      },
+      "talkToGuide": "Falar com o Unlock",
+      "growing": {
+        "empty": "Adicione uma meta e ela aparece aqui como algo que está crescendo nesta área.",
+        "insightEyebrow": "Visão da meta",
+        "progressPraise": "Uau — seu progresso está incrível.",
+        "weekChart": "Últimos 7 dias",
+        "relatedTasks": "Tasks relacionadas",
+        "relatedEvidence": "Links, documentos e imagens relacionados",
+        "relatedEvidenceEmpty": "Ainda não há evidências ligadas a esta meta.",
+        "closeInsight": "Fechar",
+        "status": {
+          "new": "Nova",
+          "behind": "Atrasada ou sem sessões feitas",
+          "partial": "Parcial — ainda aberta hoje",
+          "onTrack": "Em dia"
+        }
+      },
+      "goals": {
+        "addGoal": "Adicionar meta",
+        "empty": "Nenhuma meta ainda. Adicione uma meta final e as tasks diárias, semanais ou mensais que te levam até ela.",
+        "expandPanel": "Expandir",
+        "collapsePanel": "Recolher",
+        "toggleTasks": "Mostrar ou ocultar tasks",
+        "toggleTaskDoneToday": "Marcar a sessão de hoje como feita ou não",
+        "progressLabel": "{{percent}}% · {{done}}/{{total}} sessões",
+        "completeBadge": "Concluída",
+        "markComplete": "Marcar meta como concluída",
+        "markIncomplete": "Desmarcar meta como concluída",
+        "priority": {
+          "label": "Prioridade",
+          "essential": "Essencial",
+          "moreImportant": "Mais importante",
+          "lessImportant": "Menos importante",
+          "cycleHint": "Clique para mudar a prioridade",
+          "cycleAria": "Prioridade: {{priority}}. Clique para mudar."
+        },
+        "deleteConfirmTitle": "Tem certeza que quer excluir esta meta?",
+        "deleteConfirmDescription": "Remover “{{item}}” e suas tasks pode impactar o gráfico de progresso desta área.",
+        "deleteConfirmAction": "Excluir",
+        "cadence": {
+          "daily": "Diária",
+          "weekly": "Semanal",
+          "monthly": "Mensal"
+        },
+        "weekday": {
+          "0": "Domingo",
+          "1": "Segunda",
+          "2": "Terça",
+          "3": "Quarta",
+          "4": "Quinta",
+          "5": "Sexta",
+          "6": "Sábado"
+        },
+        "schedule": {
+          "atTime": "às {{time}}",
+          "noTime": "Sem horário definido",
+          "dayOfMonth": "Dia {{day}}",
+          "withWeekends": "incluindo fins de semana",
+          "weekdaysOnly": "só dias úteis",
+          "durationMinutes": "{{count}} min",
+          "durationHours": "{{count}} h",
+          "durationHoursMinutes": "{{hours}} h {{minutes}} min"
+        },
+        "horizon": {
+          "1": "1 mês",
+          "3": "3 meses",
+          "6": "6 meses",
+          "12": "1 ano"
+        },
+        "horizonLabel": "Horizonte · {{horizon}}",
+        "wizard": {
+          "goalStepTitle": "Sua meta final",
+          "goalStepHint": "O que você quer alcançar nesta área?",
+          "finalGoalLabel": "Meta final",
+          "finalGoalPlaceholder": "ex.: Terminar o curso de systems design",
+          "goalTitleRequired": "Digite a meta final para continuar.",
+          "horizonLabel": "Quanto tempo vai levar?",
+          "horizonHint": "Tasks diárias e recorrentes rodam ao longo deste horizonte.",
+          "tasksStepTitle": "Tasks que te levam até lá",
+          "tasksStepHint": "Quebre “{{goal}}” em tasks diárias, semanais ou mensais. Pode misturar ritmos.",
+          "taskTitleLabel": "Task",
+          "taskTitlePlaceholder": "ex.: Ler um paper",
+          "taskTitleRequired": "Digite o título da task.",
+          "tasksRequired": "Adicione pelo menos uma task antes de salvar.",
+          "cadenceLabel": "Ritmo",
+          "weekendsLabel": "Fins de semana",
+          "weekdaysOnly": "Só dias úteis",
+          "includeWeekends": "Incluir fins de semana",
+          "weekdayLabel": "Dia da semana",
+          "dayOfMonthLabel": "Dia do mês",
+          "setTime": "Definir horário",
+          "durationLabel": "Duração da sessão (minutos)",
+          "durationPlaceholder": "ex.: 30",
+          "durationHint": "Opcional — quanto dura cada sessão.",
+          "addTask": "Adicionar task",
+          "next": "Próximo",
+          "back": "Voltar",
+          "saveGoal": "Salvar meta"
+        },
+        "edit": {
+          "editGoal": "Editar título da meta",
+          "editTask": "Editar task",
+          "deleteTask": "Excluir task",
+          "addTask": "Adicionar task",
+          "addTaskTitle": "Adicionar task",
+          "editTaskTitle": "Editar task",
+          "save": "Salvar",
+          "deleteTaskConfirm": "Excluir esta task? Isso pode afetar o progresso desta meta.",
+          "skipToday": "Pular só hoje",
+          "restoreToday": "Restaurar hoje",
+          "skippedToday": "Pulada hoje",
+          "completedToday": "Feita hoje",
+          "toggleTaskDetails": "Mostrar ou ocultar detalhes da task"
+        },
+        "calendar": {
+          "open": "Ver no calendário",
+          "eyebrow": "Calendário da meta",
+          "view": {
+            "week": "Semana",
+            "month": "Mês"
+          },
+          "prev": "Período anterior",
+          "next": "Próximo período",
+          "taskCount": "{{count}}",
+          "emptyDay": "Nenhuma task neste dia.",
+          "skipDay": "Pular só este dia",
+          "restoreDay": "Restaurar este dia",
+          "toggleComplete": "Marcar este dia como feito ou não"
+        }
+      },
+      "deleteAreaConfirmTitle": "Tem certeza que quer remover esta área?",
+      "deleteAreaConfirmDescription": "Remover “{{area}}” pode impactar o seu gráfico de progresso e ocultar as evidências dela.",
+      "deleteAreaConfirmAction": "Remover",
+      "themeMotto": {
+        "professional": "Seu ofício está acumulando força — cada semana focada aproxima o papel que você quer.",
+        "health": "Cuidar do corpo com constância é o que torna o deep work possível.",
+        "studies": "O estudo te ajuda a alcançar suas metas e te aproxima da profissão que você quer.",
+        "spirituality": "Atenção quieta hoje protege o sentido por trás de tudo o que você constrói.",
+        "leisure": "Descanso não é desvio — é o que mantém esse caminho sustentável.",
+        "family": "Presença com quem importa é progresso que cresce em silêncio.",
+        "economy": "Clareza com o dinheiro abre pista para o futuro que você está construindo."
+      },
+      "assets": {
+        "mottoTitle": "Frase motivacional",
+        "mottoHint": "Gerada a partir do que você adicionou e por que cada item marca progresso.",
+        "mottoEmpty": "Adicione evidências com uma razão de progresso e gere a moral.",
+        "mottoGenerate": "Gerar moral",
+        "mottoGenerating": "Gerando…",
+        "mottoNeedsReason": "Adicione pelo menos uma razão de progresso antes de gerar.",
+        "mottoFailed": "Não foi possível gerar a frase. Tente de novo.",
+        "progressReasonLabel": "Por que isso é progresso",
+        "progressReasonPlaceholder": "O que mudou por causa disso?",
+        "relatedGoalLabel": "Meta relacionada",
+        "relatedGoalNone": "Nenhuma meta relacionada",
+        "relatedGoalNoneAvailable": "Adicione uma meta primeiro",
+        "linksTitle": "Links",
+        "linksEmpty": "Nenhum link ainda.",
+        "linkLabel": "Rótulo",
+        "linkUrl": "https://…",
+        "addLink": "Adicionar link",
+        "saveLink": "Salvar link",
+        "documentsTitle": "Documentos",
+        "documentsEmpty": "Nenhum documento ainda.",
+        "documentName": "Nome do documento",
+        "documentUrl": "https://…",
+        "addDocument": "Adicionar documento",
+        "saveDocument": "Salvar documento",
+        "imagesTitle": "Imagens",
+        "imagesHint": "Até {{max}} imagens. Guardadas neste dispositivo. Escreva por que marca progresso e depois escolha o arquivo.",
+        "addImage": "Adicionar imagem",
+        "chooseImage": "Escolher arquivo",
+        "imageLimit": "Você pode adicionar até {{max}} imagens.",
+        "imageTooLarge": "Imagem muito grande. Escolha um arquivo menor.",
+        "imageInvalid": "Escolha um arquivo de imagem.",
+        "remove": "Remover",
+        "galleryTitle": "Galeria",
+        "gallerySubtitle": "Tudo o que você adicionou nesta área.",
+        "galleryEmpty": "Nada aqui ainda. Adicione um link, documento ou imagem acima.",
+        "galleryCount": "{{count}} itens",
+        "kindLink": "Link",
+        "kindDocument": "Documento",
+        "kindImage": "Imagem",
+        "deleteConfirmTitle": "Tem certeza que quer excluir isso?",
+        "deleteConfirmDescription": "Remover “{{item}}” pode impactar o seu gráfico de progresso nesta área.",
+        "deleteConfirmAction": "Excluir"
+      },
+      "details": {
+        "professional": {
+          "summary": "Software Engineer avançando para Arquitetura de IA e liderança técnica.",
+          "goals": {
+            "g1": "Conseguir um papel focado em IA",
+            "g2": "Lançar a plataforma Unlock",
+            "g3": "Mentorar 2 devs juniores"
+          },
+          "tags": {
+            "t1": "System design",
+            "t2": "Backend",
+            "t3": "Liderança"
+          }
+        },
+        "health": {
+          "summary": "Construindo energia e recuperação sustentáveis em torno do deep work.",
+          "goals": {
+            "g1": "Dormir 7+ horas nos dias de semana",
+            "g2": "Caminhar 8 mil passos por dia",
+            "g3": "Agendar check-up anual"
+          },
+          "tags": {
+            "t1": "Sono",
+            "t2": "Movimento"
+          }
+        },
+        "studies": {
+          "summary": "Aprofundando sistemas de IA sem perder a base.",
+          "goals": {
+            "g1": "Terminar o curso de systems design",
+            "g2": "Hábito semanal de leitura de papers"
+          },
+          "tags": {
+            "t1": "Sistemas de IA",
+            "t2": "Ritmo de aprendizado"
+          }
+        },
+        "spirituality": {
+          "summary": "Protegendo espaço quieto para reflexão e sentido além da entrega.",
+          "goals": {
+            "g1": "10 minutos de quietude cada manhã",
+            "g2": "Entrada semanal no diário"
+          },
+          "tags": {
+            "t1": "Presença"
+          }
+        },
+        "leisure": {
+          "summary": "Abrindo espaço para o lúdico para o trabalho continuar sustentável.",
+          "goals": {
+            "g1": "Um bloco de hobby todo fim de semana",
+            "g2": "Desconectar nas noites de sexta"
+          },
+          "tags": {
+            "t1": "Lazer",
+            "t2": "Descanso"
+          }
+        },
+        "family": {
+          "summary": "Permanecer presente com as pessoas que mais importam.",
+          "goals": {
+            "g1": "Jantar semanal em família sem celular",
+            "g2": "Ligar para os pais todo domingo"
+          },
+          "tags": {
+            "t1": "Presença"
+          }
+        },
+        "economy": {
+          "summary": "Crescendo clareza financeira e runway junto com a carreira.",
+          "goals": {
+            "g1": "Automatizar transferência de poupança",
+            "g2": "Revisar orçamento mensalmente"
+          },
+          "tags": {
+            "t1": "Runway",
+            "t2": "Clareza"
+          }
         }
       }
     },
@@ -740,5 +1152,46 @@
   },
   "routes": {
     "stubMessage": "Em breve — estrutura do demo"
+  },
+  "share": {
+    "lifeArea": {
+      "eyebrow": "Área da vida",
+      "footer": "Feito com Unlock",
+      "goalsTitle": "Metas desta área",
+      "goalsEmpty": "Nenhuma meta compartilhada ainda.",
+      "growingTitle": "O que está crescendo",
+      "growingEmpty": "Nada crescendo ainda.",
+      "imagesTitle": "Imagens",
+      "linksTitle": "Links",
+      "documentsTitle": "Documentos",
+      "loading": "Carregando perfil…",
+      "unavailableTitle": "Este perfil não está disponível",
+      "unavailableBody": "Este link pode ter sido desativado ou está incorreto. Peça um novo link a quem compartilhou.",
+      "errorTitle": "Não foi possível carregar este perfil",
+      "errorBody": "Tente de novo em instantes.",
+      "lightbox": {
+        "eyebrow": "Foto",
+        "close": "Fechar"
+      },
+      "document": {
+        "eyebrow": "Documento",
+        "open": "Abrir documento"
+      },
+      "comments": {
+        "profileTitle": "Comentários",
+        "namePlaceholder": "Seu nome",
+        "bodyPlaceholder": "Escreva um comentário… (pode usar emoji)",
+        "submit": "Comentar",
+        "sending": "Enviando…",
+        "error": "Não foi possível enviar. Tente de novo.",
+        "emojiPicker": "Adicionar emoji",
+        "emptyProfile": "Seja a primeira pessoa a comentar neste perfil.",
+        "emptyAsset": "Ainda não há comentários aqui.",
+        "target": {
+          "image": "Na foto · {{label}}",
+          "document": "No documento · {{label}}"
+        }
+      }
+    }
   }
 }

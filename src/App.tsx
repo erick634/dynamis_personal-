@@ -7,6 +7,7 @@ import { ChatHistoryScreen } from '@/features/chat-history/chat-history-screen';
 import { ChatSessionScreen } from '@/features/chat-history/chat-session-screen';
 import { DiscoveryChat } from '@/features/discovery/discovery-chat';
 import { IntentProfileScreen } from '@/features/intent-profile/intent-profile-screen';
+import { LifeAreaDetailScreen } from '@/features/intent-profile/life-area-detail-screen';
 import { LiveKitTestScreen } from '@/features/livekit-test/livekit-test-screen';
 import { CreateProfileScreen } from '@/features/onboarding/create-profile-screen';
 import { LoginScreen } from '@/features/onboarding/login-screen';
@@ -15,6 +16,7 @@ import { PossibilityMap } from '@/features/possibility-map/possibility-map';
 import { PortfolioScreen } from '@/features/portfolio/portfolio-screen';
 import { ProfilesScreen } from '@/features/profiles/profiles-screen';
 import { SharePublicPage } from '@/features/share/share-public-page';
+import { ShareLifeAreaPublicPage } from '@/features/share/share-life-area-public-page';
 import { TransformationPlanScreen } from '@/features/transformation-plan/transformation-plan-screen';
 import { WatchtowersScreen } from '@/features/watchtowers/watchtowers-screen';
 
@@ -26,6 +28,7 @@ export function App() {
         <Route path="/awakening" element={<AwakeningScreen />} />
         <Route path="/onboarding" element={<CreateProfileScreen />} />
         <Route path="/login" element={<LoginScreen />} />
+        <Route path="/share/area/:token" element={<ShareLifeAreaPublicPage />} />
         <Route path="/share/:token" element={<SharePublicPage />} />
         {/* Legacy live/welcome entry — chat is the conversation surface now. */}
         <Route path="/welcome" element={<Navigate to="/guide" replace />} />
@@ -45,6 +48,7 @@ export function App() {
             <Route path="/chats" element={<ChatHistoryScreen />} />
             <Route path="/chats/:sessionId" element={<ChatSessionScreen />} />
             <Route path="/you" element={<IntentProfileScreen />} />
+            <Route path="/you/areas/:areaId" element={<LifeAreaDetailScreen />} />
             <Route path="/profiles" element={<ProfilesScreen />} />
             <Route path="/portfolio" element={<PortfolioScreen />} />
             <Route path="/profile" element={<Navigate to="/you" replace />} />

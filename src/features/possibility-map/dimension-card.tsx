@@ -10,11 +10,11 @@ const ICON_MAP: Record<DimensionIcon, LucideIcon> = {
   compass: Compass,
 };
 
-const ICON_GRADIENT: Record<DimensionIcon, string> = {
-  brain: 'from-blue/40 to-blue-accent/30',
-  briefcase: 'from-blue-accent/35 to-blue/25',
-  heart: 'from-success/35 to-success-deep/25',
-  compass: 'from-red-warm/35 to-red/25',
+const ICON_TONE: Record<DimensionIcon, string> = {
+  brain: 'bg-blue-soft text-blue',
+  briefcase: 'bg-blue-soft/70 text-blue',
+  heart: 'bg-success/15 text-success',
+  compass: 'bg-ember/15 text-ember',
 };
 
 type DimensionCardProps = {
@@ -33,31 +33,31 @@ export function DimensionCard({ dimension, animationDelayMs = 0 }: DimensionCard
   return (
     <article
       tabIndex={0}
-      className="possibility-map__dimension-card possibility-map__reveal-card outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-blue-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-deep"
+      className="possibility-map__reveal-card flex min-h-full flex-col rounded-3xl border border-line-soft/80 bg-white p-5 shadow-soft outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-blue-accent focus-visible:ring-offset-2"
       style={{ animationDelay: `${String(animationDelayMs)}ms` }}
     >
       <span
         className={[
-          'possibility-map__dimension-icon flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br',
-          ICON_GRADIENT[dimension.icon],
+          'flex size-10 items-center justify-center rounded-xl',
+          ICON_TONE[dimension.icon],
         ].join(' ')}
         aria-hidden
       >
-        <Icon className="h-5 w-5 text-white" strokeWidth={2} />
+        <Icon className="size-5" strokeWidth={2} />
       </span>
 
-      <h3 className="possibility-map__dimension-title font-body font-semibold text-white">
+      <h3 className="mt-4 font-body text-sm font-semibold leading-snug text-ink sm:text-[0.9375rem]">
         {dimension.name}
       </h3>
 
       <p
-        className="possibility-map__dimension-leverage font-display font-semibold tabular-nums"
+        className="mt-2 font-display text-xl font-semibold tracking-tight text-ember tabular-nums sm:text-2xl"
         aria-label={leverageLabel}
       >
         {leverageLabel}
       </p>
 
-      <p className="possibility-map__dimension-description font-body leading-relaxed text-white/60">
+      <p className="mt-3 flex-1 font-body text-sm leading-relaxed text-ink-2">
         {dimension.description}
       </p>
     </article>

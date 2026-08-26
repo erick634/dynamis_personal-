@@ -157,8 +157,8 @@ export function EnergeiaConstellation({
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="white"
-            strokeOpacity="0.22"
+            stroke="var(--ink)"
+            strokeOpacity="0.2"
             strokeWidth="1"
           />
         );
@@ -175,15 +175,15 @@ export function EnergeiaConstellation({
             cx={node.x}
             cy={node.y}
             r={node.r * 2.4}
-            fill={node.accent ? 'var(--red)' : 'white'}
-            fillOpacity={node.accent ? 0.25 : 0.1}
+            fill={node.accent ? 'var(--ember)' : 'var(--ink)'}
+            fillOpacity={node.accent ? 0.22 : 0.08}
           />
           <circle
             cx={node.x}
             cy={node.y}
             r={node.r}
-            fill={node.accent ? 'var(--red)' : 'white'}
-            fillOpacity={node.accent ? 1 : 0.9}
+            fill={node.accent ? 'var(--ember)' : 'var(--ink)'}
+            fillOpacity={node.accent ? 1 : 0.55}
           />
         </g>
       ))}

@@ -1,5 +1,7 @@
 import { parseChatSignalsPayload } from '@/features/discovery/discovery-signals-api';
 import type { ProfileSignals } from '@/features/discovery/discovery-types';
+import { parseLifeAreaGoalSuggestion } from '@/features/intent-profile/parse-life-area-goal-suggestion';
+import type { LifeAreaGoalSuggestion } from '@/features/intent-profile/use-life-area-goals';
 import { API_BASE_URL, DYNAMIS_JWT } from '@/lib/config';
 
 type RunDiscoveryChatTurnParams = {
@@ -13,6 +15,7 @@ export type DiscoveryChatTurnResult = {
   sessionId: string | null;
   profileSignals: ProfileSignals | null;
   insight: string | null;
+  lifeAreaGoalSuggestion: LifeAreaGoalSuggestion | null;
 };
 
 export async function runDiscoveryChatTurn(
@@ -48,6 +51,7 @@ export async function runDiscoveryChatTurn(
     session_id?: string;
     profile_signals?: ProfileSignals;
     insight?: string;
+    life_area_goal_suggestion?: unknown;
   };
 
   const signalsPayload = parseChatSignalsPayload(data);
@@ -57,5 +61,6 @@ export async function runDiscoveryChatTurn(
     sessionId: data.session_id ?? params.sessionId,
     profileSignals: signalsPayload?.profile_signals ?? null,
     insight: signalsPayload?.insight ?? null,
+    lifeAreaGoalSuggestion: parseLifeAreaGoalSuggestion(data.life_area_goal_suggestion),
   };
 }

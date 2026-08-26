@@ -140,6 +140,21 @@
     "leverageSuffix": "{{value}} leverage",
     "generating": "Building your map from your Intent Profile…",
     "regenerate": "Regenerate map",
+    "dimensionsTitle": "Where AI multiplies your reach",
+    "dimensionsSubtitle": "Four leverage dimensions shaped from your Intent Profile.",
+    "profile": {
+      "belongsTo": "Map for {{profile}}",
+      "fallback": "your profile"
+    },
+    "motivation": {
+      "fallback": "Your words become the map — keep Discovery going to sharpen every dimension."
+    },
+    "lifeAreas": {
+      "title": "Life areas right now",
+      "subtitle": "Live progress from your Profile. Tap an area for an Unlock suggestion — goals, tasks, and resources.",
+      "suggestionEyebrow": "Unlock suggestion",
+      "openArea": "Open area"
+    },
     "noProfile": {
       "body": "Complete Discovery first so we can map your potential from your own words — not the demo persona.",
       "cta": "Start Discovery"
@@ -210,6 +225,25 @@
         "title": "Advance on what I already have",
         "body": "Take a next step on something already in motion.",
         "message": "I want to advance on what I already have going — help me take a concrete next step."
+      },
+      "continueProfile": {
+        "title": "Continue a profile",
+        "body": "Pick a life area or professional profile to update with new goals.",
+        "listPrompt": "Which profile do you want to keep updating?",
+        "lifeAreasHeading": "Life areas",
+        "profilesHeading": "Professional profiles",
+        "suggestedBadge": "Suggested",
+        "primaryBadge": "Primary",
+        "staleBadge": "{{days}}+ days quiet",
+        "suggestNever": "I'd suggest {{name}} — you haven't built goals there yet, and that can slow progress in this area.",
+        "suggestStale": "I'd suggest {{name}} — it's been about {{days}} days without an update, and that can affect progress in this area.",
+        "suggestDefault": "I'd suggest starting with {{name}}.",
+        "focusCaveat": "If you're focused on “{{focus}}” right now, we can follow that instead.",
+        "confirm": "Continue with this",
+        "back": "Back",
+        "empty": "No profiles or life areas yet. Add one on Profile, or choose another intent.",
+        "messageLifeArea": "I want to continue updating my {{area}} profile. Help me set clear goals and daily, weekly, or monthly tasks for it. Ask questions until you have enough to suggest a solid goal plan — then propose it.",
+        "messageProfile": "I want to continue updating my professional profile “{{title}}”. Help me set clear goals and actionable tasks for it. Ask focused questions until you have enough, then suggest a concrete goal plan."
       }
     },
     "identity": {
@@ -218,6 +252,12 @@
       "promptBubble": "Before we continue — could you fill in a few details for me, please? That way I can keep the conversation going without any issues.",
       "submit": "Continue conversation",
       "saving": "Saving…"
+    },
+    "goalSuggestion": {
+      "eyebrow": "Suggested goal",
+      "title": "Add this to {{area}}?",
+      "accept": "Add to my goals",
+      "dismiss": "Not now"
     },
     "errors": {
       "profileRequired": "Create a short profile first (name and email) — then we can start Discovery together."
@@ -261,8 +301,38 @@
       "label": "Filter plan items",
       "all": "All",
       "today": "Today",
+      "week": "Week",
+      "month": "Month",
       "high": "High",
       "build": "Build"
+    },
+    "lifeAreaTasks": {
+      "subtitle": "Tasks from your life areas — ordered by priority and time. Changes sync back to Profile.",
+      "empty": "No tasks in this period. Add goals on Profile, or try another filter.",
+      "goalMeta": "{{goal}} · {{area}}",
+      "edit": "Edit task",
+      "markDone": "Mark “{{title}}” done",
+      "markNotDone": "Mark “{{title}}” not done",
+      "periodProgress": "{{done}}/{{total}} in period"
+    },
+    "profile": {
+      "belongsTo": "Plan for {{profile}}",
+      "fallback": "your profile"
+    },
+    "motivation": {
+      "fallback": "Small, steady steps turn Dynamis into Energeia."
+    },
+    "chart": {
+      "title": "Progress this period",
+      "summary": "{{done}} of {{total}} task sessions done",
+      "ringLabel": "{{percent}} percent of task sessions done",
+      "empty": "No tasks to chart in this period.",
+      "period": {
+        "all": "Across upcoming tasks",
+        "today": "Today",
+        "week": "This week",
+        "month": "This month"
+      }
     },
     "tags": {
       "high": "High",
@@ -387,6 +457,348 @@
         "constraints": {
           "label": "Growth areas",
           "description": "Opportunities for development"
+        }
+      }
+    },
+    "balanceRadar": {
+      "title": "Balance radar",
+      "subtitle": "How each life area is developing",
+      "viewScores": "View scores",
+      "hideScores": "Hide scores",
+      "chartAria": "Radar chart of development across life areas",
+      "areas": {
+        "professional": "Professional",
+        "health": "Health",
+        "studies": "Studies",
+        "spirituality": "Spirituality",
+        "leisure": "Leisure",
+        "family": "Family",
+        "economy": "Economy"
+      },
+      "bands": {
+        "high": "76–100",
+        "mid": "51–75",
+        "low": "0–50"
+      }
+    },
+    "lifeArea": {
+      "cardsTitle": "Your life areas",
+      "cardsSubtitle": "Each area carries a short theme line beside its progress. Open one to add evidence.",
+      "addArea": "Add area",
+      "removeArea": "Remove {{area}}",
+      "empty": "No life areas active yet. Add one to start mapping your balance.",
+      "scoreOutOf": "{{score}} / 100",
+      "backToBalance": "Back to balance",
+      "eyebrow": "Life area",
+      "summary": {
+        "editHint": "Click to edit this summary",
+        "editLabel": "Edit life area summary"
+      },
+      "scoreBreakdown": {
+        "open": "See how each goal shapes this progress",
+        "eyebrow": "Area progress",
+        "title": "{{score}}% of this area",
+        "subtitle": "Area progress is the average of your goals. Each line shows how much that goal adds.",
+        "empty": "Add goals for this area to see how each one shapes progress.",
+        "contribution": "{{points}} pts",
+        "close": "Close"
+      },
+      "goalsTitle": "Goals for this area",
+      "growingTitle": "What's growing",
+      "shareArea": "Share this area",
+      "agentSuggestion": {
+        "title": "Unlock suggestion",
+        "subtitle": "Ask for a goal, daily/weekly/monthly tasks, or books, sites, and YouTube videos for this area.",
+        "ask": "Ask Unlock",
+        "loading": "Thinking…",
+        "error": "Could not generate a suggestion. Try again.",
+        "empty": "No suggestion right now. Add a bit more context, then try again.",
+        "newGoal": "New goal",
+        "existingGoal": "Add tasks to existing goal",
+        "resources": "Resources",
+        "resourceKind": {
+          "book": "Book",
+          "site": "Site",
+          "youtube": "YouTube"
+        },
+        "accept": "Accept",
+        "dismiss": "Dismiss"
+      },
+      "shareProfile": "Share this profile",
+      "shareProfilePending": "Sharing…",
+      "shareProfileCopied": "Link copied — anyone can open it without an account.",
+      "shareProfileError": "Couldn't create the share link. Try again.",
+      "shareComments": {
+        "title": "Comments from your share",
+        "subtitle": "What people wrote on your public profile, photos, and documents.",
+        "loading": "Loading comments…",
+        "empty": "No comments yet. Share this profile to invite feedback.",
+        "error": "Couldn't load comments."
+      },
+      "talkToGuide": "Talk to Unlock",
+      "growing": {
+        "empty": "Add a goal and it will show up here as something growing in this area.",
+        "insightEyebrow": "Goal insight",
+        "progressPraise": "Wow — your progress is incredible.",
+        "weekChart": "Last 7 days",
+        "relatedTasks": "Related tasks",
+        "relatedEvidence": "Related links, documents, and images",
+        "relatedEvidenceEmpty": "No evidence linked to this goal yet.",
+        "closeInsight": "Close",
+        "status": {
+          "new": "New",
+          "behind": "Behind or no sessions done yet",
+          "partial": "Partly done — still open today",
+          "onTrack": "Up to date"
+        }
+      },
+      "goals": {
+        "addGoal": "Add goal",
+        "empty": "No goals yet. Add a final goal and the daily, weekly, or monthly tasks that get you there.",
+        "expandPanel": "Expand",
+        "collapsePanel": "Collapse",
+        "toggleTasks": "Show or hide tasks",
+        "toggleTaskDoneToday": "Mark today's session done or not done",
+        "progressLabel": "{{percent}}% · {{done}}/{{total}} sessions",
+        "completeBadge": "Complete",
+        "markComplete": "Mark goal as complete",
+        "markIncomplete": "Mark goal as incomplete",
+        "priority": {
+          "label": "Priority",
+          "essential": "Essential",
+          "moreImportant": "More important",
+          "lessImportant": "Less important",
+          "cycleHint": "Click to change priority",
+          "cycleAria": "Priority: {{priority}}. Click to change."
+        },
+        "deleteConfirmTitle": "Are you sure you want to delete this goal?",
+        "deleteConfirmDescription": "Removing “{{item}}” and its tasks can affect your progress chart for this area.",
+        "deleteConfirmAction": "Delete",
+        "cadence": {
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "monthly": "Monthly"
+        },
+        "weekday": {
+          "0": "Sunday",
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday"
+        },
+        "schedule": {
+          "atTime": "at {{time}}",
+          "noTime": "No set time",
+          "dayOfMonth": "Day {{day}}",
+          "withWeekends": "including weekends",
+          "weekdaysOnly": "weekdays only",
+          "durationMinutes": "{{count}} min",
+          "durationHours": "{{count}} h",
+          "durationHoursMinutes": "{{hours}} h {{minutes}} min"
+        },
+        "horizon": {
+          "1": "1 month",
+          "3": "3 months",
+          "6": "6 months",
+          "12": "1 year"
+        },
+        "horizonLabel": "Horizon · {{horizon}}",
+        "wizard": {
+          "goalStepTitle": "Your final goal",
+          "goalStepHint": "What do you want to achieve in this area?",
+          "finalGoalLabel": "Final goal",
+          "finalGoalPlaceholder": "e.g. Finish the systems design course",
+          "goalTitleRequired": "Enter your final goal to continue.",
+          "horizonLabel": "How long will this take?",
+          "horizonHint": "Daily and repeating tasks run across this horizon.",
+          "tasksStepTitle": "Tasks that get you there",
+          "tasksStepHint": "Break “{{goal}}” into daily, weekly, or monthly tasks. You can mix cadences.",
+          "taskTitleLabel": "Task",
+          "taskTitlePlaceholder": "e.g. Read one paper",
+          "taskTitleRequired": "Enter a task title.",
+          "tasksRequired": "Add at least one task before saving.",
+          "cadenceLabel": "Cadence",
+          "weekendsLabel": "Weekends",
+          "weekdaysOnly": "Weekdays only",
+          "includeWeekends": "Include weekends",
+          "weekdayLabel": "Day of week",
+          "dayOfMonthLabel": "Day of month",
+          "setTime": "Set a time",
+          "durationLabel": "Session length (minutes)",
+          "durationPlaceholder": "e.g. 30",
+          "durationHint": "Optional — how long each session lasts.",
+          "addTask": "Add task",
+          "next": "Next",
+          "back": "Back",
+          "saveGoal": "Save goal"
+        },
+        "edit": {
+          "editGoal": "Edit goal title",
+          "editTask": "Edit task",
+          "deleteTask": "Delete task",
+          "addTask": "Add task",
+          "addTaskTitle": "Add a task",
+          "editTaskTitle": "Edit task",
+          "save": "Save",
+          "deleteTaskConfirm": "Delete this task? It can affect your progress for this goal.",
+          "skipToday": "Skip today only",
+          "restoreToday": "Restore today",
+          "skippedToday": "Skipped for today",
+          "completedToday": "Done for today",
+          "toggleTaskDetails": "Show or hide task details"
+        },
+        "calendar": {
+          "open": "View in calendar",
+          "eyebrow": "Goal calendar",
+          "view": {
+            "week": "Week",
+            "month": "Month"
+          },
+          "prev": "Previous period",
+          "next": "Next period",
+          "taskCount": "{{count}}",
+          "emptyDay": "No tasks scheduled for this day.",
+          "skipDay": "Skip this day only",
+          "restoreDay": "Restore this day",
+          "toggleComplete": "Mark this day done or not done"
+        }
+      },
+      "deleteAreaConfirmTitle": "Are you sure you want to remove this area?",
+      "deleteAreaConfirmDescription": "Removing “{{area}}” can affect your progress chart and hide its evidence.",
+      "deleteAreaConfirmAction": "Remove",
+      "themeMotto": {
+        "professional": "Your craft is compounding — each focused week brings the role you want closer.",
+        "health": "Steady care for your body is what keeps deep work possible.",
+        "studies": "Study is how you close the gap between where you are and the work you want.",
+        "spirituality": "Quiet attention today protects the meaning behind everything you build.",
+        "leisure": "Rest is not a detour — it is how this path stays sustainable.",
+        "family": "Presence with the people who matter is progress that compounds quietly.",
+        "economy": "Clarity with money creates runway for the future you are building."
+      },
+      "assets": {
+        "mottoTitle": "Motivational phrase",
+        "mottoHint": "Generated from what you added and why each item marks progress.",
+        "mottoEmpty": "Add evidence with a progress reason, then generate the moral.",
+        "mottoGenerate": "Generate moral",
+        "mottoGenerating": "Generating…",
+        "mottoNeedsReason": "Add at least one progress reason before generating.",
+        "mottoFailed": "Could not generate the phrase. Try again.",
+        "progressReasonLabel": "Why this is progress",
+        "progressReasonPlaceholder": "What changed because of this?",
+        "relatedGoalLabel": "Related goal",
+        "relatedGoalNone": "No related goal",
+        "relatedGoalNoneAvailable": "Add a goal first",
+        "linksTitle": "Links",
+        "linksEmpty": "No links yet.",
+        "linkLabel": "Label",
+        "linkUrl": "https://…",
+        "addLink": "Add link",
+        "saveLink": "Save link",
+        "documentsTitle": "Documents",
+        "documentsEmpty": "No documents yet.",
+        "documentName": "Document name",
+        "documentUrl": "https://…",
+        "addDocument": "Add document",
+        "saveDocument": "Save document",
+        "imagesTitle": "Images",
+        "imagesHint": "Up to {{max}} images. Stored on this device. Write why it marks progress, then pick a file.",
+        "addImage": "Add image",
+        "chooseImage": "Choose file",
+        "imageLimit": "You can add up to {{max}} images.",
+        "imageTooLarge": "Image is too large. Choose a smaller file.",
+        "imageInvalid": "Choose an image file.",
+        "remove": "Remove",
+        "galleryTitle": "Gallery",
+        "gallerySubtitle": "Everything you have added to this area.",
+        "galleryEmpty": "Nothing here yet. Add a link, document, or image above.",
+        "galleryCount": "{{count}} items",
+        "kindLink": "Link",
+        "kindDocument": "Document",
+        "kindImage": "Image",
+        "deleteConfirmTitle": "Are you sure you want to delete this?",
+        "deleteConfirmDescription": "Removing “{{item}}” can affect your progress chart for this area.",
+        "deleteConfirmAction": "Delete"
+      },
+      "details": {
+        "professional": {
+          "summary": "Software Engineer moving toward AI Architecture and technical leadership.",
+          "goals": {
+            "g1": "Land an AI-focused role",
+            "g2": "Ship the Unlock platform",
+            "g3": "Mentor 2 junior devs"
+          },
+          "tags": {
+            "t1": "System design",
+            "t2": "Backend",
+            "t3": "Leadership"
+          }
+        },
+        "health": {
+          "summary": "Building sustainable energy and recovery habits around deep work.",
+          "goals": {
+            "g1": "Sleep 7+ hours on weeknights",
+            "g2": "Walk 8k steps daily",
+            "g3": "Book annual checkup"
+          },
+          "tags": {
+            "t1": "Sleep",
+            "t2": "Movement"
+          }
+        },
+        "studies": {
+          "summary": "Deepening AI systems knowledge while staying sharp on fundamentals.",
+          "goals": {
+            "g1": "Finish systems design course",
+            "g2": "Weekly paper reading habit"
+          },
+          "tags": {
+            "t1": "AI systems",
+            "t2": "Learning cadence"
+          }
+        },
+        "spirituality": {
+          "summary": "Protecting quiet space for reflection and meaning beyond delivery.",
+          "goals": {
+            "g1": "10 minutes of stillness each morning",
+            "g2": "Weekly journal entry"
+          },
+          "tags": {
+            "t1": "Presence"
+          }
+        },
+        "leisure": {
+          "summary": "Making room for play so work stays sustainable.",
+          "goals": {
+            "g1": "One hobby block every weekend",
+            "g2": "Unplug Friday evenings"
+          },
+          "tags": {
+            "t1": "Play",
+            "t2": "Rest"
+          }
+        },
+        "family": {
+          "summary": "Staying present with the people who matter most.",
+          "goals": {
+            "g1": "Weekly family dinner without phones",
+            "g2": "Call parents every Sunday"
+          },
+          "tags": {
+            "t1": "Presence"
+          }
+        },
+        "economy": {
+          "summary": "Growing financial clarity and runway alongside career growth.",
+          "goals": {
+            "g1": "Automate savings transfer",
+            "g2": "Review budget monthly"
+          },
+          "tags": {
+            "t1": "Runway",
+            "t2": "Clarity"
+          }
         }
       }
     },
@@ -740,5 +1152,46 @@
   },
   "routes": {
     "stubMessage": "Coming soon — demo scaffold"
+  },
+  "share": {
+    "lifeArea": {
+      "eyebrow": "Life area",
+      "footer": "Made with Unlock",
+      "goalsTitle": "Goals for this area",
+      "goalsEmpty": "No goals shared yet.",
+      "growingTitle": "What's growing",
+      "growingEmpty": "Nothing growing yet.",
+      "imagesTitle": "Images",
+      "linksTitle": "Links",
+      "documentsTitle": "Documents",
+      "loading": "Loading profile…",
+      "unavailableTitle": "This profile isn't available",
+      "unavailableBody": "This link may have been turned off or is incorrect. Ask the person who shared it for a new link.",
+      "errorTitle": "Couldn't load this profile",
+      "errorBody": "Please try again in a moment.",
+      "lightbox": {
+        "eyebrow": "Photo",
+        "close": "Close"
+      },
+      "document": {
+        "eyebrow": "Document",
+        "open": "Open document"
+      },
+      "comments": {
+        "profileTitle": "Comments",
+        "namePlaceholder": "Your name",
+        "bodyPlaceholder": "Write a comment… (emojis welcome)",
+        "submit": "Comment",
+        "sending": "Sending…",
+        "error": "Couldn't send your comment. Try again.",
+        "emojiPicker": "Add emoji",
+        "emptyProfile": "Be the first to leave a comment on this profile.",
+        "emptyAsset": "No comments on this yet.",
+        "target": {
+          "image": "On photo · {{label}}",
+          "document": "On document · {{label}}"
+        }
+      }
+    }
   }
 }

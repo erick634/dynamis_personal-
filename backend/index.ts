@@ -7,6 +7,17 @@ const { createProfilesRepo, ProfileConflictError, ProfileNotFoundError, ProfileV
   require('./profiles') as typeof import('./profiles');
 const { createPortfolioRepo, PortfolioNotFoundError, PortfolioValidationError } =
   require('./portfolio') as typeof import('./portfolio');
+const { createLifeAreaShareRepo, LifeAreaShareValidationError } =
+  require('./life-area-share') as typeof import('./life-area-share');
+const { createLifeAreaShareCommentsRepo, LifeAreaShareCommentValidationError } =
+  require('./life-area-share-comments') as typeof import('./life-area-share-comments');
+const {
+  LIFE_AREA_SUGGESTION_SYSTEM_PROMPT,
+  LifeAreaSuggestionValidationError,
+  normalizeLifeAreaSuggestionRequest,
+  normalizeLifeAreaSuggestionResponse,
+  buildLifeAreaSuggestionUserMessage,
+} = require('./life-area-suggestion') as typeof import('./life-area-suggestion');
 const Anthropic = require('@anthropic-ai/sdk')
   .default as typeof import('@anthropic-ai/sdk').default;
 const { WebSocket, WebSocketServer } = require('ws') as typeof import('ws');
@@ -139,10 +150,24 @@ const ASSISTANT_SYSTEM_PROMPT =
     '- Give concrete organizing help (one clear next step or a tiny plan skeleton).',
     '- Ask at most one question when it unblocks action — never a survey loop.',
     '',
+    '=== LIFE AREA GOALS (when committing to organize a concrete focus) ===',
+    'When the user wants a plan (or you propose locking one in), suggest ONE final goal',
+    'tied to a life area (professional, health, studies, spirituality, leisure, family,',
+    'economy), a horizon (1 / 3 / 6 / 12 months), plus a few mixable daily/weekly/monthly',
+    'tasks with optional times and session lengths. For daily tasks, ask whether weekends',
+    'are included. Say the goal and tasks in plain language in the chat. The product can',
+    'capture them as an editable goal the user can accept, change, skip for one day, or delete.',
+    '=== END LIFE AREA GOALS ===',
+    '',
     'RETURNING USER INTENTS (when the user clearly chooses one at the start):',
     '- Refine: deepen what you know — one clarifying question, then keep helping.',
     '- New Watchtower: learn the NEW area to watch; commit to setting that focus up.',
     '- Advance: one concrete next step on what is already in motion.',
+    '- Continue profile: the user picked a life area or professional profile to update.',
+    '  Focus on helping them create goals for THAT profile. Ask focused questions about',
+    '  the subject until you have enough, then suggest a concrete final goal with',
+    '  daily/weekly/monthly tasks (use the LIFE AREA GOALS rules). Do not restart full',
+    '  Discovery or open a new Watchtower unless they ask.',
     '',
     'ANTI-PATTERNS (never do these):',
     '- Do NOT open most turns with "That makes sense", "I hear you", "Perfect", or',
@@ -186,6 +211,8 @@ const VOICE_MODE_PROMPT = [
 const prisma = new PrismaClient();
 const profilesRepo = createProfilesRepo(prisma);
 const portfolioRepo = createPortfolioRepo(prisma);
+const lifeAreaShareRepo = createLifeAreaShareRepo(prisma);
+const lifeAreaShareCommentsRepo = createLifeAreaShareCommentsRepo(prisma);
 
 async function connectPrisma(): Promise<void> {
   await prisma.$connect();
@@ -2988,6 +3015,178 @@ app.get(
   },
 );
 
+app.post(
+  '/life-area-share',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const areaId = String(req.body?.area_id ?? '').trim();
+      if (!areaId) {
+        return res.status(400).json({ error: 'Invalid or missing area_id.' });
+      }
+
+      const { share, payload } = await lifeAreaShareRepo.upsertShare({
+        userId,
+        areaId,
+        payload: req.body?.payload,
+      });
+
+      console.log('[life-area-share] upsert', {
+        user_id: userId,
+        area_id: areaId,
+        token: share.share_token,
+      });
+
+      return res.status(200).json({
+        share_token: share.share_token,
+        area_id: share.area_id,
+        payload,
+      });
+    } catch (error) {
+      if (error instanceof LifeAreaShareValidationError) {
+        return res.status(400).json({ error: error.message });
+      }
+      console.error('POST /life-area-share error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.get(
+  '/share/area/:token',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      // Public route — intentionally no isRequestAuthorized.
+      const token = String(req.params.token ?? '').trim();
+      if (!token) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      const result = await lifeAreaShareRepo.getPublicByToken(token);
+      if (!result) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      return res.status(200).json({
+        share_token: result.token,
+        payload: result.payload,
+      });
+    } catch (error) {
+      console.error('GET /share/area/:token error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.get(
+  '/share/area/:token/comments',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      const token = String(req.params.token ?? '').trim();
+      if (!token) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      const share = await lifeAreaShareRepo.getShareByToken(token);
+      if (!share) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      const comments = await lifeAreaShareCommentsRepo.listByShareId(share.id);
+      return res.status(200).json({ comments });
+    } catch (error) {
+      console.error('GET /share/area/:token/comments error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.post(
+  '/share/area/:token/comments',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      const token = String(req.params.token ?? '').trim();
+      if (!token) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      const result = await lifeAreaShareRepo.getPublicByToken(token);
+      if (!result) {
+        return res.status(404).json({ error: 'Share link not found.' });
+      }
+
+      const comment = await lifeAreaShareCommentsRepo.addComment(
+        {
+          shareId: result.share.id,
+          userId: result.share.user_id,
+          areaId: result.share.area_id,
+          images: result.payload.images.map((image) => ({
+            id: image.id,
+            label: image.name,
+          })),
+          documents: result.payload.documents.map((doc) => ({
+            id: doc.id,
+            label: doc.name,
+          })),
+        },
+        {
+          authorName: req.body?.author_name,
+          body: req.body?.body,
+          targetType: req.body?.target_type,
+          targetKey: req.body?.target_key,
+        },
+      );
+
+      return res.status(201).json({ comment });
+    } catch (error) {
+      if (error instanceof LifeAreaShareCommentValidationError) {
+        return res.status(400).json({ error: error.message });
+      }
+      console.error('POST /share/area/:token/comments error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.get(
+  '/life-area-share/comments',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.query.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const areaId = String(req.query.area_id ?? '').trim();
+      if (!areaId) {
+        return res.status(400).json({ error: 'Invalid or missing area_id.' });
+      }
+
+      const comments = await lifeAreaShareCommentsRepo.listByOwner(userId, areaId);
+      return res.status(200).json({ comments });
+    } catch (error) {
+      console.error('GET /life-area-share/comments error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
 app.patch(
   '/profiles/:id',
   async (req: import('express').Request, res: import('express').Response) => {
@@ -3346,12 +3545,16 @@ app.post('/chat', async (req: import('express').Request, res: import('express').
     }
 
     const reply = await runAgentTurn(userId, sessionId, userMessage);
-    const { profile_signals, insight } = await buildDiscoverySignalsPayload(userId);
+    const [{ profile_signals, insight }, life_area_goal_suggestion] = await Promise.all([
+      buildDiscoverySignalsPayload(userId),
+      extractLifeAreaGoalSuggestion(userId, sessionId, userMessage, reply),
+    ]);
     return res.status(200).json({
       reply,
       session_id: sessionId,
       profile_signals,
       insight,
+      ...(life_area_goal_suggestion ? { life_area_goal_suggestion } : {}),
     });
   } catch (error) {
     console.error('POST /chat error:', error);
@@ -3663,6 +3866,207 @@ const REFLECTION_SUMMARY_SYSTEM_PROMPT = [
   '{"did_today":["..."],"plan_tomorrow":["..."],"celebration":"..."}',
 ].join('\n');
 
+const LIFE_AREA_MOTTO_SYSTEM_PROMPT = [
+  'You write one short motivational line for a life area in Unlock (Dynamis).',
+  'Anchor the line in the life-area theme (studies, health, professional, etc.).',
+  'If the user attached evidence with progress reasons, weave that progress lightly into the same theme.',
+  'Exactly ONE sentence, max 140 characters, second person ("you").',
+  'Tone: direct, warm, grounded. No exclamation marks. No cheerleading clichés.',
+  'Do not invent facts not present in the evidence.',
+  'If locale is pt-BR, write in Brazilian Portuguese. Otherwise write in English.',
+  'Output ONLY valid JSON, no markdown, no preamble, exact shape:',
+  '{"phrase":"..."}',
+].join('\n');
+
+type LifeAreaMottoEvidenceItem = {
+  kind: string;
+  title: string;
+  progress_reason: string;
+};
+
+function normalizeLifeAreaMottoEvidence(raw: unknown): LifeAreaMottoEvidenceItem[] | null {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return null;
+  }
+  const items: LifeAreaMottoEvidenceItem[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const kind = String((entry as { kind?: unknown }).kind ?? '').trim();
+    const title = String((entry as { title?: unknown }).title ?? '').trim();
+    const progressReason = String(
+      (entry as { progress_reason?: unknown }).progress_reason ?? '',
+    ).trim();
+    if (!title) continue;
+    if (kind !== 'link' && kind !== 'document' && kind !== 'image') continue;
+    items.push({ kind, title, progress_reason: progressReason });
+  }
+  return items.length > 0 ? items : null;
+}
+
+function formatLifeAreaMottoEvidence(items: LifeAreaMottoEvidenceItem[]): string {
+  return items
+    .map((item, index) => {
+      const reason = item.progress_reason || '(no progress reason given)';
+      return `${index + 1}. [${item.kind}] ${item.title}\n   Why progress: ${reason}`;
+    })
+    .join('\n');
+}
+
+function buildLifeAreaMottoPhrase(parsed: unknown, fallback: string): string {
+  if (parsed && typeof parsed === 'object') {
+    const phrase = (parsed as { phrase?: unknown }).phrase;
+    if (typeof phrase === 'string' && phrase.trim()) {
+      return phrase.trim().slice(0, 280);
+    }
+  }
+  return fallback;
+}
+
+const LIFE_AREA_GOAL_EXTRACT_SYSTEM_PROMPT = [
+  'You extract a structured life-area goal suggestion from a Dynamis conversation.',
+  'Only return a suggestion when the assistant and user are locking in a concrete goal',
+  'with actionable tasks (daily/weekly/monthly). Otherwise return {"suggestion":null}.',
+  'area_id must be one of: professional, health, studies, spirituality, leisure, family, economy.',
+  'horizon_months must be one of: 1, 3, 6, 12 (how long the goal runs).',
+  'Include 2–5 tasks. Mix cadences when useful. time is HH:mm or null.',
+  'duration_minutes is optional positive integer (session length) or null.',
+  'For daily tasks, include_weekends is boolean (false = Mon–Fri only).',
+  'weekday is 0=Sunday … 6=Saturday. day_of_month is 1–31.',
+  'Output ONLY valid JSON, no markdown:',
+  '{"suggestion":null}',
+  'OR',
+  '{"suggestion":{"area_id":"studies","title":"...","horizon_months":3,"tasks":[{"title":"...","cadence":"daily","time":"09:00","include_weekends":false,"duration_minutes":30},{"title":"...","cadence":"weekly","weekday":1,"time":null,"duration_minutes":60},{"title":"...","cadence":"monthly","day_of_month":15,"time":"18:00","duration_minutes":null}]}}',
+].join('\n');
+
+type LifeAreaGoalSuggestionPayload = {
+  area_id: string;
+  title: string;
+  horizon_months: number;
+  tasks: Array<{
+    title: string;
+    cadence: string;
+    time: string | null;
+    weekday?: number;
+    day_of_month?: number;
+    include_weekends?: boolean;
+    duration_minutes?: number | null;
+  }>;
+};
+
+function shouldTryLifeAreaGoalExtract(userMessage: string, reply: string): boolean {
+  const blob = `${userMessage}\n${reply}`.toLowerCase();
+  return /goal|meta|task|plan|habit|daily|weekly|monthly|organize|rhythm|rotina|semana|diár|mensal/.test(
+    blob,
+  );
+}
+
+function normalizeLifeAreaGoalSuggestion(raw: unknown): LifeAreaGoalSuggestionPayload | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const root = raw as { suggestion?: unknown };
+  if (root.suggestion === null || root.suggestion === undefined) return null;
+  if (!root.suggestion || typeof root.suggestion !== 'object') return null;
+  const record = root.suggestion as Record<string, unknown>;
+  const areaId = String(record.area_id ?? '').trim();
+  const allowed = [
+    'professional',
+    'health',
+    'studies',
+    'spirituality',
+    'leisure',
+    'family',
+    'economy',
+  ];
+  if (!allowed.includes(areaId)) return null;
+  const title = String(record.title ?? '').trim();
+  if (!title || !Array.isArray(record.tasks)) return null;
+
+  const tasks: LifeAreaGoalSuggestionPayload['tasks'] = [];
+  for (const item of record.tasks) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as Record<string, unknown>;
+    const taskTitle = String(row.title ?? '').trim();
+    const cadence = String(row.cadence ?? '').trim();
+    if (!taskTitle) continue;
+    if (cadence !== 'daily' && cadence !== 'weekly' && cadence !== 'monthly') continue;
+    const time =
+      row.time === null || typeof row.time === 'string' ? (row.time as string | null) : null;
+    const task: LifeAreaGoalSuggestionPayload['tasks'][number] = {
+      title: taskTitle,
+      cadence,
+      time,
+    };
+    if (cadence === 'daily') {
+      task.include_weekends = row.include_weekends === true;
+    }
+    const durationRaw = row.duration_minutes;
+    if (durationRaw === null) {
+      task.duration_minutes = null;
+    } else if (
+      typeof durationRaw === 'number' &&
+      Number.isInteger(durationRaw) &&
+      durationRaw > 0
+    ) {
+      task.duration_minutes = Math.min(480, durationRaw);
+    }
+    if (cadence === 'weekly') {
+      const weekday = Number(row.weekday);
+      if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) continue;
+      task.weekday = weekday;
+    }
+    if (cadence === 'monthly') {
+      const dayOfMonth = Number(row.day_of_month);
+      if (!Number.isInteger(dayOfMonth) || dayOfMonth < 1 || dayOfMonth > 31) continue;
+      task.day_of_month = dayOfMonth;
+    }
+    tasks.push(task);
+  }
+  if (tasks.length === 0) return null;
+  const horizonRaw = Number(record.horizon_months);
+  const horizon_months = [1, 3, 6, 12].includes(horizonRaw) ? horizonRaw : 3;
+  return { area_id: areaId, title, horizon_months, tasks };
+}
+
+async function extractLifeAreaGoalSuggestion(
+  userId: string,
+  sessionId: string,
+  userMessage: string,
+  reply: string,
+): Promise<LifeAreaGoalSuggestionPayload | null> {
+  if (!shouldTryLifeAreaGoalExtract(userMessage, reply)) {
+    return null;
+  }
+  try {
+    const history = await loadRecentHistory(userId, sessionId, 12);
+    const transcript = [
+      ...history.map((item) => `${item.role.toUpperCase()}: ${item.content}`),
+      `USER: ${userMessage}`,
+      `ASSISTANT: ${reply}`,
+    ].join('\n');
+
+    const llmRes = await anthropic.messages.create({
+      model: SUMMARY_MODEL,
+      system: LIFE_AREA_GOAL_EXTRACT_SYSTEM_PROMPT,
+      max_tokens: 700,
+      messages: [
+        {
+          role: 'user',
+          content: `Conversation:\n${transcript}\n\nReturn the JSON now.`,
+        },
+      ],
+    });
+    const block = llmRes.content[0];
+    if (!block || block.type !== 'text') return null;
+    const parsed = extractJsonObjectFromText(block.text);
+    return normalizeLifeAreaGoalSuggestion(parsed);
+  } catch (error) {
+    console.warn('[life-area-goal] extract failed', {
+      user_id: userId,
+      error: String(error),
+    });
+    return null;
+  }
+}
+
 const REFLECTION_SUMMARY_FALLBACK: {
   did_today: string[];
   plan_tomorrow: string[];
@@ -3858,6 +4262,135 @@ app.post(
       });
     } catch (error) {
       console.error('POST /reflection-summary error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.post(
+  '/life-area-motto',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      const userId = String(req.body?.user_id ?? '').trim();
+      if (!userId || !isValidUuid(userId)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const areaLabel = String(req.body?.area_label ?? '').trim();
+      if (!areaLabel) {
+        return res.status(400).json({ error: 'Missing area_label.' });
+      }
+
+      const evidence = normalizeLifeAreaMottoEvidence(req.body?.evidence);
+      if (!evidence) {
+        return res.status(400).json({ error: 'empty evidence' });
+      }
+
+      const locale = String(req.body?.locale ?? 'en-US').trim() || 'en-US';
+      const areaId = String(req.body?.area_id ?? '').trim();
+      const evidenceBlock = formatLifeAreaMottoEvidence(evidence);
+      const fallback = locale.toLowerCase().startsWith('pt')
+        ? `Em ${areaLabel}, suas evidências mostram progresso concreto.`
+        : `In ${areaLabel}, your evidence shows concrete progress.`;
+
+      const llmRes = await anthropic.messages.create({
+        model: SUMMARY_MODEL,
+        system: LIFE_AREA_MOTTO_SYSTEM_PROMPT,
+        max_tokens: 120,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              `Locale: ${locale}`,
+              `Life area id: ${areaId || 'unknown'}`,
+              `Life area label: ${areaLabel}`,
+              'Evidence:',
+              evidenceBlock,
+              'Return the JSON now.',
+            ].join('\n'),
+          },
+        ],
+      });
+
+      const block = llmRes.content[0];
+      let parsed: unknown | null = null;
+      if (block && block.type === 'text') {
+        parsed = extractJsonObjectFromText(block.text);
+      }
+
+      return res.status(200).json({
+        phrase: buildLifeAreaMottoPhrase(parsed, fallback),
+        generated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('POST /life-area-motto error:', error);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+  },
+);
+
+app.post(
+  '/life-area-suggestion',
+  async (req: import('express').Request, res: import('express').Response) => {
+    try {
+      if (!isRequestAuthorized(req)) {
+        return res.status(401).json({ error: 'Acesso não autorizado' });
+      }
+
+      let ctx;
+      try {
+        ctx = normalizeLifeAreaSuggestionRequest(req.body);
+      } catch (error) {
+        if (error instanceof LifeAreaSuggestionValidationError) {
+          return res.status(400).json({ error: error.message });
+        }
+        throw error;
+      }
+
+      if (!isValidUuid(ctx.user_id)) {
+        return res.status(400).json({
+          error: 'Invalid or missing user_id. Expected UUID.',
+        });
+      }
+
+      const llmRes = await anthropic.messages.create({
+        model: SUMMARY_MODEL,
+        system: LIFE_AREA_SUGGESTION_SYSTEM_PROMPT,
+        max_tokens: 900,
+        messages: [
+          {
+            role: 'user',
+            content: buildLifeAreaSuggestionUserMessage(ctx),
+          },
+        ],
+      });
+
+      const block = llmRes.content[0];
+      let parsed: unknown | null = null;
+      if (block && block.type === 'text') {
+        parsed = extractJsonObjectFromText(block.text);
+      }
+
+      const suggestion = normalizeLifeAreaSuggestionResponse(parsed);
+      if (!suggestion.goal && suggestion.resources.length === 0) {
+        return res.status(200).json({
+          suggestion: null,
+          generated_at: new Date().toISOString(),
+        });
+      }
+
+      return res.status(200).json({
+        suggestion,
+        generated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('POST /life-area-suggestion error:', error);
       return res.status(500).json({ error: 'Internal server error.' });
     }
   },

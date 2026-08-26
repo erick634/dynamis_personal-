@@ -85,3 +85,36 @@ model PortfolioItem {
   @@index([profile_ids])
   @@map("portfolio_items")
 }
+
+/** Snapshot of a life area for public share links (no account required to view). */
+model LifeAreaShare {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id     String
+  area_id     String
+  share_token String   @unique
+  payload     Json
+  created_at  DateTime
+  updated_at  DateTime
+
+  @@unique([user_id, area_id])
+  @@index([user_id])
+  @@map("life_area_shares")
+}
+
+/** Public comments on a shared life-area profile, image, or document. */
+model LifeAreaShareComment {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  share_id     String   @db.ObjectId
+  user_id      String
+  area_id      String
+  target_type  String // "profile" | "image" | "document"
+  target_key   String?
+  target_label String?
+  author_name  String
+  body         String
+  created_at   DateTime
+
+  @@index([share_id, created_at])
+  @@index([user_id, area_id, created_at])
+  @@map("life_area_share_comments")
+}

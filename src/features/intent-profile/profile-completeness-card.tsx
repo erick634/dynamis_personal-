@@ -40,7 +40,7 @@ function OverallClarityRing({ percent, label }: { percent: number; label: string
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className="drop-shadow-[0_0_8px_rgb(28_74_126_/_35%)] transition-[stroke-dashoffset] duration-500"
+          className="transition-[stroke-dashoffset] duration-500"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -61,7 +61,7 @@ export function ProfileCompletenessCard({ signals }: ProfileCompletenessCardProp
   );
 
   return (
-    <section className="w-full min-w-0 rounded-3xl border border-line-soft/80 bg-paper p-5 shadow-soft sm:p-7 md:p-8">
+    <section className="flex h-full w-full min-w-0 flex-col rounded-3xl border border-line-soft/80 bg-paper p-5 shadow-soft sm:p-7 md:p-8">
       <header>
         <h2 className="font-display text-[1.35rem] font-semibold tracking-tight text-ink sm:text-2xl">
           {t('you.completeness.title')}

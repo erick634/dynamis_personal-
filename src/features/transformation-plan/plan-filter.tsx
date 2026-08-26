@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
-export type PlanFilterId = 'all' | 'today' | 'high' | 'build';
+import type { PlanPeriodFilter } from '@/features/transformation-plan/plan-life-area-tasks';
 
-const FILTERS: PlanFilterId[] = ['all', 'today', 'high', 'build'];
+export type PlanFilterId = PlanPeriodFilter;
+
+const FILTERS: PlanFilterId[] = ['all', 'today', 'week', 'month'];
 
 type PlanFilterProps = {
   activeFilter: PlanFilterId;
